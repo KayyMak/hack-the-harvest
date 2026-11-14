@@ -31,9 +31,11 @@ interface Props {
   year: number
   asOf: string
   stub: boolean
+  /** hide the before/after image block when no chips exist for this data */
+  showChips?: boolean
 }
 
-export function FieldPanel({ field, pred, year, asOf, stub, shortcuts = [], onSelect }: Props) {
+export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect }: Props) {
   if (!field) {
     return (
       <div className="empty">
@@ -60,10 +62,10 @@ export function FieldPanel({ field, pred, year, asOf, stub, shortcuts = [], onSe
       </div>
     )
   }
-  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} />
+  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} />
 }
 
-function FieldDetail({ field, pred, year, asOf, stub }: Props & { field: FieldFeature }) {
+function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { field: FieldFeature }) {
   const id = field.properties.OBJECTID
   const label = field.properties.label
   const series = useAsync(() => api.series(id, year), [id, year])
@@ -103,6 +105,7 @@ function FieldDetail({ field, pred, year, asOf, stub }: Props & { field: FieldFe
         {series.data && <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} />}
       </section>
 
+      {showChips && (
       <section className="block">
         <div className="block__head">
           <h3>Before and after</h3>
@@ -113,6 +116,7 @@ function FieldDetail({ field, pred, year, asOf, stub }: Props & { field: FieldFe
           <Chip src={api.chipUrl(id, year, 'post')} caption="After the drop" />
         </div>
       </section>
+      )}
 
       <section className="block">
         <div className="block__head">
@@ -148,7 +152,9 @@ function ProbabilityBar({ pred }: { pred: Pred | undefined }) {
     const why =
       pred?.class === 'Insufficient'
         ? 'Too few clear satellite looks — the model abstains instead of guessing.'
-        : 'No harvest signal yet at this date — check a later as-of date.'
+        : !pred
+          ? 'No model call for this field-year: BARC has no label to score it against.'
+          : 'No harvest signal yet at this date — check a later as-of date.'
     return (
       <section className="pbar pbar--empty">
         <div className="pbar__value">{pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? '—')}</div>
@@ -224,7 +230,7 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
         />
         <Legend verticalAlign="bottom" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
         <Line dataKey="ndvi" name="NDVI (greenness)" stroke={t.ndvi} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
-        <Line dataKey="ndti" name="NDTI (residue)" stroke={DATA.ndti} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
+        {data.some((p) => p.ndti != null) && <Line dataKey="ndti" name="NDTI (residue)" stroke={DATA.ndti} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />}
       </LineChart>
     </ResponsiveContainer>
   )
@@ -248,7 +254,7 @@ function Contributions({ raw }: { raw: string | undefined }) {
         .sort((a, b) => Math.abs(b.contrib) - Math.abs(a.contrib)),
     [raw],
   )
-  if (!rows.length) return <p className="muted">No feature contributions until the field is decided.</p>
+  if (!rows.length) return <p className="muted">No per-field feature contributions are exported for this model yet.</p>
   const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
   return (
     <div className="contrib" role="table" aria-label="Feature contributions; negative pushes toward grain, positive toward silage">

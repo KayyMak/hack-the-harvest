@@ -59,6 +59,7 @@ export default function App() {
   }, [meta.data, year])
   const asOf = asOfDates[Math.min(asOfIdx, asOfDates.length - 1)]
 
+  const seasonEnd = meta.data?.season_end_only === true || asOfDates.length === 1
   const fields = useAsync(() => api.fields(year), [year])
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
   const evaluation = useAsync(() => api.evaluate('strict'), [])
@@ -156,7 +157,10 @@ export default function App() {
           </nav>
           <div className="topbar__spacer" />
           <div className="asof" role="group" aria-label="As-of date">
-            <span className="asof__label">As of</span>
+            <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
+            {seasonEnd ? (
+              <span className="season-pill">End of season {year}</span>
+            ) : (
             <div className="seg">
               {asOfDates.map((d, i) => (
                 <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)}>
@@ -164,6 +168,7 @@ export default function App() {
                 </button>
               ))}
             </div>
+            )}
           </div>
           <label className="yearpick">
             Year
@@ -206,6 +211,7 @@ export default function App() {
             onSelect={select}
             onOpenQuality={() => setView('quality')}
             onOpenFields={() => setView('fields')}
+            seasonEnd={seasonEnd}
           />
         )}
 
@@ -222,8 +228,12 @@ export default function App() {
               <>
                 <h1 className="sheet__title">Model quality</h1>
                 <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />
-                <h2 className="sheet__h2">Maryland roll-up</h2>
-                <RollupPanel data={rollup.data} error={rollup.error} />
+                {!rollup.error && (
+                  <>
+                    <h2 className="sheet__h2">Maryland roll-up</h2>
+                    <RollupPanel data={rollup.data} error={rollup.error} />
+                  </>
+                )}
               </>
             )}
             {view === 'agent' && (
@@ -242,16 +252,19 @@ export default function App() {
                 <path d="M2 2l10 10M12 2L2 12" />
               </svg>
             </button>
-            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} />
+            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={!seasonEnd} />
           </aside>
         )}
 
         <div className="glass mapkey">
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
-          <span><i className="k k--pending" />Not yet decided</span>
-          <span><i className="k k--abstain" />Abstained</span>
+          <span><i className="k k--pending" />{seasonEnd ? 'No BARC label, not scored' : 'Not yet decided'}</span>
+          {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
           <span className="mapkey__note">Fill is the model's call, outline is the BARC label</span>
+          <span className="mapkey__fine">
+            Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Prototype, not a USDA or NASS release.
+          </span>
         </div>
       </div>
     </ThemeContext.Provider>

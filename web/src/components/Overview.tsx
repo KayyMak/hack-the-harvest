@@ -21,52 +21,43 @@ interface Props {
   onSelect: (id: number) => void
   onOpenQuality: () => void
   onOpenFields: () => void
+  /** real data so far: one held-out call per field-year at season end, no as-of history */
+  seasonEnd: boolean
 }
 
 const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality, onOpenFields }: Props) {
+export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
   const mismatches = review.filter((r) => r.kind === 'mismatch').length
   const abstained = review.length - mismatches
+  const split = evaluation?.split_label ?? 'whole years held out'
+  const base = evaluation?.baseline
   const w = (n: number) => `${counts.total ? (n / counts.total) * 100 : 0}%`
 
   return (
     <>
       <div className="lead">
-      <section className="glass summary" aria-label="Season summary">
-        <h1 className="summary__title">
-          {year} season, as of {shortDate(asOf)}
-        </h1>
-        <p className="summary__text">
-          {decided} of {counts.total} BARC corn fields are called so far: {counts.Silage} silage and {counts.Grain} grain.{' '}
-          {counts.Pending > 0 && <>{counts.Pending} are still waiting on a harvest signal. </>}
-          {counts.Insufficient > 0 && <>{counts.Insufficient} are too cloudy to call. </>}
-          {rollup && (
-            <>
-              Scaled up, {rollup.region} grew about {acres(rollup.acres)} acres of corn for silage,{' '}
-              {Math.abs(((rollup.acres - rollup.census_acres) / rollup.census_acres) * 100).toFixed(0)}% {rollup.acres >= rollup.census_acres ? 'above' : 'below'} the {rollup.year} Census.
-            </>
-          )}
-        </p>
-        <ul className="summary__meta" aria-label="About the data">
-          <li>Imagery: Sentinel-2, 10 m</li>
-          <li>Labels: BARC 2021 to 2023</li>
-          <li>Scores: whole years held out</li>
-          <li>Prototype, not a USDA or NASS release</li>
-        </ul>
-      </section>
       <section className="kpis" aria-label="Key figures">
+        {rollup || !base ? (
+          <article className="glass kpi">
+            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}</h2>
+            <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
+            {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
+            {rollup && <div className="kpi__foot">Census {rollup.year} reported {acres(rollup.census_acres)}</div>}
+          </article>
+        ) : (
+          <article className="glass kpi">
+            <h2 className="kpi__label">Balanced accuracy, 2021–2023</h2>
+            <div className="kpi__value">{num(evaluation?.balanced_accuracy)}</div>
+            <div className="kpi__sub">{base.name ?? 'Baseline'}: {num(base.balanced_accuracy)}</div>
+            <div className="kpi__foot">{evaluation?.n_evaluated} field-years, {split}</div>
+          </article>
+        )}
         <article className="glass kpi">
-          <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}</h2>
-          <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
-          {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
-          {rollup && <div className="kpi__foot">Census {rollup.year} reported {acres(rollup.census_acres)}</div>}
-        </article>
-        <article className="glass kpi">
-          <h2 className="kpi__label">Fields decided by {shortDate(asOf)}</h2>
+          <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Fields decided by ${shortDate(asOf)}`}</h2>
           <div className="kpi__value">
             {decided} <span className="kpi__of">of {counts.total}</span>
           </div>
@@ -76,11 +67,11 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
             <span style={{ width: w(counts.Insufficient), background: '#c9d3cf' }} />
           </div>
           <div className="kpi__foot">
-            {counts.Silage} silage, {counts.Grain} grain, {counts.Insufficient} abstained
+            {counts.Silage} silage, {counts.Grain} grain{seasonEnd ? `, ${counts.total - decided} not labeled` : `, ${counts.Insufficient} abstained`}
           </div>
         </article>
         <article className="glass kpi">
-          <h2 className="kpi__label">Silage recall, held-out years</h2>
+          <h2 className="kpi__label">Silage recall, {seasonEnd ? '2021–2023' : 'held-out years'}</h2>
           <div className="kpi__value">{S ? num(S.recall.value) : '—'}</div>
           {S && <div className="kpi__sub">95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
           {evaluation && (
@@ -93,21 +84,29 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
           <h2 className="kpi__label">Needs a second look</h2>
           <div className="kpi__value kpi__value--warn">{review.length}</div>
           <div className="kpi__sub">{mismatches} disagree with BARC</div>
-          <div className="kpi__foot">{abstained} too cloudy to call</div>
+          <div className="kpi__foot">{seasonEnd ? 'Open one to see its season' : `${abstained} too cloudy to call`}</div>
         </article>
       </section>
       </div>
 
       <aside className="glass rail" aria-label="Season and accuracy">
-        <section>
-          <h2 className="rail__title">How the call firms up through the season</h2>
-          <p className="rail__note">Share of fields decided, and accuracy on those decided.</p>
-          {evaluation ? <Convergence data={evaluation} asOf={asOf} /> : <div className="skeleton skeleton--chart" />}
-          <div className="linekey">
-            <span><i style={{ background: '#8fcdf2' }} />Fields decided</span>
-            <span><i style={{ background: '#f0eee6' }} />Accuracy on decided</span>
-          </div>
-        </section>
+        {evaluation && evaluation.convergence.length < 2 && evaluation.by_year && base ? (
+          <section>
+            <h2 className="rail__title">Model vs always guessing grain</h2>
+            <p className="rail__note">Balanced accuracy by year. 0.50 is a coin flip between the classes.</p>
+            <BaselineBars data={evaluation} />
+          </section>
+        ) : (
+          <section>
+            <h2 className="rail__title">How the call firms up through the season</h2>
+            <p className="rail__note">Share of fields decided, and accuracy on those decided.</p>
+            {evaluation ? <Convergence data={evaluation} asOf={asOf} /> : <div className="skeleton skeleton--chart" />}
+            <div className="linekey">
+              <span><i style={{ background: '#8fcdf2' }} />Fields decided</span>
+              <span><i style={{ background: '#f0eee6' }} />Accuracy on decided</span>
+            </div>
+          </section>
+        )}
 
         <section>
           <div className="rail__head">
@@ -175,7 +174,7 @@ function MiniConfusion({ data }: { data: EvaluateResponse }) {
   return (
     <>
       <p className="rail__note">
-        {correct} of {total} labeled field-years correct, whole years held out.
+        {correct} of {total} labeled field-years correct, {data.split_label ?? 'whole years held out'}.
       </p>
       <div className="mcm" role="table" aria-label="Confusion matrix">
         <div role="row" className="mcm__row">
@@ -200,5 +199,37 @@ function MiniConfusion({ data }: { data: EvaluateResponse }) {
         ))}
       </div>
     </>
+  )
+}
+
+/** Balanced accuracy per year (and pooled) for the model and the always-grain baseline. */
+function BaselineBars({ data }: { data: EvaluateResponse }) {
+  const rows = [
+    ...Object.entries(data.by_year ?? {}).map(([y, v]) => ({ key: y, label: y, model: v.model.balanced_accuracy, base: v.baseline.balanced_accuracy, n: v.model.n })),
+    { key: 'all', label: 'All', model: data.balanced_accuracy ?? 0, base: data.baseline?.balanced_accuracy ?? 0, n: data.n_evaluated ?? 0 },
+  ]
+  return (
+    <div className="bb" role="table" aria-label="Balanced accuracy by year, model and always-grain baseline">
+      {rows.map((r) => (
+        <div className={`bb__row${r.key === 'all' ? ' bb__row--all' : ''}`} role="row" key={r.key}>
+          <span className="bb__year" role="rowheader">
+            {r.label}
+            <small>{r.n} field-years</small>
+          </span>
+          <span className="bb__bars" role="cell">
+            <span className="bb__track"><span className="bb__fill bb__fill--model" style={{ width: `${r.model * 100}%` }} /></span>
+            <span className="bb__track"><span className="bb__fill bb__fill--base" style={{ width: `${r.base * 100}%` }} /></span>
+          </span>
+          <span className="bb__vals" role="cell">
+            <b>{num(r.model)}</b>
+            <span>{num(r.base)}</span>
+          </span>
+        </div>
+      ))}
+      <div className="linekey">
+        <span><i style={{ background: '#8fcdf2' }} />Model</span>
+        <span><i style={{ background: '#6f7f79' }} />Always grain</span>
+      </div>
+    </div>
   )
 }

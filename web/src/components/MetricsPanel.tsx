@@ -37,13 +37,13 @@ export function MetricsPanel({ data, error, asOf }: Props) {
   return (
     <div className="metrics">
       <p className="finding">
-        On held-out years the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
+        On field-years {data.split_label ?? 'held out by year'} the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
         <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.
       </p>
       <section className="reliability" aria-label="Reliability of these scores">
         <h3>Reliability of these scores</h3>
         <p>
-          Chances are 19 out of 20 (95% confidence) that silage recall on a new year lies between <b>{num(S.recall.lo)}</b> and <b>{num(S.recall.hi)}</b>, and silage precision between{' '}
+          Chances are 19 out of 20 (95% confidence) that silage recall on new fields like these lies between <b>{num(S.recall.lo)}</b> and <b>{num(S.recall.hi)}</b>, and silage precision between{' '}
           <b>{num(S.precision.lo)}</b> and <b>{num(S.precision.hi)}</b>.
         </p>
         <p className="muted small">
@@ -54,7 +54,7 @@ export function MetricsPanel({ data, error, asOf }: Props) {
         <Tile kicker="Evaluated field-years" value={String(data.n_evaluated ?? total)} />
         <Tile kicker="Correct" value={`${correct} / ${total}`} sub={pct(total ? correct / total : null)} />
         <Tile kicker="Abstained" value={String(data.abstained)} sub="too few clear looks" />
-        <Tile kicker="Validation split" value={data.split === 'strict' ? 'Strict' : data.split} sub="whole year held out" />
+        <Tile kicker="Balanced accuracy" value={data.balanced_accuracy != null ? num(data.balanced_accuracy) : '—'} sub={data.baseline ? `${data.baseline.name ?? 'Baseline'}: ${num(data.baseline.balanced_accuracy)}` : (data.split_label ?? '')} />
       </div>
 
       <section className="block">
@@ -73,13 +73,13 @@ export function MetricsPanel({ data, error, asOf }: Props) {
         <PrecisionRecall data={data} />
       </section>
 
-      <section className="block">
+      {data.convergence.length > 1 && <section className="block">
         <div className="block__head">
           <h3>Convergence through the season</h3>
           <span className="block__note">as-of {shortDate(asOf)} marked</span>
         </div>
         <Convergence data={data} asOf={asOf} />
-      </section>
+      </section>}
     </div>
   )
 }

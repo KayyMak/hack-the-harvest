@@ -65,6 +65,24 @@ export interface EvaluateResponse {
   convergence: ConvergencePoint[]
   abstained: number
   n_evaluated?: number
+  /** plain-language validation design, e.g. "held out by field" */
+  split_label?: string
+  protocol?: string
+  n_fields?: number
+  model_name?: string
+  balanced_accuracy?: number
+  /** naive comparison model, e.g. always predicting grain */
+  baseline?: BaselineSummary
+  by_year?: Record<string, { model: BaselineSummary; baseline: BaselineSummary }>
+}
+export interface BaselineSummary {
+  name?: string
+  n: number
+  silage_precision: number
+  silage_recall: number
+  balanced_accuracy: number
+  brier_score: number
+  confusion_matrix: number[][]
 }
 
 /** GET /rollup?year= */
@@ -117,6 +135,8 @@ export interface SnapshotMeta {
   note: string
   years: number[]
   as_of_dates: string[]
+  /** real data so far has one call per field-year, at season end */
+  season_end_only?: boolean
 }
 
 export function parseTopFeatures(raw: string | null | undefined): FeatureContribution[] {
