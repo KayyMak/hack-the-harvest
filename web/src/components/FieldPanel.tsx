@@ -17,6 +17,7 @@ import { classColor, featureName, monthOf, num, shortDate, toTime } from '../for
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps } from './charts'
+import { Pending } from './Pending'
 
 export interface Shortcut {
   title: string
@@ -105,6 +106,11 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { fie
         {series.data && <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} />}
       </section>
 
+      {!showChips && (
+        <section className="block">
+          <Pending title="Before and after images">Sentinel-2 true-color cutouts of this field from just before and just after its greenness drop.</Pending>
+        </section>
+      )}
       {showChips && (
       <section className="block">
         <div className="block__head">
@@ -121,9 +127,9 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { fie
       <section className="block">
         <div className="block__head">
           <h3>Why the model decided</h3>
-          <span className="block__note">
+          {parseTopFeatures(pred?.top_features).length > 0 && <span className="block__note">
             <span style={{ color: DATA.grain }}>◀ toward Grain</span> · <span style={{ color: DATA.silage }}>toward Silage ▶</span>
-          </span>
+          </span>}
         </div>
         <Contributions raw={pred?.top_features} />
       </section>
@@ -254,7 +260,8 @@ function Contributions({ raw }: { raw: string | undefined }) {
         .sort((a, b) => Math.abs(b.contrib) - Math.abs(a.contrib)),
     [raw],
   )
-  if (!rows.length) return <p className="muted">No per-field feature contributions are exported for this model yet.</p>
+  if (!rows.length)
+    return <Pending title="Signal breakdown for this field">Which signals pushed this field toward grain or silage, from the model's per-field breakdown.</Pending>
   const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
   return (
     <div className="contrib" role="table" aria-label="Feature contributions; negative pushes toward grain, positive toward silage">

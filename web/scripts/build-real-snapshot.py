@@ -8,12 +8,18 @@ Builds web/public/snapshot/ from the REAL repo data, replacing the fake stub:
                                               balanced accuracy, always-grain baseline, by-year)
   baseline/outputs/observations.csv        -> series_<id>_<year>.json (per-date NDVI for scored field-years)
 
-Not produced (no real source yet): Maryland roll-up, image chips, as-of snapshots before season end.
+Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when it exists:
+  baseline/outputs/asof_predictions.csv      -> mid-season predict files + convergence chart
+  baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
+  baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
+  baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
 The agent trace stays the existing demo files.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
 """
 import csv
+import os
+import shutil
 import json
 import math
 import sqlite3
@@ -24,9 +30,9 @@ from pathlib import Path
 from pyproj import Transformer
 
 ROOT = Path(__file__).resolve().parents[2]
-OUT = ROOT / 'web' / 'public' / 'snapshot'
+OUT = Path(os.environ.get('CUTLINE_OUT', ROOT / 'web' / 'public' / 'snapshot'))
 GPKG = ROOT / 'BARC_Corn.2021-2023.gpkg'
-BASE = ROOT / 'baseline' / 'outputs'
+BASE = Path(os.environ.get('CUTLINE_BASE', ROOT / 'baseline' / 'outputs'))
 YEARS = [2021, 2022, 2023]
 SEASON_END = '11-30'
 KEEP = {'agent_run.json', 'README.md'}  # demo agent files and docs survive a rebuild
@@ -123,6 +129,19 @@ def main() -> None:
             })
         write(f'fields_{year}', {'type': 'FeatureCollection', 'features': feats})
 
+    # ---- optional: per-field feature contributions ----
+    contrib = defaultdict(list)  # (OBJECTID, year, as_of or '') -> [{name, value, contrib}]
+    cpath = BASE / 'feature_contributions.csv'
+    if cpath.exists():
+        with cpath.open(encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                key = (int(r['OBJECTID']), int(r['year']), (r.get('as_of') or '').strip())
+                contrib[key].append({'name': r['feature'], 'value': round(float(r['value']), 4), 'contrib': round(float(r['contribution']), 4)})
+
+    def top_features(oid: int, year: int, as_of: str = '') -> str:
+        rows_ = contrib.get((oid, year, as_of)) or contrib.get((oid, year, '')) or []
+        return json.dumps(sorted(rows_, key=lambda c: -abs(c['contrib']))[:6])
+
     # ---- held-out predictions (season end) ----
     preds = defaultdict(list)
     with (BASE / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
@@ -135,10 +154,45 @@ def main() -> None:
                 'p_silage': round(float(r['silage_probability']), 4),
                 'class': r['predicted_label'],
                 'abstain': False,
-                'top_features': '[]',
+                'top_features': top_features(int(r['OBJECTID']), year),
             })
     for year in YEARS:
         write(f'predict_{year}_{year}-{SEASON_END}', preds[year])
+
+    # ---- optional: mid-season (as-of) predictions ----
+    asof_dates = []
+    convergence = []
+    apath = BASE / 'asof_predictions.csv'
+    if apath.exists():
+        by_date = defaultdict(list)
+        with apath.open(encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                status = (r.get('status') or 'decided').strip().lower()
+                cls = r['predicted_label'] if status == 'decided' else ('Insufficient' if status == 'insufficient' else 'Pending')
+                p = r.get('silage_probability') or ''
+                by_date[r['as_of']].append({
+                    'OBJECTID': int(r['OBJECTID']), 'year': int(r['year']), 'as_of': r['as_of'],
+                    'p_silage': round(float(p), 4) if p and status == 'decided' else None,
+                    'class': cls, 'abstain': status == 'insufficient',
+                    'top_features': top_features(int(r['OBJECTID']), int(r['year']), r['as_of']),
+                })
+        truth = {}
+        with (BASE / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                truth[(int(r['OBJECTID']), int(r['year']))] = r['label']
+        for as_of, rows_ in sorted(by_date.items()):
+            write(f'predict_{as_of[:4]}_{as_of}', rows_)
+            asof_dates.append(as_of)
+        # convergence pooled over years by month-day
+        by_md = defaultdict(list)
+        for as_of, rows_ in by_date.items():
+            by_md[as_of[5:]].extend(rows_)
+        for md in sorted(by_md):
+            rows_ = [x for x in by_md[md] if (x['OBJECTID'], x['year']) in truth]
+            dec = [x for x in rows_ if x['class'] in ('Grain', 'Silage')]
+            ok = sum(1 for x in dec if x['class'] == truth[(x['OBJECTID'], x['year'])])
+            convergence.append({'as_of': f'{YEARS[1]}-{md}', 'share_decided': round(len(dec) / max(1, len(rows_)), 4),
+                                'acc_decided': round(ok / len(dec), 4) if dec else 0.0})
 
     # ---- evaluation ----
     m = json.loads((BASE / 'metrics.json').read_text(encoding='utf-8'))
@@ -161,7 +215,7 @@ def main() -> None:
         'labels': order,
         'confusion': cm,
         'per_class': {lab: per_class(i) for i, lab in enumerate(order)},
-        'convergence': [],
+        'convergence': convergence,
         'abstained': 0,
         'n_evaluated': m['evaluated_field_years'],
         'n_fields': m['evaluated_fields'],
@@ -182,12 +236,43 @@ def main() -> None:
         pts.sort(key=lambda p: p['date'])
         write(f'series_{oid}_{year}', {'OBJECTID': oid, 'year': year, 'points': pts, 'decline_date': None})
 
+    # ---- optional: Maryland roll-up ----
+    has_rollup = False
+    for year in YEARS:
+        rpath = BASE / f'rollup_{year}.json'
+        if not rpath.exists() and (BASE / 'rollup.json').exists():
+            rpath = BASE / 'rollup.json'
+        if not rpath.exists():
+            continue
+        r = json.loads(rpath.read_text(encoding='utf-8'))
+        if int(r['year']) != year:
+            continue
+        has_rollup = True
+        (OUT / f'rollup_{year}.csv').write_text(
+            'year,aggregation_level,state_name,commodity,crop_use,statistic,unit,value,cv_percent,source\n'
+            f"{year},STATE,{r['region'].upper()},CORN,silage,AREA HARVESTED,ACRES,{round(r['acres'])},{r.get('cv_pct', '')},Cutline model estimate\n",
+            encoding='utf-8')
+        write(f'rollup_{year}', {'year': year, 'region': r['region'], 'acres': r['acres'], 'ci': [r['ci_lo'], r['ci_hi']],
+                                 'cv_pct': r.get('cv_pct', 0), 'census_acres': r['census_acres'], 'csv_url': f'rollup_{year}.csv'})
+
+    # ---- optional: before/after chips ----
+    has_chips = False
+    cdir = BASE / 'chips'
+    if cdir.is_dir():
+        (OUT / 'chips').mkdir(exist_ok=True)
+        for png in cdir.glob('*.png'):
+            shutil.copy2(png, OUT / 'chips' / png.name)
+            has_chips = True
+
     write('_meta', {
         'stub': False,
         'note': 'Real BARC data: field outlines and labels from BARC_Corn.2021-2023.gpkg; held-out predictions and metrics from baseline/outputs (logistic regression, field-held-out folds).',
         'years': YEARS,
-        'as_of_dates': [f'{y}-{SEASON_END}' for y in YEARS],
-        'season_end_only': True,
+        'as_of_dates': sorted(set(asof_dates)) or [f'{y}-{SEASON_END}' for y in YEARS],
+        'season_end_only': not asof_dates,
+        'has_chips': has_chips,
+        'has_rollup': has_rollup,
+        'has_contributions': bool(contrib),
     })
     print(f'wrote real snapshot: {len(rows)} fields x {len(YEARS)} years, {sum(len(v) for v in preds.values())} predictions, {len(series)} series -> {OUT}')
 

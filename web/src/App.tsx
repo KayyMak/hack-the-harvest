@@ -8,6 +8,7 @@ import { LogoMark } from './components/Logo'
 import { MapView } from './components/MapView'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
+import { Pending } from './components/Pending'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
@@ -159,7 +160,7 @@ export default function App() {
           <div className="asof" role="group" aria-label="As-of date">
             <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
             {seasonEnd ? (
-              <span className="season-pill">End of season {year}</span>
+              <span className="season-pill" title="Mid-season calls are pending">End of season {year}</span>
             ) : (
             <div className="seg">
               {asOfDates.map((d, i) => (
@@ -228,11 +229,21 @@ export default function App() {
               <>
                 <h1 className="sheet__title">Model quality</h1>
                 <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />
-                {!rollup.error && (
+                {seasonEnd && (
                   <>
-                    <h2 className="sheet__h2">Maryland roll-up</h2>
-                    <RollupPanel data={rollup.data} error={rollup.error} />
+                    <h2 className="sheet__h2">Through the season</h2>
+                    <Pending title="Mid-season calls">
+                      Calls as of Aug 12, Sep 12, Oct 12 and Nov 12, showing how many fields are decided and how accurate those calls are at each date.
+                    </Pending>
                   </>
+                )}
+                <h2 className="sheet__h2">Maryland roll-up</h2>
+                {rollup.error ? (
+                  <Pending title="Maryland silage acres vs the Census">
+                    Statewide corn-for-silage acres from the model, with a 95% range, compared with the {year} Census of Agriculture and exportable as a QuickStats-shaped CSV.
+                  </Pending>
+                ) : (
+                  <RollupPanel data={rollup.data} error={rollup.error} />
                 )}
               </>
             )}
@@ -252,7 +263,7 @@ export default function App() {
                 <path d="M2 2l10 10M12 2L2 12" />
               </svg>
             </button>
-            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={!seasonEnd} />
+            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={meta.data ? meta.data.has_chips !== false : true} />
           </aside>
         )}
 

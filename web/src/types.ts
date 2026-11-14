@@ -137,6 +137,9 @@ export interface SnapshotMeta {
   as_of_dates: string[]
   /** real data so far has one call per field-year, at season end */
   season_end_only?: boolean
+  has_chips?: boolean
+  has_rollup?: boolean
+  has_contributions?: boolean
 }
 
 export function parseTopFeatures(raw: string | null | undefined): FeatureContribution[] {
