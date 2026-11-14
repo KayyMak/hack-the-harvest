@@ -103,8 +103,8 @@ export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Pr
         <div className="map-stats__row">
           <Stat color={DATA.silage} label="Silage" value={counts.Silage} />
           <Stat color={DATA.grain} label="Grain" value={counts.Grain} />
-          <Stat color={DATA.undecided} label="Pending" value={counts.Pending} />
-          <Stat color={DATA.undecided} label="Abstained" value={counts.Insufficient} dashed />
+          <Stat color={DATA.undecided} label="Pending (NA)" value={counts.Pending} />
+          <Stat color={DATA.undecided} label="Abstained (X)" value={counts.Insufficient} dashed />
         </div>
       </div>
 
@@ -137,14 +137,14 @@ function Legend() {
         <div className="legend__head">Fill · prediction</div>
         <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.silage }} />} text="Silage" />
         <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.grain }} />} text="Grain" />
-        <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.undecided }} />} text="Not yet decided" />
+        <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.undecided }} />} text="Not yet decided (NA)" />
       </div>
       <div className="legend__group">
         <div className="legend__head">Outline · BARC label</div>
         <LegendRow swatch={<span className="swatch swatch--outline" style={{ borderColor: DATA.silage }} />} text="Silage" />
         <LegendRow swatch={<span className="swatch swatch--outline" style={{ borderColor: DATA.grain }} />} text="Grain" />
         <LegendRow swatch={<span className="swatch swatch--outline swatch--thin" />} text="Unlabeled" />
-        <LegendRow swatch={<span className="swatch swatch--outline swatch--dashed" />} text="Dashed · abstained" />
+        <LegendRow swatch={<span className="swatch swatch--outline swatch--dashed" />} text="Dashed · abstained (X)" />
       </div>
     </div>
   )

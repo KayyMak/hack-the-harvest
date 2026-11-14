@@ -63,6 +63,21 @@ export default function App() {
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
 
+  const shortcuts = useMemo(() => {
+    const wrong: number[] = []
+    const abstained: number[] = []
+    for (const f of fields.data?.features ?? []) {
+      const p = predMap.get(f.properties.OBJECTID)
+      const l = f.properties.label
+      if (p && l && (p.class === 'Grain' || p.class === 'Silage') && p.class !== l) wrong.push(f.properties.OBJECTID)
+      if (p?.abstain) abstained.push(f.properties.OBJECTID)
+    }
+    return [
+      { title: `Disagrees with BARC label (${wrong.length})`, ids: wrong },
+      { title: `Abstained (X) (${abstained.length})`, ids: abstained },
+    ]
+  }, [fields.data, predMap])
+
   const select = useCallback((id: number) => {
     setSelectedId(id)
     setTab('field')
@@ -100,7 +115,7 @@ export default function App() {
             </span>
             <div>
               <div className="brand__title">Silage or Grain?</div>
-              <div className="brand__sub">BARC fields · Beltsville, Maryland · {year}</div>
+              <div className="brand__sub">BARC fields · Beltsville, Maryland · {year} · Team BetterGreen prototype, not a USDA/NASS release</div>
             </div>
           </div>
 
@@ -153,11 +168,16 @@ export default function App() {
               ))}
             </nav>
             <div className="panel__body" role="tabpanel">
-              {tab === 'field' && <FieldPanel field={selected} pred={selectedId != null ? predMap.get(selectedId) : undefined} year={year} asOf={asOf} stub={stub} />}
+              {tab === 'field' && <FieldPanel shortcuts={shortcuts} onSelect={select} field={selected} pred={selectedId != null ? predMap.get(selectedId) : undefined} year={year} asOf={asOf} stub={stub} />}
               {tab === 'metrics' && <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />}
               {tab === 'rollup' && <RollupPanel data={rollup.data} error={rollup.error} />}
               {tab === 'agent' && <AgentPanel />}
             </div>
+            <footer className="panel__foot">
+              <span><b>(NA)</b> not yet decided by the as-of date</span>
+              <span><b>(X)</b> abstained: too few clear satellite looks</span>
+              <span>Intervals are 95%</span>
+            </footer>
           </aside>
         </main>
       </div>

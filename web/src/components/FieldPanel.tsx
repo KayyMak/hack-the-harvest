@@ -22,7 +22,14 @@ import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps } from './charts'
 
+export interface Shortcut {
+  title: string
+  ids: number[]
+}
+
 interface Props {
+  shortcuts?: Shortcut[]
+  onSelect?: (id: number) => void
   field: FieldFeature | null
   pred: Pred | undefined
   year: number
@@ -30,7 +37,7 @@ interface Props {
   stub: boolean
 }
 
-export function FieldPanel({ field, pred, year, asOf, stub }: Props) {
+export function FieldPanel({ field, pred, year, asOf, stub, shortcuts = [], onSelect }: Props) {
   if (!field) {
     return (
       <div className="empty">
@@ -40,6 +47,20 @@ export function FieldPanel({ field, pred, year, asOf, stub }: Props) {
         </div>
         <h3>Pick a field on the map</h3>
         <p>You'll see its greenness over the season, before/after imagery, and why the model called it silage or grain.</p>
+        {shortcuts
+          .filter((s) => s.ids.length)
+          .map((s) => (
+            <div key={s.title} className="shortcuts">
+              <div className="eyebrow">{s.title}</div>
+              <div className="shortcuts__row">
+                {s.ids.map((id) => (
+                  <button key={id} className="chip-btn" onClick={() => onSelect?.(id)}>
+                    Field {id}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
       </div>
     )
   }
@@ -65,7 +86,7 @@ function FieldDetail({ field, pred, year, asOf, stub }: Props & { field: FieldFe
         </div>
         <div className="field__badges">
           <Badge kicker="BARC label" text={label ?? 'Unlabeled'} color={label ? classColor(label) : undefined} outline />
-          <Badge kicker={`Predicted · ${shortDate(asOf)}`} text={pred?.class ?? '—'} color={decided ? classColor(pred?.class) : undefined} />
+          <Badge kicker={`Predicted · ${shortDate(asOf)}`} text={pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? '—')} color={decided ? classColor(pred?.class) : undefined} />
           {verdict != null && <span className={`verdict ${verdict ? 'verdict--ok' : 'verdict--bad'}`}>{verdict ? '✓ Match' : '✗ Mismatch'}</span>}
         </div>
       </header>
@@ -134,7 +155,7 @@ function ProbabilityBar({ pred }: { pred: Pred | undefined }) {
         : 'No harvest signal yet at this date — check a later as-of date.'
     return (
       <section className="pbar pbar--empty">
-        <div className="pbar__value">{pred?.class ?? '—'}</div>
+        <div className="pbar__value">{pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? '—')}</div>
         <p>{why}</p>
       </section>
     )
