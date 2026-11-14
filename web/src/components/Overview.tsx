@@ -27,6 +27,7 @@ const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
 export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality, onOpenFields }: Props) {
+  const chart = useTheme().chart
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
   const mismatches = review.filter((r) => r.kind === 'mismatch').length
@@ -104,8 +105,8 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
           <p className="rail__note">Share of fields decided, and accuracy on those decided.</p>
           {evaluation ? <Convergence data={evaluation} asOf={asOf} /> : <div className="skeleton skeleton--chart" />}
           <div className="linekey">
-            <span><i style={{ background: '#8fcdf2' }} />Fields decided</span>
-            <span><i style={{ background: '#f0eee6' }} />Accuracy on decided</span>
+            <span><i style={{ background: chart.share }} />Fields decided</span>
+            <span><i style={{ background: chart.accuracy }} />Accuracy on decided</span>
           </div>
         </section>
 

@@ -11,7 +11,8 @@ import { Overview, type ReviewItem } from './components/Overview'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
-import { THEMES, ThemeContext, applyTheme, themeById } from './theme'
+import { THEMES, ThemeContext, applyTheme, modeById, themeById, withMode } from './theme'
+import type { Mode } from './theme'
 
 const VIEWS = [
   { id: 'overview', label: 'Overview' },
@@ -35,21 +36,34 @@ function initialTheme() {
   }
 }
 
+function initialMode(): Mode {
+  const fromUrl = new URLSearchParams(window.location.search).get('mode')
+  if (fromUrl) return modeById(fromUrl)
+  try {
+    return modeById(window.localStorage.getItem('htw-mode'))
+  } catch {
+    return 'dark'
+  }
+}
+
 export default function App() {
   const [theme, setTheme] = useState(initialTheme)
+  const [mode, setMode] = useState<Mode>(initialMode)
+  const shownTheme = useMemo(() => withMode(theme, mode), [theme, mode])
   const [year, setYear] = useState(2022)
   const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [view, setView] = useState<ViewId>('overview')
 
   useEffect(() => {
-    applyTheme(theme)
+    applyTheme(theme, mode)
     try {
       window.localStorage.setItem('htw-theme-v3', theme.id)
+      window.localStorage.setItem('htw-mode', mode)
     } catch {
       /* storage unavailable */
     }
-  }, [theme])
+  }, [theme, mode])
 
   const meta = useAsync(() => api.meta(), [])
   const years = meta.data?.years ?? LIVE_YEARS
@@ -116,7 +130,7 @@ export default function App() {
   }, [asOfDates.length])
 
   return (
-    <ThemeContext.Provider value={theme}>
+    <ThemeContext.Provider value={shownTheme}>
       <div className={`shell shell--${view}`}>
         <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
@@ -174,6 +188,7 @@ export default function App() {
             </svg>
             Download CSV
           </button>
+          {theme.id === 'glass' && <ModeToggle mode={mode} onToggle={() => setMode((m) => (m === 'dark' ? 'light' : 'dark'))} />}
         </header>
 
         {view === 'overview' && (
@@ -236,5 +251,24 @@ export default function App() {
         </div>
       </div>
     </ThemeContext.Provider>
+  )
+}
+
+function ModeToggle({ mode, onToggle }: { mode: Mode; onToggle: () => void }) {
+  const next = mode === 'dark' ? 'light' : 'dark'
+  const label = `Switch to ${next} mode`
+  return (
+    <button className="ghost-btn mode-btn" onClick={onToggle} aria-label={label} title={label}>
+      {next === 'light' ? (
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <circle cx="12" cy="12" r="4.5" />
+          <path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8" />
+        </svg>
+      ) : (
+        <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
+          <path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z" />
+        </svg>
+      )}
+    </button>
   )
 }
