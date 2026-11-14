@@ -42,7 +42,7 @@ are separate fields.
 | `GET /api/health` | `{"status": "ok"}` |
 | `GET /api/baseline/summary` | Evaluation counts, quality counts, logistic and always-Grain metrics |
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
-| `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using rates from the other years (labeled field-years only) |
+| `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using acre-weighted rates from the other years (labeled field-years only) |
 | `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
@@ -69,6 +69,13 @@ wraps the same tools as LangChain tools (`from harvest.tools import TOOLS`)
 for the LangGraph agent. Traces and reports are the only writes, and are not
 committed. `evaluate` adds Wilson 95% intervals for precision and recall of
 both classes and counts by year and class.
+
+`classify` includes all features listed in the saved model metadata, including
+July/November NDVI and peak NDVI. QuickStats crop-use filters use a dedicated
+column or infer Grain/Silage from the data-item description; requested filters
+that cannot be applied return 503 rather than unfiltered rows. Run IDs are UUIDs.
+Trace polling returns completed records while a final record is still being
+written; corrupt completed records and unreadable traces return 503.
 
 ## One command
 

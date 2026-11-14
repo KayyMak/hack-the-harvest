@@ -2,6 +2,7 @@
 import csv
 import math
 import os
+import re
 import sqlite3
 from contextlib import closing
 from pathlib import Path
@@ -78,12 +79,14 @@ def read_observations(field_id: int, year: int) -> list[Observation]:
         raise ArtifactUnavailable('Saved observations are missing or invalid.') from exc
 
 
-def _rates(preds: list[Prediction]) -> tuple[float | None, float | None]:
-    """True and false positive rates (Silage positive) from held-out predictions."""
-    pos = [p for p in preds if p.reference_label == 'Silage']
-    neg = [p for p in preds if p.reference_label == 'Grain']
-    tpr = sum(p.predicted_label == 'Silage' for p in pos) / len(pos) if pos else None
-    fpr = sum(p.predicted_label == 'Silage' for p in neg) / len(neg) if neg else None
+def _rates(preds: list[Prediction], acres: dict[int, float | None]) -> tuple[float | None, float | None]:
+    """Acre-weighted error rates for correcting an acre-weighted predicted share."""
+    known = [(p, acres[p.field_id]) for p in preds if acres.get(p.field_id) is not None]
+    pos = [(p, area) for p, area in known if p.reference_label == 'Silage']
+    neg = [(p, area) for p, area in known if p.reference_label == 'Grain']
+    pos_acres, neg_acres = sum(a for _, a in pos), sum(a for _, a in neg)
+    tpr = sum(a for p, a in pos if p.predicted_label == 'Silage') / pos_acres if pos_acres else None
+    fpr = sum(a for p, a in neg if p.predicted_label == 'Silage') / neg_acres if neg_acres else None
     return tpr, fpr
 
 
@@ -93,7 +96,7 @@ def compute_rollup(predictions: list[Prediction] | None = None) -> Rollup:
     Expected silage acres = sum(p * acres). The 95% interval treats field-years as
     independent Bernoulli outcomes: var = sum(acres^2 * p * (1 - p)); CV% = 100 * sd / expected.
     Adjusted share = (q - FPR) / (TPR - FPR), with q the acre share predicted Silage and
-    TPR/FPR estimated from the OTHER years only, so a year never corrects itself.
+    TPR/FPR acre-weighted and estimated from the OTHER years only.
     """
     acres = {f.field_id: f.acres for f in read_fields()}
     by_year: dict[int, list[Prediction]] = {}
@@ -110,7 +113,7 @@ def compute_rollup(predictions: list[Prediction] | None = None) -> Rollup:
         total = sum(a for _, a in known)
         predicted = sum(a for p, a in known if p.predicted_label == 'Silage')
         q = predicted / total if total else 0.0
-        tpr, fpr = _rates([p for p in all_preds if p.year != year])
+        tpr, fpr = _rates([p for p in all_preds if p.year != year], acres)
         adjusted = None
         if tpr is not None and fpr is not None and tpr - fpr > 0:
             adjusted = min(1.0, max(0.0, (q - fpr) / (tpr - fpr)))
@@ -129,7 +132,8 @@ def compute_rollup(predictions: list[Prediction] | None = None) -> Rollup:
             missing_acres_field_years=len(preds) - len(known)))
     return Rollup(scope='Labeled BARC field-years with saved held-out predictions only',
         method=('expected = sum(p_silage * acres); 95% CI and CV% from independent Bernoulli '
-                'variance; adjusted share = (q - FPR) / (TPR - FPR) with rates from the other years'),
+                'variance; adjusted share = (q - FPR) / (TPR - FPR) with acre-weighted rates '
+                'from the other years'),
         years=years)
 
 
@@ -188,6 +192,12 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
             c_domain = pick('domain', 'domain_desc')
             if c_value is None:
                 raise ValueError('No value column')
+            if c_state is None or (year is not None and c_year is None):
+                raise ValueError('Missing state or requested year column')
+            if level and c_level is None:
+                raise ValueError('No aggregation level column for the requested filter')
+            if crop_use and c_use is None and c_item is None:
+                raise ValueError('No crop use or description column for the requested filter')
             get = lambda r, c: (r.get(c) or '').strip() if c else ''
             out = []
             for r in reader:
@@ -196,16 +206,24 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
                 y = get(r, c_year)
                 if year is not None and y != str(year):
                     continue
-                if crop_use and c_use and get(r, c_use).lower() != crop_use.lower():
-                    continue
                 if level and c_level and get(r, c_level).upper() != level.upper():
                     continue
                 if total_only and c_domain and get(r, c_domain).upper() not in ('', 'TOTAL'):
                     continue
+                use = get(r, c_use).lower()
+                if use not in ('grain', 'silage'):
+                    uses = set(re.findall(r'\b(grain|silage)\b', get(r, c_item), flags=re.IGNORECASE))
+                    uses = {u.lower() for u in uses}
+                    use = uses.pop() if len(uses) == 1 else ''
+                if crop_use:
+                    if not use:
+                        raise ValueError('Cannot identify crop use for the requested filter')
+                    if use != crop_use.lower():
+                        continue
                 raw, cv = get(r, c_value), get(r, c_cv)
                 out.append(QuickStatsRow(year=int(y) if y.isdigit() else None,
                     state=get(r, c_state) or None, county=get(r, c_county) or None,
-                    aggregation_level=get(r, c_level) or None, crop_use=get(r, c_use) or None,
+                    aggregation_level=get(r, c_level) or None, crop_use=use or None,
                     source=get(r, c_source) or None, item=get(r, c_item) or None,
                     value=None if _suppressed(raw) else _num(raw.replace(',', '')),
                     cv_percent=None if not cv or _suppressed(cv) else _num(cv.replace(',', '')),

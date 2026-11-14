@@ -53,13 +53,15 @@ def classify(year: int | None = None, field_ids: list[int] | None = None) -> dic
     feature values behind each call. Reference labels are returned separately as reference_label."""
     feats = {}
     try:
+        features = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
+        if not isinstance(features, list) or not features or not all(isinstance(f, str) for f in features):
+            raise ValueError('Invalid model feature list')
         with (artifacts.OUTPUT_DIR / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
             for r in csv.DictReader(f):
                 feats[(int(r['OBJECTID']), int(r['year']))] = {
-                    k: artifacts._num(r.get(k)) for k in ('ndvi_08', 'ndvi_09', 'ndvi_10', 'peak_doy',
-                                                          'late_ndvi', 'early_minus_late')}
-    except OSError:
-        pass
+                    k: artifacts._num(r[k]) for k in features}
+    except (OSError, KeyError, ValueError, TypeError) as exc:
+        raise ArtifactUnavailable('Saved prediction feature evidence is missing or invalid.') from exc
     rows = []
     for p in artifacts.read_predictions():
         if year is not None and p.year != year:
@@ -167,10 +169,28 @@ def log_step(run_id: str, **fields) -> dict:
 
 
 def read_trace(run_id: str) -> list[dict]:
+    """Read complete records; an unfinished final JSON record waits for the next poll."""
     p = TRACES_DIR / f'{_check_run_id(run_id)}.jsonl'
-    if not p.exists():
+    try:
+        lines = p.read_text(encoding='utf-8').splitlines(keepends=True)
+    except FileNotFoundError:
         return []
-    return [json.loads(l) for l in p.read_text(encoding='utf-8').splitlines() if l.strip()]
+    except (OSError, UnicodeError) as exc:
+        raise ArtifactUnavailable('Agent trace cannot be read.') from exc
+    records = []
+    for index, line in enumerate(lines):
+        if not line.strip():
+            continue
+        try:
+            record = json.loads(line)
+        except json.JSONDecodeError as exc:
+            if index == len(lines) - 1 and not line.endswith(('\n', '\r')):
+                break
+            raise ArtifactUnavailable('Agent trace contains a corrupt record.') from exc
+        if not isinstance(record, dict):
+            raise ArtifactUnavailable('Agent trace contains a non-object record.')
+        records.append(record)
+    return records
 
 
 _INT, _STR = {'type': 'integer'}, {'type': 'string'}

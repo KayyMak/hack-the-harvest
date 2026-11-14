@@ -1,6 +1,6 @@
 """Run from backend/: python -m uvicorn app.main:app --reload."""
 import sys
-import time
+from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
@@ -83,7 +83,7 @@ def agent_run(request: AgentRequest, background: BackgroundTasks) -> dict[str, s
         from agent.run import run_agent
     except ImportError as exc:
         raise HTTPException(status_code=501, detail='Agent is not installed yet (agent.run.run_agent).') from exc
-    run_id = time.strftime('r-%Y%m%d-%H%M%S')
+    run_id = f'r-{uuid4().hex}'
     background.add_task(run_agent, request.query, run_id)
     return {'run_id': run_id}
 
@@ -95,3 +95,5 @@ def agent_trace(run_id: str) -> list[dict]:
         return tools.read_trace(run_id)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except ArtifactUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
