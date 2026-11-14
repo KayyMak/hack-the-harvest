@@ -15,33 +15,33 @@
   },
   {
    "date": "2022-05-30",
-   "ndvi": 0.202,
-   "ndti": 0.093
+   "ndvi": 0.201,
+   "ndti": 0.085
   },
   {
-   "date": "2022-06-04",
+   "date": "2022-06-05",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-06-08",
+   "date": "2022-06-09",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-06-13",
+   "date": "2022-06-15",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-06-18",
+   "date": "2022-06-19",
    "ndvi": null,
    "ndti": null
   },
   {
    "date": "2022-06-25",
-   "ndvi": 0.639,
-   "ndti": 0.174
+   "ndvi": 0.655,
+   "ndti": 0.181
   },
   {
    "date": "2022-06-30",
@@ -49,92 +49,97 @@
    "ndti": null
   },
   {
-   "date": "2022-07-04",
-   "ndvi": 0.775,
-   "ndti": 0.2
-  },
-  {
-   "date": "2022-07-09",
+   "date": "2022-07-07",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-07-14",
-   "ndvi": 0.836,
-   "ndti": 0.216
-  },
-  {
-   "date": "2022-07-20",
-   "ndvi": 0.842,
-   "ndti": 0.207
-  },
-  {
-   "date": "2022-07-25",
+   "date": "2022-07-12",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-07-29",
-   "ndvi": 0.882,
-   "ndti": 0.231
+   "date": "2022-07-18",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-07-24",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-07-28",
+   "ndvi": 0.847,
+   "ndti": 0.221
+  },
+  {
+   "date": "2022-08-01",
+   "ndvi": null,
+   "ndti": null
   },
   {
    "date": "2022-08-05",
-   "ndvi": 0.868,
-   "ndti": 0.217
+   "ndvi": null,
+   "ndti": null
   },
   {
    "date": "2022-08-11",
-   "ndvi": 0.866,
-   "ndti": 0.227
+   "ndvi": null,
+   "ndti": null
   },
   {
    "date": "2022-08-18",
+   "ndvi": 0.873,
+   "ndti": 0.222
+  },
+  {
+   "date": "2022-08-23",
+   "ndvi": 0.143,
+   "ndti": 0.069
+  },
+  {
+   "date": "2022-08-30",
    "ndvi": null,
    "ndti": null
-  },
-  {
-   "date": "2022-08-22",
-   "ndvi": 0.838,
-   "ndti": 0.21
-  },
-  {
-   "date": "2022-08-27",
-   "ndvi": 0.187,
-   "ndti": 0.036
   },
   {
    "date": "2022-09-03",
+   "ndvi": 0.203,
+   "ndti": 0.047
+  },
+  {
+   "date": "2022-09-08",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-09",
-   "ndvi": 0.151,
-   "ndti": 0.068
+   "date": "2022-09-14",
+   "ndvi": 0.172,
+   "ndti": 0.05
   },
   {
-   "date": "2022-09-15",
+   "date": "2022-09-18",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-21",
+   "date": "2022-09-23",
+   "ndvi": 0.196,
+   "ndti": 0.04
+  },
+  {
+   "date": "2022-09-29",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-27",
-   "ndvi": 0.164,
-   "ndti": 0.056
+   "date": "2022-10-03",
+   "ndvi": 0.166,
+   "ndti": 0.047
   },
   {
-   "date": "2022-10-02",
-   "ndvi": null,
-   "ndti": null
-  },
-  {
-   "date": "2022-10-08",
+   "date": "2022-10-09",
    "ndvi": null,
    "ndti": null
   },
@@ -145,48 +150,38 @@
   },
   {
    "date": "2022-10-18",
-   "ndvi": 0.182,
-   "ndti": 0.038
+   "ndvi": 0.189,
+   "ndti": 0.036
   },
   {
-   "date": "2022-10-23",
-   "ndvi": null,
-   "ndti": null
+   "date": "2022-10-25",
+   "ndvi": 0.166,
+   "ndti": 0.055
   },
   {
-   "date": "2022-10-29",
-   "ndvi": null,
-   "ndti": null
-  },
-  {
-   "date": "2022-11-02",
-   "ndvi": null,
-   "ndti": null
-  },
-  {
-   "date": "2022-11-06",
-   "ndvi": 0.209,
-   "ndti": 0.045
-  },
-  {
-   "date": "2022-11-10",
-   "ndvi": 0.176,
+   "date": "2022-11-01",
+   "ndvi": 0.159,
    "ndti": 0.039
   },
   {
-   "date": "2022-11-16",
-   "ndvi": 0.153,
-   "ndti": 0.06
-  },
-  {
-   "date": "2022-11-20",
-   "ndvi": 0.161,
+   "date": "2022-11-07",
+   "ndvi": 0.165,
    "ndti": 0.044
   },
   {
-   "date": "2022-11-25",
-   "ndvi": 0.165,
-   "ndti": 0.057
+   "date": "2022-11-11",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-11-17",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-11-24",
+   "ndvi": 0.191,
+   "ndti": 0.065
   }
  ],
  "decline_date": null

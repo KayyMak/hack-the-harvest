@@ -1550,3 +1550,48 @@ textarea {
 }
 .review__id { width: auto; min-width: 88px; white-space: nowrap; }
 .review__val { white-space: nowrap; }
+
+/* ---------- header v2: solid app bar on the top edge ---------- */
+.topbar {
+  top: 0; left: 0; right: 0;
+  height: 60px; padding: 0 20px; gap: 28px; flex-wrap: nowrap;
+  border-radius: 0; background: #0b1513; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); color: #e8eeeb;
+}
+.topbar .brand { gap: 10px; }
+.topbar .brand__title { font-size: 18px; font-weight: 700; letter-spacing: -0.015em; }
+.topbar .brand__sub { font-size: 13px; color: #93a59e; padding-left: 12px; margin-left: 2px; border-left: 1px solid rgba(255, 255, 255, 0.12); line-height: 18px; }
+.views { align-self: stretch; gap: 4px; }
+.views__btn { height: 100%; border-radius: 0; padding: 0 12px; background: none !important; color: #a9b8b2; font-size: 15px; font-weight: 500; border-bottom: 2px solid transparent; border-top: 2px solid transparent; }
+.views__btn:hover { color: #ffffff; }
+.views__btn.is-on { color: #ffffff; font-weight: 600; border-bottom-color: #8fcdf2; }
+.topbar .asof { gap: 10px; }
+.topbar .asof__label, .yearpick { font-size: 13px; color: #93a59e; }
+.topbar .seg { height: 34px; padding: 0; border-radius: 6px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.16); overflow: hidden; }
+.topbar .seg__btn { height: 100%; border-radius: 0; padding: 0 12px; font-size: 14px; color: #c7d2ce; }
+.topbar .seg__btn + .seg__btn { border-left: 1px solid rgba(255, 255, 255, 0.12); }
+.topbar .seg__btn:hover { background: rgba(255, 255, 255, 0.06); color: #ffffff; }
+.topbar .seg__btn.is-on { background: #e8eeeb; color: #0b1513; }
+.yearpick { gap: 10px; }
+.yearpick select {
+  height: 34px; min-width: 84px; padding: 0 30px 0 12px; border-radius: 6px; font-size: 14px; font-weight: 500;
+  -webkit-appearance: none; appearance: none; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.16);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c7d2ce' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 11px center; cursor: pointer;
+}
+.yearpick select:hover { border-color: rgba(255, 255, 255, 0.3); }
+.ghost-btn { height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 6px; font-size: 14px; background: transparent; border-color: rgba(255, 255, 255, 0.16); }
+.ghost-btn:hover { background: rgba(255, 255, 255, 0.06); }
+.lead, .rail, .sheet, .drawer { top: 76px; }
+.shell .leaflet-top.leaflet-right { top: 76px; }
+.shell--overview .leaflet-top.leaflet-right { top: 372px; }
+@media (max-width: 1240px) { .topbar .brand__sub { display: none; } }
+@media (max-width: 900px) {
+  .topbar { height: auto; flex-wrap: wrap; padding: 12px; gap: 10px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); }
+  .views { align-self: auto; }
+  .views__btn { height: 40px; }
+  .topbar .seg { height: 40px; }
+  .yearpick select, .ghost-btn { height: 40px; }
+  .ghost-btn { justify-content: center; }
+}
+.shell--overview .leaflet-top.leaflet-right { top: 452px; }

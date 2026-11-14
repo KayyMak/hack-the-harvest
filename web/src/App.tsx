@@ -120,13 +120,11 @@ export default function App() {
       <div className={`shell shell--${view}`}>
         <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} />
 
-        <header className="glass topbar">
+        <header className="topbar">
           <div className="brand">
-            <LogoMark size={30} />
-            <div>
-              <div className="brand__title">Silage or Grain?</div>
-              <div className="brand__sub">BARC corn fields, Beltsville MD</div>
-            </div>
+            <LogoMark size={28} />
+            <span className="brand__title">Cutline</span>
+            <span className="brand__sub">Silage or grain, field by field</span>
           </div>
           <nav className="views" aria-label="Views">
             {VIEWS.map((v, i) => (
@@ -145,7 +143,6 @@ export default function App() {
                 </button>
               ))}
             </div>
-            {preds.loading && <span className="asof__spin" aria-label="Loading predictions" />}
           </div>
           <label className="yearpick">
             Year
@@ -170,6 +167,9 @@ export default function App() {
             </label>
           )}
           <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data}>
+            <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
+            </svg>
             Download CSV
           </button>
         </header>

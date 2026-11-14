@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "stub:snapshot": "STUB_YEAR=2021 node scripts/make-stub-snapshot.mjs && STUB_YEAR=2022 node scripts/make-stub-snapshot.mjs && STUB_YEAR=2023 node scripts/make-stub-snapshot.mjs"
   },
   "dependencies": {
     "@fontsource/merriweather": "^5.3.0",

@@ -111,7 +111,7 @@ function FitToFields({ fields }: { fields: FieldsResponse | null }) {
     if (!b.isValid()) return
     const phone = window.innerWidth <= 900
     map.invalidateSize()
-    map.fitBounds(b, phone ? { padding: [12, 12] } : { paddingTopLeft: [40, 400], paddingBottomRight: [480, 80] })
+    map.fitBounds(b, phone ? { padding: [12, 12] } : { paddingTopLeft: [40, 460], paddingBottomRight: [480, 80] })
   }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

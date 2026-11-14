@@ -5,146 +5,151 @@
  "points": [
   {
    "date": "2022-05-20",
-   "ndvi": 0.209,
-   "ndti": 0.083
+   "ndvi": 0.208,
+   "ndti": 0.09
   },
   {
-   "date": "2022-05-26",
+   "date": "2022-05-24",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-06-01",
-   "ndvi": null,
-   "ndti": null
+   "date": "2022-05-31",
+   "ndvi": 0.225,
+   "ndti": 0.097
   },
   {
-   "date": "2022-06-05",
-   "ndvi": null,
-   "ndti": null
+   "date": "2022-06-06",
+   "ndvi": 0.257,
+   "ndti": 0.095
   },
   {
    "date": "2022-06-12",
-   "ndvi": 0.365,
-   "ndti": 0.107
+   "ndvi": 0.36,
+   "ndti": 0.109
   },
   {
-   "date": "2022-06-16",
-   "ndvi": 0.412,
-   "ndti": 0.119
-  },
-  {
-   "date": "2022-06-21",
+   "date": "2022-06-19",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-06-26",
-   "ndvi": 0.673,
-   "ndti": 0.186
-  },
-  {
-   "date": "2022-07-02",
+   "date": "2022-06-23",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-07-08",
+   "date": "2022-06-29",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-07-15",
+   "date": "2022-07-05",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-07-19",
-   "ndvi": 0.863,
-   "ndti": 0.229
-  },
-  {
-   "date": "2022-07-26",
-   "ndvi": 0.874,
-   "ndti": 0.222
-  },
-  {
-   "date": "2022-08-01",
-   "ndvi": 0.87,
-   "ndti": 0.219
-  },
-  {
-   "date": "2022-08-07",
-   "ndvi": 0.839,
-   "ndti": 0.21
-  },
-  {
-   "date": "2022-08-11",
+   "date": "2022-07-11",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-08-16",
+   "date": "2022-07-18",
+   "ndvi": 0.832,
+   "ndti": 0.214
+  },
+  {
+   "date": "2022-07-22",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-08-20",
+   "date": "2022-07-27",
+   "ndvi": 0.875,
+   "ndti": 0.224
+  },
+  {
+   "date": "2022-08-03",
+   "ndvi": 0.852,
+   "ndti": 0.215
+  },
+  {
+   "date": "2022-08-08",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-08-13",
+   "ndvi": 0.844,
+   "ndti": 0.218
+  },
+  {
+   "date": "2022-08-19",
    "ndvi": null,
    "ndti": null
   },
   {
    "date": "2022-08-24",
-   "ndvi": 0.884,
-   "ndti": 0.219
-  },
-  {
-   "date": "2022-08-31",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-07",
+   "date": "2022-08-30",
+   "ndvi": 0.864,
+   "ndti": 0.226
+  },
+  {
+   "date": "2022-09-03",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-12",
-   "ndvi": 0.836,
-   "ndti": 0.228
-  },
-  {
-   "date": "2022-09-17",
+   "date": "2022-09-09",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-09-23",
-   "ndvi": 0.689,
-   "ndti": 0.2
+   "date": "2022-09-14",
+   "ndvi": 0.851,
+   "ndti": 0.226
   },
   {
-   "date": "2022-09-30",
+   "date": "2022-09-18",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-10-05",
-   "ndvi": 0.491,
-   "ndti": 0.183
+   "date": "2022-09-25",
+   "ndvi": 0.64,
+   "ndti": 0.191
   },
   {
-   "date": "2022-10-12",
+   "date": "2022-10-01",
+   "ndvi": 0.537,
+   "ndti": 0.173
+  },
+  {
+   "date": "2022-10-06",
+   "ndvi": 0.454,
+   "ndti": 0.173
+  },
+  {
+   "date": "2022-10-10",
    "ndvi": null,
    "ndti": null
   },
   {
-   "date": "2022-10-18",
-   "ndvi": 0.262,
-   "ndti": 0.157
+   "date": "2022-10-14",
+   "ndvi": null,
+   "ndti": null
   },
   {
-   "date": "2022-10-24",
+   "date": "2022-10-20",
+   "ndvi": null,
+   "ndti": null
+  },
+  {
+   "date": "2022-10-25",
    "ndvi": null,
    "ndti": null
   },
@@ -154,7 +159,7 @@
    "ndti": null
   },
   {
-   "date": "2022-11-03",
+   "date": "2022-11-05",
    "ndvi": null,
    "ndti": null
   },
@@ -164,19 +169,19 @@
    "ndti": null
   },
   {
-   "date": "2022-11-17",
-   "ndvi": 0.266,
-   "ndti": 0.166
+   "date": "2022-11-15",
+   "ndvi": null,
+   "ndti": null
   },
   {
-   "date": "2022-11-21",
-   "ndvi": 0.244,
-   "ndti": 0.142
+   "date": "2022-11-20",
+   "ndvi": 0.255,
+   "ndti": 0.16
   },
   {
    "date": "2022-11-27",
-   "ndvi": null,
-   "ndti": null
+   "ndvi": 0.243,
+   "ndti": 0.153
   }
  ],
  "decline_date": null

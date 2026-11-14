@@ -21,10 +21,10 @@
   "OBJECTID": 1002,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.96,
+  "p_silage": 0.93,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.81,\"contrib\":0.83},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.62},{\"name\":\"ndti_post\",\"value\":0.057,\"contrib\":0.44},{\"name\":\"decline_doy_rel\",\"value\":-37,\"contrib\":0.44},{\"name\":\"dairy_dist_km\",\"value\":7.8,\"contrib\":0.01}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.85,\"contrib\":1.04},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.42},{\"name\":\"ndti_post\",\"value\":0.06,\"contrib\":0.56},{\"name\":\"decline_doy_rel\",\"value\":-35,\"contrib\":0.38},{\"name\":\"dairy_dist_km\",\"value\":2.7,\"contrib\":0.06}]"
  },
  {
   "OBJECTID": 1003,
@@ -48,19 +48,19 @@
   "OBJECTID": 1005,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.07,
+  "p_silage": 0.17,
   "class": "Grain",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.79,\"contrib\":-1.09},{\"name\":\"drop_days\",\"value\":8,\"contrib\":-0.4},{\"name\":\"ndti_post\",\"value\":0.034,\"contrib\":-0.37},{\"name\":\"decline_doy_rel\",\"value\":-44,\"contrib\":-0.22},{\"name\":\"dairy_dist_km\",\"value\":2.9,\"contrib\":-0.12}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.78,\"contrib\":-0.91},{\"name\":\"drop_days\",\"value\":7,\"contrib\":-0.77},{\"name\":\"ndti_post\",\"value\":0.043,\"contrib\":-0.36},{\"name\":\"decline_doy_rel\",\"value\":-30,\"contrib\":-0.33},{\"name\":\"dairy_dist_km\",\"value\":13.5,\"contrib\":0.12}]"
  },
  {
   "OBJECTID": 1006,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.91,
+  "p_silage": 0.76,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.86,\"contrib\":0.78},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.66},{\"name\":\"ndti_post\",\"value\":0.03,\"contrib\":0.47},{\"name\":\"decline_doy_rel\",\"value\":-30,\"contrib\":0.23},{\"name\":\"dairy_dist_km\",\"value\":3.7,\"contrib\":-0.09}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.86,\"contrib\":0.88},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.51},{\"name\":\"ndti_post\",\"value\":0.052,\"contrib\":0.38},{\"name\":\"decline_doy_rel\",\"value\":-32,\"contrib\":0.34},{\"name\":\"dairy_dist_km\",\"value\":4.7,\"contrib\":-0.04}]"
  },
  {
   "OBJECTID": 1007,
@@ -93,19 +93,19 @@
   "OBJECTID": 1010,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.9,
+  "p_silage": 0.83,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.76,\"contrib\":1.02},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.4},{\"name\":\"ndti_post\",\"value\":0.055,\"contrib\":0.5},{\"name\":\"decline_doy_rel\",\"value\":-44,\"contrib\":0.37},{\"name\":\"dairy_dist_km\",\"value\":4.7,\"contrib\":0.01}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.85,\"contrib\":0.9},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.66},{\"name\":\"ndti_post\",\"value\":0.052,\"contrib\":0.49},{\"name\":\"decline_doy_rel\",\"value\":-29,\"contrib\":0.21},{\"name\":\"dairy_dist_km\",\"value\":7.2,\"contrib\":-0.07}]"
  },
  {
   "OBJECTID": 1011,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.96,
+  "p_silage": 0.88,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.83,\"contrib\":0.97},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.63},{\"name\":\"ndti_post\",\"value\":0.047,\"contrib\":0.39},{\"name\":\"decline_doy_rel\",\"value\":-34,\"contrib\":0.35},{\"name\":\"dairy_dist_km\",\"value\":1.3,\"contrib\":0.04}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.77,\"contrib\":0.98},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.65},{\"name\":\"ndti_post\",\"value\":0.048,\"contrib\":0.41},{\"name\":\"decline_doy_rel\",\"value\":-37,\"contrib\":0.34},{\"name\":\"dairy_dist_km\",\"value\":2.7,\"contrib\":-0.09}]"
  },
  {
   "OBJECTID": 1012,
@@ -147,19 +147,19 @@
   "OBJECTID": 1016,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.83,
+  "p_silage": 0.82,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.74,\"contrib\":0.87},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.55},{\"name\":\"ndti_post\",\"value\":0.035,\"contrib\":0.59},{\"name\":\"decline_doy_rel\",\"value\":-37,\"contrib\":0.21},{\"name\":\"dairy_dist_km\",\"value\":13.5,\"contrib\":-0.04}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.77,\"contrib\":1.06},{\"name\":\"drop_days\",\"value\":9,\"contrib\":0.49},{\"name\":\"ndti_post\",\"value\":0.06,\"contrib\":0.59},{\"name\":\"decline_doy_rel\",\"value\":-27,\"contrib\":0.39},{\"name\":\"dairy_dist_km\",\"value\":9.1,\"contrib\":0.11}]"
  },
  {
   "OBJECTID": 1017,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.84,
+  "p_silage": 0.88,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.78,\"contrib\":0.83},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.45},{\"name\":\"ndti_post\",\"value\":0.057,\"contrib\":0.43},{\"name\":\"decline_doy_rel\",\"value\":-43,\"contrib\":0.24},{\"name\":\"dairy_dist_km\",\"value\":3,\"contrib\":0.01}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.83,\"contrib\":0.84},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.58},{\"name\":\"ndti_post\",\"value\":0.066,\"contrib\":0.38},{\"name\":\"decline_doy_rel\",\"value\":-39,\"contrib\":0.42},{\"name\":\"dairy_dist_km\",\"value\":10.1,\"contrib\":0.15}]"
  },
  {
   "OBJECTID": 1018,
@@ -237,19 +237,19 @@
   "OBJECTID": 1026,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.78,
+  "p_silage": 0.88,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.81,\"contrib\":0.74},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.61},{\"name\":\"ndti_post\",\"value\":0.064,\"contrib\":0.43},{\"name\":\"decline_doy_rel\",\"value\":-36,\"contrib\":0.34},{\"name\":\"dairy_dist_km\",\"value\":8.1,\"contrib\":0}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.74,\"contrib\":0.87},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.57},{\"name\":\"ndti_post\",\"value\":0.032,\"contrib\":0.51},{\"name\":\"decline_doy_rel\",\"value\":-39,\"contrib\":0.28},{\"name\":\"dairy_dist_km\",\"value\":8.1,\"contrib\":0.13}]"
  },
  {
   "OBJECTID": 1027,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.94,
+  "p_silage": 0.79,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.85,\"contrib\":1.06},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.63},{\"name\":\"ndti_post\",\"value\":0.03,\"contrib\":0.43},{\"name\":\"decline_doy_rel\",\"value\":-30,\"contrib\":0.44},{\"name\":\"dairy_dist_km\",\"value\":9.2,\"contrib\":0.02}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.79,\"contrib\":0.99},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.6},{\"name\":\"ndti_post\",\"value\":0.048,\"contrib\":0.59},{\"name\":\"decline_doy_rel\",\"value\":-29,\"contrib\":0.32},{\"name\":\"dairy_dist_km\",\"value\":8.8,\"contrib\":-0.06}]"
  },
  {
   "OBJECTID": 1028,
@@ -354,19 +354,19 @@
   "OBJECTID": 1039,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.75,
+  "p_silage": 0.95,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.79,\"contrib\":0.94},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.64},{\"name\":\"ndti_post\",\"value\":0.037,\"contrib\":0.5},{\"name\":\"decline_doy_rel\",\"value\":-29,\"contrib\":0.37},{\"name\":\"dairy_dist_km\",\"value\":4,\"contrib\":-0.09}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.79,\"contrib\":0.87},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.49},{\"name\":\"ndti_post\",\"value\":0.037,\"contrib\":0.41},{\"name\":\"decline_doy_rel\",\"value\":-44,\"contrib\":0.4},{\"name\":\"dairy_dist_km\",\"value\":2,\"contrib\":0.04}]"
  },
  {
   "OBJECTID": 1040,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.74,
+  "p_silage": 0.88,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.78,\"contrib\":1.02},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.75},{\"name\":\"ndti_post\",\"value\":0.061,\"contrib\":0.59},{\"name\":\"decline_doy_rel\",\"value\":-26,\"contrib\":0.23},{\"name\":\"dairy_dist_km\",\"value\":5.2,\"contrib\":0.09}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.77,\"contrib\":0.92},{\"name\":\"drop_days\",\"value\":5,\"contrib\":0.54},{\"name\":\"ndti_post\",\"value\":0.062,\"contrib\":0.56},{\"name\":\"decline_doy_rel\",\"value\":-39,\"contrib\":0.21},{\"name\":\"dairy_dist_km\",\"value\":6.4,\"contrib\":-0.07}]"
  },
  {
   "OBJECTID": 1041,
@@ -390,10 +390,10 @@
   "OBJECTID": 1043,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.75,
+  "p_silage": 0.92,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.8,\"contrib\":0.93},{\"name\":\"drop_days\",\"value\":4,\"contrib\":0.53},{\"name\":\"ndti_post\",\"value\":0.062,\"contrib\":0.58},{\"name\":\"decline_doy_rel\",\"value\":-29,\"contrib\":0.21},{\"name\":\"dairy_dist_km\",\"value\":9.4,\"contrib\":0.11}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.75,\"contrib\":1.08},{\"name\":\"drop_days\",\"value\":9,\"contrib\":0.62},{\"name\":\"ndti_post\",\"value\":0.048,\"contrib\":0.31},{\"name\":\"decline_doy_rel\",\"value\":-38,\"contrib\":0.4},{\"name\":\"dairy_dist_km\",\"value\":1.8,\"contrib\":-0.03}]"
  },
  {
   "OBJECTID": 1044,
@@ -408,10 +408,10 @@
   "OBJECTID": 1045,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.8,
+  "p_silage": 0.83,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.83,\"contrib\":0.84},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.66},{\"name\":\"ndti_post\",\"value\":0.044,\"contrib\":0.47},{\"name\":\"decline_doy_rel\",\"value\":-30,\"contrib\":0.37},{\"name\":\"dairy_dist_km\",\"value\":3.2,\"contrib\":-0.14}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.79,\"contrib\":0.98},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.63},{\"name\":\"ndti_post\",\"value\":0.042,\"contrib\":0.38},{\"name\":\"decline_doy_rel\",\"value\":-31,\"contrib\":0.35},{\"name\":\"dairy_dist_km\",\"value\":7.9,\"contrib\":-0.08}]"
  },
  {
   "OBJECTID": 1046,
@@ -444,10 +444,10 @@
   "OBJECTID": 1049,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.82,
+  "p_silage": 0.88,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.76,\"contrib\":0.71},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.64},{\"name\":\"ndti_post\",\"value\":0.05,\"contrib\":0.32},{\"name\":\"decline_doy_rel\",\"value\":-40,\"contrib\":0.23},{\"name\":\"dairy_dist_km\",\"value\":12.4,\"contrib\":0.14}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.77,\"contrib\":0.91},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.65},{\"name\":\"ndti_post\",\"value\":0.053,\"contrib\":0.32},{\"name\":\"decline_doy_rel\",\"value\":-37,\"contrib\":0.23},{\"name\":\"dairy_dist_km\",\"value\":12.1,\"contrib\":0.05}]"
  },
  {
   "OBJECTID": 1050,
@@ -471,10 +471,10 @@
   "OBJECTID": 1052,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.79,
+  "p_silage": 0.93,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.73,\"contrib\":0.78},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.73},{\"name\":\"ndti_post\",\"value\":0.032,\"contrib\":0.3},{\"name\":\"decline_doy_rel\",\"value\":-36,\"contrib\":0.37},{\"name\":\"dairy_dist_km\",\"value\":3.4,\"contrib\":-0.05}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.82,\"contrib\":0.97},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.55},{\"name\":\"ndti_post\",\"value\":0.044,\"contrib\":0.59},{\"name\":\"decline_doy_rel\",\"value\":-35,\"contrib\":0.33},{\"name\":\"dairy_dist_km\",\"value\":3.4,\"contrib\":0}]"
  },
  {
   "OBJECTID": 1053,
@@ -489,10 +489,10 @@
   "OBJECTID": 1054,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.9,
+  "p_silage": 0.86,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.78,\"contrib\":0.71},{\"name\":\"drop_days\",\"value\":8,\"contrib\":0.77},{\"name\":\"ndti_post\",\"value\":0.041,\"contrib\":0.43},{\"name\":\"decline_doy_rel\",\"value\":-39,\"contrib\":0.32},{\"name\":\"dairy_dist_km\",\"value\":10,\"contrib\":0.12}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.72,\"contrib\":1.07},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.57},{\"name\":\"ndti_post\",\"value\":0.063,\"contrib\":0.47},{\"name\":\"decline_doy_rel\",\"value\":-34,\"contrib\":0.43},{\"name\":\"dairy_dist_km\",\"value\":5.7,\"contrib\":-0.01}]"
  },
  {
   "OBJECTID": 1055,
@@ -507,10 +507,10 @@
   "OBJECTID": 1056,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.85,
+  "p_silage": 0.91,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.81,\"contrib\":0.84},{\"name\":\"drop_days\",\"value\":9,\"contrib\":0.68},{\"name\":\"ndti_post\",\"value\":0.046,\"contrib\":0.39},{\"name\":\"decline_doy_rel\",\"value\":-36,\"contrib\":0.31},{\"name\":\"dairy_dist_km\",\"value\":8.7,\"contrib\":-0.1}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.76,\"contrib\":0.96},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.6},{\"name\":\"ndti_post\",\"value\":0.062,\"contrib\":0.35},{\"name\":\"decline_doy_rel\",\"value\":-39,\"contrib\":0.24},{\"name\":\"dairy_dist_km\",\"value\":6.6,\"contrib\":-0.08}]"
  },
  {
   "OBJECTID": 1057,
@@ -588,10 +588,10 @@
   "OBJECTID": 1065,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.92,
+  "p_silage": 0.89,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.81,\"contrib\":0.81},{\"name\":\"drop_days\",\"value\":7,\"contrib\":0.5},{\"name\":\"ndti_post\",\"value\":0.036,\"contrib\":0.33},{\"name\":\"decline_doy_rel\",\"value\":-29,\"contrib\":0.27},{\"name\":\"dairy_dist_km\",\"value\":10.4,\"contrib\":-0.07}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.78,\"contrib\":0.96},{\"name\":\"drop_days\",\"value\":4,\"contrib\":0.77},{\"name\":\"ndti_post\",\"value\":0.056,\"contrib\":0.5},{\"name\":\"decline_doy_rel\",\"value\":-28,\"contrib\":0.38},{\"name\":\"dairy_dist_km\",\"value\":13.8,\"contrib\":0.09}]"
  },
  {
   "OBJECTID": 1066,
@@ -660,10 +660,10 @@
   "OBJECTID": 1073,
   "year": 2022,
   "as_of": "2022-09-12",
-  "p_silage": 0.89,
+  "p_silage": 0.85,
   "class": "Silage",
   "abstain": false,
-  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.74,\"contrib\":1.02},{\"name\":\"drop_days\",\"value\":4,\"contrib\":0.54},{\"name\":\"ndti_post\",\"value\":0.042,\"contrib\":0.36},{\"name\":\"decline_doy_rel\",\"value\":-32,\"contrib\":0.41},{\"name\":\"dairy_dist_km\",\"value\":13.6,\"contrib\":-0.13}]"
+  "top_features": "[{\"name\":\"ndvi_pre_drop\",\"value\":0.74,\"contrib\":1.02},{\"name\":\"drop_days\",\"value\":6,\"contrib\":0.46},{\"name\":\"ndti_post\",\"value\":0.049,\"contrib\":0.3},{\"name\":\"decline_doy_rel\",\"value\":-42,\"contrib\":0.39},{\"name\":\"dairy_dist_km\",\"value\":8,\"contrib\":0.09}]"
  },
  {
   "OBJECTID": 1074,
