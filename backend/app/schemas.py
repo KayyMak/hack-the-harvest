@@ -40,3 +40,53 @@ class Prediction(BaseModel):
     silage_probability: float = Field(ge=0, le=1)
     fold: int = Field(ge=1)
     valid_dates: int = Field(ge=0)
+
+
+class BarcField(BaseModel):
+    field_id: int
+    farm: str | None
+    field: str | None
+    acres: float | None = Field(ge=0)
+
+
+class Observation(BaseModel):
+    date: str
+    ndvi: float | None
+    clear_fraction: float | None = Field(ge=0, le=1)
+    scene_cloud_percent: float | None
+    status: str
+
+
+class YearRollup(BaseModel):
+    year: int
+    field_years: int
+    total_acres: float
+    reference_silage_acres: float
+    predicted_silage_acres: float
+    expected_silage_acres: float
+    expected_silage_acres_95ci: tuple[float, float]
+    cv_percent: float | None
+    predicted_silage_share: float
+    adjusted_silage_share: float | None
+    adjusted_silage_acres: float | None
+    adjustment_rates: dict[str, float | None]
+    missing_acres_field_years: int
+
+
+class Rollup(BaseModel):
+    scope: str
+    method: str
+    years: list[YearRollup]
+
+
+class QuickStatsRow(BaseModel):
+    year: int | None
+    state: str | None
+    county: str | None = None
+    aggregation_level: str | None = None
+    crop_use: str | None = None
+    source: str | None = None
+    item: str | None
+    value: float | None
+    cv_percent: float | None = None
+    suppressed: bool
