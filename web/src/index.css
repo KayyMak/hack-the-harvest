@@ -1483,3 +1483,70 @@ textarea {
 .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: 960px; }
 .shell:has(.drawer) .kpis { right: 456px; }
 .shell--overview .leaflet-top.leaflet-right { top: 268px; }
+
+/* ---------- readability + summary header pass ---------- */
+.lead {
+  position: absolute; z-index: 900; top: 96px; left: 16px; right: 456px; max-width: 980px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.lead .kpis { position: static; max-width: none; }
+.summary { padding: 18px 22px; border-radius: 18px; }
+.summary__title { margin: 0; font-family: var(--font-body); font-size: 20px; font-weight: 700; letter-spacing: -0.01em; color: #ffffff; }
+.summary__text { margin: 6px 0 0; font-size: 15px; line-height: 1.55; color: #d5dfdb; max-width: 75ch; }
+.summary__meta { list-style: none; margin: 12px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.summary__meta li { font-size: 12px; color: #c7d2ce; background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 999px; padding: 3px 10px; }
+.shell--overview .leaflet-top.leaflet-right { top: 390px; }
+
+.kpi { padding: 18px 20px; }
+.kpi__label { font-size: 14px; color: #b7c5bf; }
+.kpi__value { font-size: 34px; margin-top: 4px; }
+.kpi__sub { font-size: 14px; }
+.kpi__foot { font-size: 13px; color: #b7c5bf; }
+.rail { gap: 32px; padding: 22px; }
+.rail__title { font-size: 16px; }
+.rail__note { font-size: 14px; color: #b7c5bf; }
+.review__row { font-size: 15px; padding: 12px 6px; }
+.review__why, .review__val { font-size: 14px; }
+.mcm { font-size: 14px; }
+.mcm__cell { height: 52px; font-size: 22px; }
+.linekey { font-size: 13px; }
+.mapkey { font-size: 14px; }
+.topbar .brand__title { font-size: 17px; }
+.topbar .brand__sub { font-size: 13px; }
+.views__btn, .topbar .seg__btn, .ghost-btn { font-size: 15px; }
+.sheet__lede { font-size: 15px; }
+.ftable table { font-size: 15px; }
+
+/* ---------- phone ---------- */
+@media (max-width: 900px) {
+  .shell { padding: 10px; gap: 10px; }
+  .lead { position: relative; inset: auto; top: auto; left: auto; right: auto; max-width: none; order: 1; }
+  .shell .map-wrap { order: 2; height: 52vh; }
+  .topbar { border-radius: 16px; padding: 12px; gap: 10px; }
+  .topbar .brand { width: 100%; }
+  .topbar__spacer { display: none; }
+  .views { width: 100%; overflow-x: auto; scrollbar-width: none; }
+  .views__btn { flex: none; padding: 10px 12px; }
+  .topbar .asof { width: 100%; justify-content: space-between; }
+  .topbar .seg { flex: 1; }
+  .topbar .seg__btn { flex: 1; padding: 10px 4px; font-size: 14px; }
+  .yearpick { flex: 1; }
+  .yearpick select { flex: 1; padding: 9px 8px; }
+  .ghost-btn { flex: 1; padding: 10px 12px; }
+  .summary { padding: 16px; }
+  .summary__title { font-size: 19px; }
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .kpi { padding: 14px 16px; }
+  .kpi__value { font-size: 28px; }
+  .rail, .sheet, .drawer { border-radius: 16px; padding: 18px; overflow: visible; }
+  .sheet { width: auto !important; }
+  .drawer { position: fixed !important; inset: auto 0 0 0 !important; top: 10vh !important; width: auto !important; max-width: none !important; border-radius: 20px 20px 0 0; overflow-y: auto; background: rgba(18, 31, 28, 0.94); }
+  .mapkey { font-size: 13px; }
+  .mapkey__note { width: 100%; }
+  .search input { width: 100%; }
+  .ftable__tools { flex-direction: column; align-items: stretch; }
+  .tiles { grid-template-columns: repeat(2, 1fr) !important; }
+  .cm { max-width: 100%; }
+}
+.review__id { width: auto; min-width: 88px; white-space: nowrap; }
+.review__val { white-space: nowrap; }

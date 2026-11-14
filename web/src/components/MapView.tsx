@@ -108,7 +108,10 @@ function FitToFields({ fields }: { fields: FieldsResponse | null }) {
   useEffect(() => {
     if (!fields || !n) return
     const b = leafletGeoJSON(fields).getBounds()
-    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [40, 300], paddingBottomRight: [480, 80] })
+    if (!b.isValid()) return
+    const phone = window.innerWidth <= 900
+    map.invalidateSize()
+    map.fitBounds(b, phone ? { padding: [12, 12] } : { paddingTopLeft: [40, 400], paddingBottomRight: [480, 80] })
   }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

@@ -32,6 +32,29 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
 
   return (
     <>
+      <div className="lead">
+      <section className="glass summary" aria-label="Season summary">
+        <h1 className="summary__title">
+          {year} season, as of {shortDate(asOf)}
+        </h1>
+        <p className="summary__text">
+          {decided} of {counts.total} BARC corn fields are called so far: {counts.Silage} silage and {counts.Grain} grain.{' '}
+          {counts.Pending > 0 && <>{counts.Pending} are still waiting on a harvest signal. </>}
+          {counts.Insufficient > 0 && <>{counts.Insufficient} are too cloudy to call. </>}
+          {rollup && (
+            <>
+              Scaled up, {rollup.region} grew about {acres(rollup.acres)} acres of corn for silage,{' '}
+              {Math.abs(((rollup.acres - rollup.census_acres) / rollup.census_acres) * 100).toFixed(0)}% {rollup.acres >= rollup.census_acres ? 'above' : 'below'} the {rollup.year} Census.
+            </>
+          )}
+        </p>
+        <ul className="summary__meta" aria-label="About the data">
+          <li>Imagery: Sentinel-2, 10 m</li>
+          <li>Labels: BARC 2021 to 2023</li>
+          <li>Scores: whole years held out</li>
+          <li>Prototype, not a USDA or NASS release</li>
+        </ul>
+      </section>
       <section className="kpis" aria-label="Key figures">
         <article className="glass kpi">
           <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}</h2>
@@ -70,6 +93,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
           <div className="kpi__foot">{abstained} too cloudy to call</div>
         </article>
       </section>
+      </div>
 
       <aside className="glass rail" aria-label="Season and accuracy">
         <section>
