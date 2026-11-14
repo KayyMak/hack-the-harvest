@@ -42,6 +42,54 @@ class ApiChecks(unittest.TestCase):
                 for endpoint in ['summary', 'predictions']:
                     self.assertEqual(self.client.get(f'/api/baseline/{endpoint}').status_code, 503)
 
+    def test_fields_and_observations(self):
+        fields = self.client.get('/api/fields')
+        self.assertEqual(fields.status_code, 200)
+        ids = {f['field_id'] for f in fields.json()}
+        self.assertEqual(len(ids), len(fields.json()))
+        row = self.client.get('/api/baseline/predictions').json()[0]
+        self.assertIn(row['field_id'], ids)
+        obs = self.client.get(f"/api/fields/{row['field_id']}/observations",
+                              params={'year': row['year']})
+        self.assertEqual(obs.status_code, 200)
+        dates = [o['date'] for o in obs.json()]
+        self.assertEqual(dates, sorted(dates))
+        self.assertGreaterEqual(len([o for o in obs.json() if o['status'] == 'ok']), row['valid_dates'])
+        missing = self.client.get(f"/api/fields/{row['field_id']}/observations", params={'year': 1900})
+        self.assertEqual(missing.status_code, 404)
+
+    def test_rollup_matches_predictions(self):
+        rollup = self.client.get('/api/baseline/rollup')
+        self.assertEqual(rollup.status_code, 200)
+        years = rollup.json()['years']
+        rows = self.client.get('/api/baseline/predictions').json()
+        self.assertEqual(sum(y['field_years'] for y in years), len(rows))
+        for y in years:
+            low, high = y['expected_silage_acres_95ci']
+            self.assertLessEqual(low, y['expected_silage_acres'])
+            self.assertLessEqual(y['expected_silage_acres'], high)
+            self.assertLessEqual(y['reference_silage_acres'], y['total_acres'])
+
+    def test_quickstats_suppressed_values_are_null(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'qs.csv'
+            path.write_text('Year,State,Data Item,Value\n'
+                '2022,MARYLAND,"CORN, SILAGE - ACRES HARVESTED","45,000"\n'
+                '2022,MARYLAND,"CORN, GRAIN - ACRES HARVESTED",(D)\n'
+                '2022,IOWA,"CORN, SILAGE - ACRES HARVESTED","1,000"\n', encoding='utf-8')
+            with patch.dict('os.environ', {'QUICKSTATS_CSV': str(path)}):
+                rows = self.client.get('/api/quickstats').json()
+            self.assertEqual([(r['value'], r['suppressed']) for r in rows], [(45000.0, False), (None, True)])
+        with patch.dict('os.environ', {}, clear=True):
+            self.assertEqual(self.client.get('/api/quickstats').status_code, 503)
+
+    def test_new_endpoints_return_503_without_artifacts(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)), \
+                 patch('app.artifacts.FIELDS_GPKG', Path(directory) / 'none.gpkg'):
+                for url in ['/api/fields', '/api/baseline/rollup', '/api/fields/1/observations?year=2021']:
+                    self.assertEqual(self.client.get(url).status_code, 503, url)
+
 
 if __name__ == '__main__':
     unittest.main()

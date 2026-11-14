@@ -23,7 +23,8 @@ reference-label handling, grouped model evaluation, and generated artifacts.
 It can run independently of the app. The existing command-line workflow is
 preserved instead of moving it while teammates start work.
 
-**Backend** owns the HTTP contract and reads the two versioned analysis outputs.
+**Backend** owns the HTTP contract and reads versioned analysis outputs, the
+source GeoPackage field table (read-only via SQLite), and an optional QuickStats CSV.
 Pydantic validates public responses. Missing or invalid artifacts yield HTTP 503
 with a clear message. Health indicates the API process is alive; it does not
 claim that baseline artifacts exist. There are no writes, training jobs, or
@@ -41,6 +42,10 @@ are separate fields.
 | `GET /api/health` | `{"status": "ok"}` |
 | `GET /api/baseline/summary` | Evaluation counts, quality counts, logistic and always-Grain metrics |
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
+| `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval (labeled field-years only) |
+| `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
+| `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
+| `GET /api/quickstats?state=` | NASS QuickStats rows from optional `QUICKSTATS_CSV`; suppressed values are null; 503 if unset |
 | `GET /docs` | Interactive generated API documentation |
 | `GET /openapi.json` | Machine-readable response schemas |
 
