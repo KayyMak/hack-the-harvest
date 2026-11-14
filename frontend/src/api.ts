@@ -60,6 +60,11 @@ export interface YearRollup {
   predicted_silage_acres: number;
   expected_silage_acres: number;
   expected_silage_acres_95ci: [number, number];
+  cv_percent: number | null;
+  predicted_silage_share: number;
+  adjusted_silage_share: number | null;
+  adjusted_silage_acres: number | null;
+  adjustment_rates: Record<string, number | null>;
   missing_acres_field_years: number;
 }
 

@@ -65,6 +65,11 @@ class YearRollup(BaseModel):
     predicted_silage_acres: float
     expected_silage_acres: float
     expected_silage_acres_95ci: tuple[float, float]
+    cv_percent: float | None
+    predicted_silage_share: float
+    adjusted_silage_share: float | None
+    adjusted_silage_acres: float | None
+    adjustment_rates: dict[str, float | None]
     missing_acres_field_years: int
 
 

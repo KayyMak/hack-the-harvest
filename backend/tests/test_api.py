@@ -106,13 +106,15 @@ class ApiChecks(unittest.TestCase):
     def test_agent_trace_and_report(self):
         from app import tools
         with tempfile.TemporaryDirectory() as directory:
-            with patch('app.tools.RUNS_DIR', Path(directory)):
+            with patch('app.tools.RUNS_DIR', Path(directory)), \
+                 patch('app.tools.TRACES_DIR', Path(directory) / 'traces'):
                 self.assertEqual(self.client.get('/api/agent/trace/r-1').json(), [])
                 tools.log_step('r-1', node='Analyst', tool='classify')
                 tools.log_step('r-1', node='Verifier', verdict='ok')
                 steps = self.client.get('/api/agent/trace/r-1').json()
                 self.assertEqual([s['step'] for s in steps], [1, 2])
                 self.assertEqual(steps[1]['node'], 'Verifier')
+                self.assertTrue((Path(directory) / 'traces' / 'r-1.jsonl').exists())
                 self.assertTrue(Path(tools.write_report('r-1', '# hi')['path']).exists())
                 self.assertIn('error', tools.call_tool('write_report', {'run_id': '../x', 'markdown': 'x'}))
                 self.assertEqual(self.client.get('/api/agent/trace/bad id!').status_code, 400)
@@ -120,6 +122,28 @@ class ApiChecks(unittest.TestCase):
     def test_agent_run_without_agent_returns_501(self):
         response = self.client.post('/api/agent/run', json={'query': 'classify 2022'})
         self.assertEqual(response.status_code, 501)
+
+    def test_rollup_statistics_and_csv(self):
+        years = self.client.get('/api/baseline/rollup').json()['years']
+        for y in years:
+            self.assertGreater(y['cv_percent'], 0)
+            if y['adjusted_silage_share'] is not None:
+                self.assertTrue(0 <= y['adjusted_silage_share'] <= 1)
+        csv_text = self.client.get('/api/baseline/rollup.csv')
+        self.assertEqual(csv_text.status_code, 200)
+        lines = csv_text.text.strip().splitlines()
+        self.assertIn('CV (%)', lines[0])
+        self.assertEqual(len(lines), len(years) + 1)
+
+    def test_evaluate_has_both_classes_with_wilson_intervals(self):
+        from app import tools
+        e = tools.evaluate()
+        for cls in ('Grain', 'Silage'):
+            low, high = e['per_class'][cls]['recall_95ci']
+            self.assertLessEqual(low, e['per_class'][cls]['recall'])
+            self.assertLessEqual(e['per_class'][cls]['recall'], high)
+        self.assertEqual(sum(sum(c.values()) for c in e['counts_by_year_and_class'].values()), e['n'])
+        self.assertEqual(tools.wilson(0, 0), None)
 
 
 if __name__ == '__main__':

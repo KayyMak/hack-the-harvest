@@ -78,32 +78,79 @@ def read_observations(field_id: int, year: int) -> list[Observation]:
         raise ArtifactUnavailable('Saved observations are missing or invalid.') from exc
 
 
+def _rates(preds: list[Prediction]) -> tuple[float | None, float | None]:
+    """True and false positive rates (Silage positive) from held-out predictions."""
+    pos = [p for p in preds if p.reference_label == 'Silage']
+    neg = [p for p in preds if p.reference_label == 'Grain']
+    tpr = sum(p.predicted_label == 'Silage' for p in pos) / len(pos) if pos else None
+    fpr = sum(p.predicted_label == 'Silage' for p in neg) / len(neg) if neg else None
+    return tpr, fpr
+
+
 def compute_rollup() -> Rollup:
     """Acre roll-up of saved held-out predictions, per year, next to reference acres.
 
     Expected silage acres = sum(p * acres). The 95% interval treats field-years as
-    independent Bernoulli outcomes: var = sum(acres^2 * p * (1 - p)).
+    independent Bernoulli outcomes: var = sum(acres^2 * p * (1 - p)); CV% = 100 * sd / expected.
+    Adjusted share = (q - FPR) / (TPR - FPR), with q the acre share predicted Silage and
+    TPR/FPR estimated from the OTHER years only, so a year never corrects itself.
     """
     acres = {f.field_id: f.acres for f in read_fields()}
     by_year: dict[int, list[Prediction]] = {}
-    for p in read_predictions():
+    all_preds = read_predictions()
+    for p in all_preds:
         by_year.setdefault(p.year, []).append(p)
     years = []
     for year, preds in sorted(by_year.items()):
         known = [(p, acres[p.field_id]) for p in preds if acres.get(p.field_id) is not None]
         expected = sum(p.silage_probability * a for p, a in known)
         sd = math.sqrt(sum(a * a * p.silage_probability * (1 - p.silage_probability) for p, a in known))
+        total = sum(a for _, a in known)
+        predicted = sum(a for p, a in known if p.predicted_label == 'Silage')
+        q = predicted / total if total else 0.0
+        tpr, fpr = _rates([p for p in all_preds if p.year != year])
+        adjusted = None
+        if tpr is not None and fpr is not None and tpr - fpr > 0:
+            adjusted = min(1.0, max(0.0, (q - fpr) / (tpr - fpr)))
         years.append(YearRollup(year=year, field_years=len(preds),
-            total_acres=round(sum(a for _, a in known), 2),
+            total_acres=round(total, 2),
             reference_silage_acres=round(sum(a for p, a in known if p.reference_label == 'Silage'), 2),
-            predicted_silage_acres=round(sum(a for p, a in known if p.predicted_label == 'Silage'), 2),
+            predicted_silage_acres=round(predicted, 2),
             expected_silage_acres=round(expected, 2),
             expected_silage_acres_95ci=(round(max(0.0, expected - 1.96 * sd), 2),
                                         round(expected + 1.96 * sd, 2)),
+            cv_percent=round(100 * sd / expected, 1) if expected else None,
+            predicted_silage_share=round(q, 4),
+            adjusted_silage_share=round(adjusted, 4) if adjusted is not None else None,
+            adjusted_silage_acres=round(adjusted * total, 2) if adjusted is not None else None,
+            adjustment_rates={'tpr': tpr, 'fpr': fpr},
             missing_acres_field_years=len(preds) - len(known)))
     return Rollup(scope='Labeled BARC field-years with saved held-out predictions only',
-        method='expected = sum(p_silage * acres); 95% CI from independent Bernoulli variance',
+        method=('expected = sum(p_silage * acres); 95% CI and CV% from independent Bernoulli '
+                'variance; adjusted share = (q - FPR) / (TPR - FPR) with rates from the other years'),
         years=years)
+
+
+QUICKSTATS_COLUMNS = ['source_desc', 'sector_desc', 'commodity_desc', 'util_practice_desc',
+    'statisticcat_desc', 'unit_desc', 'short_desc', 'agg_level_desc', 'state_name', 'location_desc',
+    'year', 'reference_period_desc', 'Value', 'CV (%)', 'method']
+
+
+def rollup_quickstats_csv() -> str:
+    """The roll-up in QuickStats column shape (one row per year), as CSV text."""
+    import io
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=QUICKSTATS_COLUMNS, lineterminator='\n')
+    writer.writeheader()
+    for y in compute_rollup().years:
+        writer.writerow({'source_desc': 'MODEL', 'sector_desc': 'CROPS', 'commodity_desc': 'CORN',
+            'util_practice_desc': 'SILAGE', 'statisticcat_desc': 'AREA HARVESTED', 'unit_desc': 'ACRES',
+            'short_desc': 'CORN, SILAGE - ACRES HARVESTED', 'agg_level_desc': 'FIELD GROUP',
+            'state_name': 'MARYLAND', 'location_desc': 'USDA BARC, LABELED FIELDS', 'year': y.year,
+            'reference_period_desc': 'YEAR', 'Value': f'{y.expected_silage_acres:,.1f}',
+            'CV (%)': '' if y.cv_percent is None else y.cv_percent,
+            'method': 'held-out logistic regression, sum p x acres'})
+    return buffer.getvalue()
 
 
 def read_quickstats(state: str) -> list[QuickStatsRow]:

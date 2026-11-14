@@ -3,9 +3,10 @@ import sys
 import time
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_rollup, read_fields, read_observations,
+from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
 from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
@@ -39,6 +40,13 @@ def predictions() -> list[Prediction]:
 @app.get('/api/baseline/rollup', response_model=Rollup)
 def rollup() -> Rollup:
     return _serve(compute_rollup)
+
+
+@app.get('/api/baseline/rollup.csv', response_class=PlainTextResponse)
+def rollup_csv() -> PlainTextResponse:
+    """Roll-up in QuickStats column shape, for download."""
+    return PlainTextResponse(_serve(rollup_quickstats_csv), media_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="quickstats_export.csv"'})
 
 
 @app.get('/api/fields', response_model=list[BarcField])

@@ -4,7 +4,7 @@ Usage from the agent (repo root on sys.path, backend/ on sys.path):
     from app.tools import TOOL_SPECS, call_tool, log_step
     TOOL_SPECS  -> OpenAI-style function specs (works with Nemotron on build.nvidia.com)
     call_tool(name, args_dict) -> JSON-safe dict; failures come back as {"error": ...}
-    log_step(run_id, node=..., ...) -> appends one line to the run's trace.jsonl
+    log_step(run_id, node=..., type=..., ...) -> appends one line to <TRACES_DIR>/<run_id>.jsonl
 LangChain users can wrap each entry of TOOLS with StructuredTool.from_function.
 """
 import csv
@@ -18,6 +18,10 @@ from . import artifacts
 from .artifacts import ArtifactUnavailable
 
 RUNS_DIR = Path(os.environ.get('AGENT_RUNS_DIR', artifacts.ROOT / 'agent_runs'))
+_HANDOFF_TRACES = Path('/workspace/data/handoff/traces')
+# Same folder agent/trace.py writes to: <dir>/<run_id>.jsonl
+TRACES_DIR = Path(os.environ.get('AGENT_TRACES_DIR')
+                  or (_HANDOFF_TRACES if _HANDOFF_TRACES.parent.exists() else RUNS_DIR / 'traces'))
 CHIPS_DIR = artifacts.OUTPUT_DIR / 'chips'
 RUN_ID = re.compile(r'^[A-Za-z0-9_.-]{1,64}$')
 
@@ -66,8 +70,19 @@ def classify(year: int | None = None, field_ids: list[int] | None = None) -> dic
     return {'model': 'logistic regression, held out by field (saved)', 'n': len(rows), 'predictions': rows}
 
 
+def wilson(successes: int, n: int, z: float = 1.96) -> list[float] | None:
+    """Wilson score interval for a proportion; None when n is 0."""
+    if n == 0:
+        return None
+    phat = successes / n
+    centre = (phat + z * z / (2 * n)) / (1 + z * z / n)
+    half = z * ((phat * (1 - phat) / n + z * z / (4 * n * n)) ** 0.5) / (1 + z * z / n)
+    return [round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4)]
+
+
 def evaluate(year: int | None = None) -> dict:
-    """Held-out metrics vs always-Grain. Overall from metrics.json; per year computed from saved predictions."""
+    """Held-out metrics vs always-Grain, with Wilson 95% intervals on precision and recall for
+    both classes. Overall adds the saved metrics.json; per year is computed from saved predictions."""
     preds = [p for p in artifacts.read_predictions() if year is None or p.year == year]
     tp = sum(p.reference_label == 'Silage' and p.predicted_label == 'Silage' for p in preds)
     fn = sum(p.reference_label == 'Silage' and p.predicted_label == 'Grain' for p in preds)
@@ -79,10 +94,24 @@ def evaluate(year: int | None = None) -> dict:
            'matrix_order': ['Grain', 'Silage'], 'silage_recall': rec,
            'silage_precision': tp / (tp + fp) if tp + fp else None,
            'balanced_accuracy': (rec + spec) / 2 if rec is not None and spec is not None else None,
-           'always_grain_balanced_accuracy': 0.5}
+           'always_grain_balanced_accuracy': 0.5,
+           'per_class': {
+               'Silage': {'precision': tp / (tp + fp) if tp + fp else None, 'precision_95ci': wilson(tp, tp + fp),
+                          'recall': rec, 'recall_95ci': wilson(tp, tp + fn), 'n_reference': tp + fn},
+               'Grain': {'precision': tn / (tn + fn) if tn + fn else None, 'precision_95ci': wilson(tn, tn + fn),
+                         'recall': spec, 'recall_95ci': wilson(tn, tn + fp), 'n_reference': tn + fp}},
+           'counts_by_year_and_class': _counts(preds)}
     if year is None:
         s = artifacts.read_summary()
         out.update(protocol=s.protocol, logistic=s.logistic.model_dump(), always_grain=s.always_grain.model_dump())
+    return out
+
+
+def _counts(preds) -> dict:
+    out: dict[str, dict[str, int]] = {}
+    for p in preds:
+        row = out.setdefault(str(p.year), {'Grain': 0, 'Silage': 0})
+        row[p.reference_label] += 1
     return out
 
 
@@ -112,26 +141,27 @@ def get_chip(field_id: int, year: int) -> dict:
 
 def write_report(run_id: str, markdown: str) -> dict:
     """Save the agent's final markdown report for a run."""
-    p = RUNS_DIR / _check_run_id(run_id) / 'report.md'
+    p = RUNS_DIR / 'reports' / f'{_check_run_id(run_id)}.md'
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(markdown, encoding='utf-8')
     return {'path': str(p), 'bytes': len(markdown.encode())}
 
 
 def log_step(run_id: str, **fields) -> dict:
-    """Append one trace line ({ts, run_id, step, ...}) to agent_runs/<run_id>/trace.jsonl."""
-    p = RUNS_DIR / _check_run_id(run_id) / 'trace.jsonl'
+    """Append one trace line ({run_id, step, ts, node, type, ...}) to <TRACES_DIR>/<run_id>.jsonl,
+    the same file and format as agent/trace.py."""
+    p = TRACES_DIR / f'{_check_run_id(run_id)}.jsonl'
     p.parent.mkdir(parents=True, exist_ok=True)
     step = sum(1 for _ in p.open(encoding='utf-8')) + 1 if p.exists() else 1
-    line = {'ts': datetime.now(timezone.utc).isoformat(timespec='seconds'), 'run_id': run_id,
-            'step': step, **fields}
+    line = {**fields, 'run_id': run_id, 'step': step,
+            'ts': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
     with p.open('a', encoding='utf-8') as f:
         f.write(json.dumps(line, default=str) + '\n')
     return line
 
 
 def read_trace(run_id: str) -> list[dict]:
-    p = RUNS_DIR / _check_run_id(run_id) / 'trace.jsonl'
+    p = TRACES_DIR / f'{_check_run_id(run_id)}.jsonl'
     if not p.exists():
         return []
     return [json.loads(l) for l in p.read_text(encoding='utf-8').splitlines() if l.strip()]
