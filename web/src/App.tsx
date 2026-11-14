@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
 import type { Pred } from './api'
 import { AgentPanel } from './components/AgentPanel'
@@ -90,6 +90,25 @@ export default function App() {
 
   const select = useCallback((id: number) => setSelectedId(id), [])
 
+  // Measure where the right-hand panels start so the map key and zoom buttons stay in the visible map.
+  const shellRef = useRef<HTMLDivElement>(null)
+  const panelsOpen = `${view}-${selectedId != null}`
+  useLayoutEffect(() => {
+    const shell = shellRef.current
+    if (!shell) return
+    const measure = () => {
+      const lefts = ['.rail', '.sheet', '.drawer']
+        .map((sel) => shell.querySelector(sel)?.getBoundingClientRect())
+        .filter((r): r is DOMRect => !!r && r.width > 0)
+        .map((r) => r.left)
+      const freeRight = lefts.length ? window.innerWidth - Math.min(...lefts) + 16 : 16
+      shell.style.setProperty('--free-right', `${freeRight}px`)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [panelsOpen])
+
   const downloadCsv = () => {
     const csv = rowsToCsv(buildRows(fields.data, predMap), year, asOf)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
@@ -117,7 +136,7 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={theme}>
-      <div className={`shell shell--${view}`}>
+      <div ref={shellRef} className={`shell shell--${view}`}>
         <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
         <header className="glass topbar">

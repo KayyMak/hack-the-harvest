@@ -1634,3 +1634,21 @@ textarea {
   .topbar .seg__btn { padding: 0 10px; font-size: 14px; }
   .ghost-btn { font-size: 14px; padding: 0 12px; }
 }
+
+/* map key + zoom live in the visible part of the map (left of whatever panel is open) */
+@media (min-width: 901px) {
+  .shell .mapkey,
+  .shell--overview .mapkey,
+  .shell:has(.drawer) .mapkey,
+  .shell:has(.sheet) .mapkey { max-width: calc(100% - var(--free-right, 16px) - 96px); }
+  .shell .leaflet-bottom.leaflet-right .leaflet-control-zoom,
+  .shell--overview .leaflet-bottom.leaflet-right .leaflet-control-zoom,
+  .shell:has(.drawer) .leaflet-bottom.leaflet-right .leaflet-control-zoom,
+  .shell:has(.sheet) .leaflet-bottom.leaflet-right .leaflet-control-zoom,
+  .shell:has(.sheet):has(.drawer) .leaflet-bottom.leaflet-right .leaflet-control-zoom {
+    margin-right: calc(var(--free-right, 16px) - 16px) !important; margin-bottom: 16px !important;
+  }
+}
+/* in Fields / Model quality the field drawer opens on top of the sheet instead of pushing it left */
+.shell:has(.drawer) .sheet { right: 16px; width: min(780px, calc(56vw - 16px)); }
+.shell:has(.sheet) .drawer { box-shadow: -18px 0 40px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.07); background: rgba(18, 31, 28, 0.9); }
