@@ -1,0 +1,22 @@
+{
+  "passed": true,
+  "signature": "58ac1575aed42f21e132a3f6487af5474bd06ef31b3408857c78d7b34fe3476f",
+  "summary": {
+    "OBJECTID": 1,
+    "year": 2021,
+    "label": "Grain",
+    "valid_dates": 23,
+    "scene_observations": 27,
+    "rejected_cloud_or_nodata": 3,
+    "read_errors": 0,
+    "ndvi_07": 0.7958822250366211,
+    "ndvi_08": 0.7544642686843872,
+    "ndvi_09": 0.38320496678352356,
+    "ndvi_10": 0.20642200112342834,
+    "ndvi_11": 0.538559228181839,
+    "peak_ndvi": 0.8531468510627747,
+    "peak_doy": 193.0,
+    "late_ndvi": 0.512023389339447,
+    "early_minus_late": 0.22612132132053375
+  }
+}
