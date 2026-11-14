@@ -96,7 +96,7 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { fie
         <div className="block__head">
           <h3>Greenness and residue over the season</h3>
           {series.data?.decline_date && (
-            <span className="block__note" style={{ color: DATA.flag }}>
+            <span className="block__note txt-flag">
               Decline {shortDate(series.data.decline_date)}
             </span>
           )}
@@ -128,7 +128,7 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { fie
         <div className="block__head">
           <h3>Why the model decided</h3>
           {parseTopFeatures(pred?.top_features).length > 0 && <span className="block__note">
-            <span style={{ color: DATA.grain }}>◀ toward Grain</span> · <span style={{ color: DATA.silage }}>toward Silage ▶</span>
+            <span className="txt-grain">◀ toward Grain</span> · <span className="txt-silage">toward Silage ▶</span>
           </span>}
         </div>
         <Contributions raw={pred?.top_features} />
@@ -226,9 +226,9 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
         {decline && (
           <ReferenceLine
             x={toTime(decline)}
-            stroke={DATA.flag}
+            stroke={t.flag ?? DATA.flag}
             strokeWidth={2}
-            label={{ value: `decline ${shortDate(decline)}`, position: 'top', fill: DATA.flag, fontSize: 13, fontWeight: 600 }}
+            label={{ value: `decline ${shortDate(decline)}`, position: 'top', fill: t.flag ?? DATA.flag, fontSize: 13, fontWeight: 600 }}
           />
         )}
         <Tooltip

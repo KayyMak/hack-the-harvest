@@ -27,6 +27,8 @@ export interface ChartTokens {
   /** convergence chart: share of fields decided (sky) and accuracy on decided (barn rust) */
   share: string
   accuracy: string
+  /** text and marker color for flags; falls back to DATA.flag */
+  flag?: string
 }
 
 export interface Theme {
@@ -240,12 +242,49 @@ export const THEMES: Theme[] = [
 export const themeById = (id: string | null | undefined): Theme =>
   THEMES.find((t) => t.id === id) ?? THEMES[0]
 
-export function applyTheme(theme: Theme) {
+/** Light or dark. Only the default glass design has both; the other variants are fixed. */
+export type Mode = 'dark' | 'light'
+
+export const modeById = (id: string | null | undefined): Mode => (id === 'light' ? 'light' : 'dark')
+
+/** Light counterpart of the glass design: same layout, white frosted panels, dark ink. */
+const GLASS_LIGHT: Pick<Theme, 'vars' | 'chart'> = {
+  vars: {
+    '--bg': '#e9eeec',
+    '--surface': 'rgba(20, 45, 38, 0.04)',
+    '--surface-2': 'rgba(20, 45, 38, 0.06)',
+    '--ink': '#13221d',
+    '--ink-2': '#33453e',
+    '--muted': '#55655e',
+    '--border': 'rgba(20, 45, 38, 0.14)',
+    '--bar-ink': '#13221d',
+    '--bar-muted': '#55655e',
+    '--accent': '#1c5d86',
+    '--accent-ink': '#ffffff',
+    '--eyebrow': '#55655e',
+    '--highlight': '#1c5d86',
+    '--focus': '#1c5d86',
+  },
+  chart: { ink: '#13221d', muted: '#55655e', grid: 'rgba(20, 45, 38, 0.1)', axis: 'rgba(20, 45, 38, 0.3)', surface: '#ffffff', ndvi: '#2e7d32', share: '#1c5d86', accuracy: '#b4532a', flag: '#c62828' },
+}
+
+/** The theme actually shown: the glass design swaps to its light palette in light mode. */
+export function withMode(theme: Theme, mode: Mode): Theme {
+  if (theme.id !== 'glass' || mode === 'dark') return theme
+  return { ...theme, vars: { ...theme.vars, ...GLASS_LIGHT.vars }, chart: GLASS_LIGHT.chart }
+}
+
+export const isDark = (theme: Theme, mode: Mode) =>
+  theme.id === 'glass' ? mode === 'dark' : theme.id === 'night'
+
+export function applyTheme(theme: Theme, mode: Mode = 'dark') {
   const root = document.documentElement
+  const shown = withMode(theme, mode)
   for (const t of THEMES) for (const k of Object.keys(t.vars)) root.style.removeProperty(k)
-  for (const [k, v] of Object.entries(theme.vars)) root.style.setProperty(k, v)
+  for (const [k, v] of Object.entries(shown.vars)) root.style.setProperty(k, v)
   root.dataset.theme = theme.id
-  root.style.colorScheme = theme.id === 'night' || theme.id === 'glass' ? 'dark' : 'light'
+  root.dataset.mode = isDark(theme, mode) ? 'dark' : 'light'
+  root.style.colorScheme = isDark(theme, mode) ? 'dark' : 'light'
 }
 
 export const ThemeContext = createContext<Theme>(THEMES[0])
