@@ -1,0 +1,267 @@
+import { useMemo, useState } from 'react'
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  LabelList,
+  Legend,
+  Line,
+  LineChart,
+  ReferenceArea,
+  ReferenceLine,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from 'recharts'
+import { api, parseTopFeatures } from '../api'
+import type { FieldFeature, Pred } from '../api'
+import { classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
+import { useAsync } from '../hooks'
+import { DATA, useTheme } from '../theme'
+import { ChartTip, type TipProps } from './charts'
+
+interface Props {
+  field: FieldFeature | null
+  pred: Pred | undefined
+  year: number
+  asOf: string
+  stub: boolean
+}
+
+export function FieldPanel({ field, pred, year, asOf, stub }: Props) {
+  if (!field) {
+    return (
+      <div className="empty">
+        <div className="empty__art" aria-hidden>
+          <span style={{ background: DATA.grain }} />
+          <span style={{ background: DATA.silage }} />
+        </div>
+        <h3>Pick a field on the map</h3>
+        <p>You'll see its greenness over the season, before/after imagery, and why the model called it silage or grain.</p>
+      </div>
+    )
+  }
+  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} />
+}
+
+function FieldDetail({ field, pred, year, asOf, stub }: Props & { field: FieldFeature }) {
+  const id = field.properties.OBJECTID
+  const label = field.properties.label
+  const series = useAsync(() => api.series(id, year), [id, year])
+  const decided = pred?.class === 'Grain' || pred?.class === 'Silage'
+  const verdict = !label || !decided ? null : pred?.class === label
+
+  return (
+    <div className="field">
+      <header className="field__head">
+        <div>
+          <div className="eyebrow">Field · {year}</div>
+          <h2 className="field__title">
+            {id}
+            {field.properties.ACRES != null && <span className="field__acres">{field.properties.ACRES} ac</span>}
+          </h2>
+        </div>
+        <div className="field__badges">
+          <Badge kicker="BARC label" text={label ?? 'Unlabeled'} color={label ? classColor(label) : undefined} outline />
+          <Badge kicker={`Predicted · ${shortDate(asOf)}`} text={pred?.class ?? '—'} color={decided ? classColor(pred?.class) : undefined} />
+          {verdict != null && <span className={`verdict ${verdict ? 'verdict--ok' : 'verdict--bad'}`}>{verdict ? '✓ Match' : '✗ Mismatch'}</span>}
+        </div>
+      </header>
+
+      <ProbabilityBar pred={pred} />
+
+      <section className="block">
+        <div className="block__head">
+          <h3>Greenness and residue over the season</h3>
+          {series.data?.decline_date && (
+            <span className="block__note" style={{ color: DATA.flag }}>
+              Decline {shortDate(series.data.decline_date)}
+            </span>
+          )}
+        </div>
+        {series.loading && <div className="skeleton skeleton--chart" />}
+        {series.error && <p className="inline-error">Series unavailable: {series.error.message}</p>}
+        {series.data && <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} />}
+      </section>
+
+      <section className="block">
+        <div className="block__head">
+          <h3>Before and after</h3>
+          {stub && <span className="tag tag--warn">Stub imagery</span>}
+        </div>
+        <div className="chips">
+          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the drop" />
+          <Chip src={api.chipUrl(id, year, 'post')} caption="After the drop" />
+        </div>
+      </section>
+
+      <section className="block">
+        <div className="block__head">
+          <h3>Why the model decided</h3>
+          <span className="block__note">
+            <span style={{ color: DATA.grain }}>◀ toward Grain</span> · <span style={{ color: DATA.silage }}>toward Silage ▶</span>
+          </span>
+        </div>
+        <Contributions raw={pred?.top_features} />
+      </section>
+    </div>
+  )
+}
+
+function Badge({ kicker, text, color, outline }: { kicker: string; text: string; color?: string; outline?: boolean }) {
+  return (
+    <div className="badge">
+      <span className="badge__kicker">{kicker}</span>
+      <span className="badge__text">
+        <span
+          className={`swatch ${outline ? 'swatch--outline' : 'swatch--fill'}`}
+          style={outline ? { borderColor: color ?? DATA.undecided } : { background: color ?? DATA.undecided }}
+        />
+        {text}
+      </span>
+    </div>
+  )
+}
+
+function ProbabilityBar({ pred }: { pred: Pred | undefined }) {
+  const p = pred?.p_silage
+  if (p == null) {
+    const why =
+      pred?.class === 'Insufficient'
+        ? 'Too few clear satellite looks — the model abstains instead of guessing.'
+        : 'No harvest signal yet at this date — check a later as-of date.'
+    return (
+      <section className="pbar pbar--empty">
+        <div className="pbar__value">{pred?.class ?? '—'}</div>
+        <p>{why}</p>
+      </section>
+    )
+  }
+  const color = p >= 0.5 ? DATA.silage : DATA.grain
+  return (
+    <section className="pbar" aria-label={`Probability of silage ${num(p)}`}>
+      <div className="pbar__top">
+        <span className="pbar__label">P(silage)</span>
+        <span className="pbar__value" style={{ color }}>{num(p)}</span>
+      </div>
+      <div className="pbar__track">
+        <div className="pbar__fill" style={{ width: `${p * 100}%`, background: color }} />
+        <div className="pbar__mid" title="Decision threshold 0.5" />
+      </div>
+      <div className="pbar__ends">
+        <span>0 · Grain</span>
+        <span>0.5</span>
+        <span>Silage · 1</span>
+      </div>
+    </section>
+  )
+}
+
+function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: number | null; ndti: number | null }[]; decline: string | null; asOf: string }) {
+  const t = useTheme().chart
+  const data = useMemo(() => points.map((p) => ({ ...p, t: toTime(p.date) })), [points])
+  const ticks = useMemo(() => {
+    if (!data.length) return []
+    const first = new Date(data[0].t)
+    const out: number[] = []
+    for (let m = first.getUTCMonth() + 1; ; m++) {
+      const tt = Date.UTC(first.getUTCFullYear(), m, 1)
+      if (tt > data[data.length - 1].t) break
+      out.push(tt)
+    }
+    return out
+  }, [data])
+  if (!data.length) return <p className="inline-error">No observations.</p>
+  const asOfT = toTime(asOf)
+  const lastT = data[data.length - 1].t
+  return (
+    <ResponsiveContainer width="100%" height={250}>
+      <LineChart data={data} margin={{ top: 22, right: 18, bottom: 0, left: -12 }}>
+        <CartesianGrid stroke={t.grid} vertical={false} />
+        <XAxis
+          dataKey="t"
+          type="number"
+          scale="time"
+          domain={['dataMin', 'dataMax']}
+          ticks={ticks}
+          tickFormatter={monthOf}
+          stroke={t.axis}
+          tick={{ fill: t.muted, fontSize: 14 }}
+        />
+        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 14 }} />
+        {asOfT < lastT && (
+          <ReferenceArea x1={asOfT} x2={lastT} fill={t.muted} fillOpacity={0.1} ifOverflow="hidden" label={{ value: 'after as-of', position: 'insideTopRight', fill: t.muted, fontSize: 13 }} />
+        )}
+        {decline && (
+          <ReferenceLine
+            x={toTime(decline)}
+            stroke={DATA.flag}
+            strokeWidth={2}
+            label={{ value: `decline ${shortDate(decline)}`, position: 'top', fill: DATA.flag, fontSize: 13, fontWeight: 600 }}
+          />
+        )}
+        <Tooltip
+          content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => shortDate(new Date(Number(l)).toISOString())} value={(v) => v.toFixed(2)} />}
+        />
+        <Legend verticalAlign="bottom" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
+        <Line dataKey="ndvi" name="NDVI (greenness)" stroke={t.ndvi} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
+        <Line dataKey="ndti" name="NDTI (residue)" stroke={DATA.ndti} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
+      </LineChart>
+    </ResponsiveContainer>
+  )
+}
+
+function Chip({ src, caption }: { src: string; caption: string }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <figure className="chip">
+      {failed ? <div className="chip__missing">No image chip</div> : <img src={src} alt={caption} onError={() => setFailed(true)} />}
+      <figcaption>{caption}</figcaption>
+    </figure>
+  )
+}
+
+function Contributions({ raw }: { raw: string | undefined }) {
+  const t = useTheme().chart
+  const rows = useMemo(
+    () =>
+      parseTopFeatures(raw)
+        .map((f) => ({ ...f, label: featureName(f.name) }))
+        .sort((a, b) => Math.abs(b.contrib) - Math.abs(a.contrib)),
+    [raw],
+  )
+  if (!rows.length) return <p className="muted">No feature contributions until the field is decided.</p>
+  const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
+  return (
+    <ResponsiveContainer width="100%" height={rows.length * 42 + 24}>
+      <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 56, bottom: 4, left: 8 }} barCategoryGap={8}>
+        <CartesianGrid stroke={t.grid} horizontal={false} />
+        <XAxis type="number" domain={[-m, m]} hide />
+        <YAxis type="category" dataKey="label" width={190} stroke={t.axis} tick={{ fill: t.ink, fontSize: 14 }} tickLine={false} />
+        <ReferenceLine x={0} stroke={t.axis} strokeWidth={1.5} />
+        <Tooltip
+          cursor={{ fill: t.grid, fillOpacity: 0.5 }}
+          content={(p) => {
+            const row = (p as unknown as { payload?: { payload: (typeof rows)[number] }[] }).payload?.[0]?.payload
+            if (!p.active || !row) return null
+            return (
+              <div className="chart-tip">
+                <div className="chart-tip__title">{row.label}</div>
+                <div className="chart-tip__row">value <span className="chart-tip__value">{num(row.value)}</span></div>
+                <div className="chart-tip__row">contribution <span className="chart-tip__value">{row.contrib > 0 ? '+' : ''}{num(row.contrib)}</span></div>
+              </div>
+            )
+          }}
+        />
+        <Bar dataKey="contrib" radius={4} isAnimationActive={false}>
+          {rows.map((r) => (
+            <Cell key={r.name} fill={r.contrib >= 0 ? DATA.silage : DATA.grain} />
+          ))}
+          <LabelList dataKey="contrib" position="right" formatter={(v: unknown) => (typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(2)}` : '')} fill={t.ink} fontSize={13} />
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
