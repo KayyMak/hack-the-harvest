@@ -56,13 +56,16 @@ def classify(year: int | None = None, field_ids: list[int] | None = None) -> dic
 
 
 def classify_predictions(predictions, year: int | None = None, field_ids: list[int] | None = None,
-                         model: str = '') -> dict:
-    """classify() on any list of Prediction objects (used for as-of runs)."""
+                         model: str = '', only: list[str] | None = None) -> dict:
+    """classify() on any list of Prediction objects (used for as-of runs). `only` limits the
+    evidence to the features the model actually saw, so an as-of call never shows later months."""
     feats = {}
     try:
         features = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
         if not isinstance(features, list) or not features or not all(isinstance(f, str) for f in features):
             raise ValueError('Invalid model feature list')
+        if only is not None:
+            features = [f for f in features if f in only]
         with (artifacts.OUTPUT_DIR / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
             for r in csv.DictReader(f):
                 feats[(int(r['OBJECTID']), int(r['year']))] = {

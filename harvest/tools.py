@@ -35,7 +35,7 @@ def classify(year: int, as_of: str | None = None, field_ids: list[int] | None = 
     if as_of is None:
         return core.classify(year, field_ids)
     s = predictions_as_of(year, as_of)
-    out = core.classify_predictions(s['predictions'], year, field_ids, s['mode'])
+    out = core.classify_predictions(s['predictions'], year, field_ids, s['mode'], only=s['features'])
     pending = [f for f in s['pending'] if not field_ids or f in field_ids]
     out.update(as_of=as_of, features=s['features'], pending=pending, n_pending=len(pending))
     return out
