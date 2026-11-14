@@ -1,7 +1,8 @@
 import type { Feature } from 'geojson'
 import type { GeoJSON as LeafletGeoJSON, Layer, PathOptions } from 'leaflet'
 import { useEffect, useMemo, useRef } from 'react'
-import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl } from 'react-leaflet'
+import { geoJSON as leafletGeoJSON } from 'leaflet'
+import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import type { FieldFeature, FieldsResponse, Pred } from '../api'
 import { classColor, num, shortDate } from '../format'
 import { DATA } from '../theme'
@@ -74,9 +75,10 @@ export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Pr
 
   return (
     <section className="map-wrap" aria-label="Map of BARC fields">
-      <MapContainer center={CENTER} zoom={13} zoomControl={false} className="map" attributionControl>
+      <MapContainer center={CENTER} zoom={13} zoomSnap={0.25} zoomControl={false} className="map" attributionControl>
         <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
         <ZoomControl position="topright" />
+        <FitToFields fields={fields} />
         <Pane name="halo" style={{ zIndex: 395 }}>
           {selected && (
             <GeoJSON
@@ -156,3 +158,15 @@ const LegendRow = ({ swatch, text }: { swatch: React.ReactNode; text: string }) 
     <span>{text}</span>
   </div>
 )
+
+/** Frame the map on the fields so they fill the view instead of floating in a zoomed-out city. */
+function FitToFields({ fields }: { fields: FieldsResponse | null }) {
+  const map = useMap()
+  const n = fields?.features.length ?? 0
+  useEffect(() => {
+    if (!fields || !n) return
+    const b = leafletGeoJSON(fields).getBounds()
+    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [16, 64], paddingBottomRight: [16, 16] })
+  }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
+}

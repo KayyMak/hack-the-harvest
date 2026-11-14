@@ -18,6 +18,7 @@ const TABS = [
 ] as const
 type TabId = (typeof TABS)[number]['id']
 
+const SHOW_DESIGN = new URLSearchParams(window.location.search).has('design')
 const LIVE_YEARS = [2021, 2022, 2023]
 const asOfDatesFor = (year: number) => ['08-12', '09-12', '10-12', '11-12'].map((md) => `${year}-${md}`)
 
@@ -25,7 +26,7 @@ function initialTheme() {
   const fromUrl = new URLSearchParams(window.location.search).get('theme')
   if (fromUrl) return themeById(fromUrl)
   try {
-    return themeById(window.localStorage.getItem('htw-theme'))
+    return themeById(window.localStorage.getItem('htw-theme-v2'))
   } catch {
     return themeById(null)
   }
@@ -41,7 +42,7 @@ export default function App() {
   useEffect(() => {
     applyTheme(theme)
     try {
-      window.localStorage.setItem('htw-theme', theme.id)
+      window.localStorage.setItem('htw-theme-v2', theme.id)
     } catch {
       /* storage unavailable — fine */
     }
@@ -132,7 +133,7 @@ export default function App() {
                 ))}
               </select>
             </label>
-            <label className="field-select">
+            {SHOW_DESIGN && <label className="field-select">
               <span>Design</span>
               <select value={theme.id} onChange={(e) => setTheme(themeById(e.target.value))} title={theme.blurb}>
                 {THEMES.map((t) => (
@@ -141,9 +142,9 @@ export default function App() {
                   </option>
                 ))}
               </select>
-            </label>
+            </label>}
             <span className={`mode ${STATIC ? 'mode--static' : 'mode--live'}`} title={STATIC ? 'Reading public/snapshot/*.json' : API_URL}>
-              {STATIC ? 'Offline snapshot' : 'Live API'}
+              {STATIC ? 'Offline snapshot' : 'Live'}
             </span>
           </div>
         </header>
@@ -161,7 +162,7 @@ export default function App() {
           <aside className="panel">
             <nav className="tabs" role="tablist" aria-label="Panels">
               {TABS.map((t, i) => (
-                <button key={t.id} role="tab" aria-selected={tab === t.id} className={`tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
+                <button key={t.id} title={`Shortcut: ${i + 1}`} role="tab" aria-selected={tab === t.id} className={`tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
                   <span className="tab__key">{i + 1}</span>
                   {t.label}
                 </button>

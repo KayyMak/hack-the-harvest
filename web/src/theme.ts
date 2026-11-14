@@ -30,7 +30,7 @@ export interface ChartTokens {
 }
 
 export interface Theme {
-  id: 'harvest' | 'usda' | 'deck' | 'night'
+  id: 'analyst' | 'harvest' | 'usda' | 'deck' | 'night'
   name: string
   blurb: string
   vars: Record<string, string>
@@ -43,6 +43,47 @@ const SERIF = "'Merriweather', Georgia, serif"
 const MONO = "'Roboto Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace"
 
 export const THEMES: Theme[] = [
+  {
+    id: 'analyst',
+    name: 'Analyst',
+    blurb: 'Default: plain USWDS-style data tool — white surfaces, Public Sans everywhere, quiet color so the data carries the meaning.',
+    vars: {
+      '--font-body': SANS_PUBLIC,
+      '--font-head': SANS_PUBLIC,
+      '--font-mono': MONO,
+      '--font-num': SANS_PUBLIC,
+      '--bg': '#f0f0f0',
+      '--surface': '#ffffff',
+      '--surface-2': '#f7f7f7',
+      '--ink': '#1b1b1b',
+      '--ink-2': '#3d4551',
+      '--muted': '#5c6670',
+      '--border': '#dfe1e2',
+      '--bar-bg': '#ffffff',
+      '--bar-ink': '#1b1b1b',
+      '--bar-muted': '#5c6670',
+      '--bar-border': '1px solid #dfe1e2',
+      '--bar-field-bg': '#ffffff',
+      '--bar-field-border': '#a9aeb1',
+      '--accent': '#1a4480',
+      '--accent-ink': '#ffffff',
+      '--eyebrow': '#5c6670',
+      '--highlight': '#1a4480',
+      '--focus': '#2491ff',
+      '--mode-static': '#5c6670',
+      '--radius': '4px',
+      '--head-weight': '700',
+      '--head-tracking': '0',
+      '--overlay-bg': 'rgba(255, 255, 255, 0.96)',
+      '--overlay-ink': '#1b1b1b',
+      '--overlay-ink-2': '#3d4551',
+      '--overlay-muted': '#5c6670',
+      '--overlay-border': '#dfe1e2',
+      '--shadow': '0 1px 3px rgba(0, 0, 0, 0.12)',
+      '--weight-num': '600',
+    },
+    chart: { ink: '#1b1b1b', muted: '#5c6670', grid: '#ededed', axis: '#a9aeb1', surface: '#ffffff', ndvi: '#2e7d32', share: '#1a4480', accuracy: '#b4532a' },
+  },
   {
     id: 'harvest',
     name: 'Mix · Harvest',
