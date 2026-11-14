@@ -46,6 +46,8 @@ are separate fields.
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
 | `GET /api/quickstats?state=` | NASS QuickStats rows from optional `QUICKSTATS_CSV`; suppressed values are null; 503 if unset |
+| `POST /api/agent/run` `{query}` | `{run_id}`; starts `agent.run.run_agent(query, run_id)` in the background; 501 until the agent exists |
+| `GET /api/agent/trace/{run_id}` | Trace lines logged so far from `agent_runs/<run_id>/trace.jsonl`; `[]` before the first step |
 | `GET /docs` | Interactive generated API documentation |
 | `GET /openapi.json` | Machine-readable response schemas |
 
@@ -54,6 +56,16 @@ in `frontend/src/api.ts` mirror them. Test response changes at both ends.
 Field ID maps to source `OBJECTID`; `(field_id, year)` identifies a prediction.
 Silage is the positive class. Matrices are true rows / predicted columns,
 ordered Grain then Silage.
+
+## Agent tools
+
+`backend/app/tools.py` exposes eight read-only tools over saved outputs
+(`get_fields`, `get_timeseries`, `classify`, `evaluate`, `aggregate`,
+`get_quickstats`, `get_chip`, `write_report`) as OpenAI-style `TOOL_SPECS` and
+a `call_tool(name, args)` dispatcher that returns `{"error": ...}` instead of
+raising. `log_step(run_id, ...)` writes the trace the UI polls. Agent run files
+(`agent_runs/`, override with `AGENT_RUNS_DIR`) are the only writes, and are
+not committed.
 
 ## Deliberate limits
 

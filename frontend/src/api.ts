@@ -97,3 +97,22 @@ export const loadQuickStats = (signal: AbortSignal, state = 'MARYLAND') =>
   get<QuickStatsRow[]>(`/api/quickstats?state=${encodeURIComponent(state)}`, signal);
 export const loadObservations = (fieldId: number, year: number, signal: AbortSignal) =>
   get<Observation[]>(`/api/fields/${fieldId}/observations?year=${year}`, signal);
+
+export interface TraceStep {
+  ts: string;
+  run_id: string;
+  step: number;
+  [key: string]: unknown;
+}
+
+export async function startAgentRun(query: string): Promise<{ run_id: string }> {
+  const response = await fetch('/api/agent/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!response.ok) throw new Error(`Agent is unavailable (HTTP ${response.status}).`);
+  return response.json() as Promise<{ run_id: string }>;
+}
+export const loadTrace = (runId: string, signal: AbortSignal) =>
+  get<TraceStep[]>(`/api/agent/trace/${encodeURIComponent(runId)}`, signal);

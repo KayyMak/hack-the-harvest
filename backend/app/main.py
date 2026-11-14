@@ -1,8 +1,13 @@
 """Run from backend/: python -m uvicorn app.main:app --reload."""
-from fastapi import FastAPI, HTTPException
+import sys
+import time
+
+from fastapi import BackgroundTasks, FastAPI, HTTPException
+from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_rollup, read_fields, read_observations,
     read_predictions, read_quickstats, read_summary)
+from . import tools
 from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
@@ -52,3 +57,31 @@ def observations(field_id: int, year: int) -> list[Observation]:
 @app.get('/api/quickstats', response_model=list[QuickStatsRow])
 def quickstats(state: str = 'MARYLAND') -> list[QuickStatsRow]:
     return _serve(read_quickstats, state)
+
+
+class AgentRequest(BaseModel):
+    query: str
+
+
+@app.post('/api/agent/run')
+def agent_run(request: AgentRequest, background: BackgroundTasks) -> dict[str, str]:
+    """Start agent.run.run_agent(query, run_id) in the background; poll the trace route."""
+    root = str(tools.artifacts.ROOT)
+    if root not in sys.path:
+        sys.path.insert(0, root)
+    try:
+        from agent.run import run_agent
+    except ImportError as exc:
+        raise HTTPException(status_code=501, detail='Agent is not installed yet (agent.run.run_agent).') from exc
+    run_id = time.strftime('r-%Y%m%d-%H%M%S')
+    background.add_task(run_agent, request.query, run_id)
+    return {'run_id': run_id}
+
+
+@app.get('/api/agent/trace/{run_id}')
+def agent_trace(run_id: str) -> list[dict]:
+    """Trace lines written so far for a run; empty while the run has not logged anything."""
+    try:
+        return tools.read_trace(run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc

@@ -90,6 +90,37 @@ class ApiChecks(unittest.TestCase):
                 for url in ['/api/fields', '/api/baseline/rollup', '/api/fields/1/observations?year=2021']:
                     self.assertEqual(self.client.get(url).status_code, 503, url)
 
+    def test_agent_tools_on_saved_outputs(self):
+        from app import tools
+        self.assertEqual({s['function']['name'] for s in tools.TOOL_SPECS}, set(tools.TOOLS))
+        preds = tools.call_tool('classify', {'year': 2022})
+        self.assertTrue(preds['n'] > 0 and all(p['year'] == 2022 for p in preds['predictions']))
+        self.assertIn('evidence', preds['predictions'][0])
+        overall = tools.call_tool('evaluate')
+        self.assertEqual(sum(map(sum, overall['confusion_matrix'])),
+                         sum(map(sum, overall['logistic']['confusion_matrix'])))
+        self.assertIn('error', tools.call_tool('nope'))
+        self.assertIn('error', tools.call_tool('get_timeseries', {'field_id': 1}))
+        self.assertIn('error', tools.call_tool('get_timeseries', {'field_id': 1, 'year': 1900}))
+
+    def test_agent_trace_and_report(self):
+        from app import tools
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.tools.RUNS_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/agent/trace/r-1').json(), [])
+                tools.log_step('r-1', node='Analyst', tool='classify')
+                tools.log_step('r-1', node='Verifier', verdict='ok')
+                steps = self.client.get('/api/agent/trace/r-1').json()
+                self.assertEqual([s['step'] for s in steps], [1, 2])
+                self.assertEqual(steps[1]['node'], 'Verifier')
+                self.assertTrue(Path(tools.write_report('r-1', '# hi')['path']).exists())
+                self.assertIn('error', tools.call_tool('write_report', {'run_id': '../x', 'markdown': 'x'}))
+                self.assertEqual(self.client.get('/api/agent/trace/bad id!').status_code, 400)
+
+    def test_agent_run_without_agent_returns_501(self):
+        response = self.client.post('/api/agent/run', json={'query': 'classify 2022'})
+        self.assertEqual(response.status_code, 501)
+
 
 if __name__ == '__main__':
     unittest.main()
