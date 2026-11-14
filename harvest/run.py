@@ -18,71 +18,28 @@ import argparse
 import csv
 import json
 import sys
-from datetime import date
 from pathlib import Path
 
-_BACKEND = Path(__file__).resolve().parents[1] / 'backend'
-if str(_BACKEND) not in sys.path:
-    sys.path.insert(0, str(_BACKEND))
+_ROOT = Path(__file__).resolve().parents[1]
+for _p in (_ROOT, _ROOT / 'backend'):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 from app import artifacts, tools  # noqa: E402
-from app.artifacts import ArtifactUnavailable, Prediction  # noqa: E402
-
-MONTH_END = {'ndvi_07': (7, 31), 'ndvi_08': (8, 31), 'ndvi_09': (9, 30), 'ndvi_10': (10, 31),
-             'ndvi_11': (11, 30)}
-
-
-def features_as_of(year: int, as_of: date) -> tuple[list[str], str]:
-    full = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
-    if as_of >= date(year, 11, 30):
-        return full, 'saved full-season model'
-    usable = [f for f, (m, d) in MONTH_END.items() if as_of >= date(year, m, d)]
-    return usable, 'refit on months complete by as-of' if usable else 'too early: all Pending'
-
-
-def refit_predictions(features: list[str]) -> list[dict]:
-    """Same pipeline as baseline/run_baseline.py, same saved folds, fewer features."""
-    try:
-        import numpy as np
-        from sklearn.impute import SimpleImputer
-        from sklearn.linear_model import LogisticRegression
-        from sklearn.pipeline import make_pipeline
-        from sklearn.preprocessing import StandardScaler
-    except ImportError as exc:
-        raise SystemExit('as-of dates before Nov 30 need scikit-learn: pip install scikit-learn') from exc
-    with (artifacts.OUTPUT_DIR / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
-        rows = list(csv.DictReader(f))
-    X = np.array([[artifacts._num(r[c]) if artifacts._num(r[c]) is not None else np.nan for c in features]
-                  for r in rows])
-    y = np.array([r['label'] == 'Silage' for r in rows], dtype=int)
-    folds = np.array([int(r['fold']) for r in rows])
-    prob = np.zeros(len(rows))
-    for k in sorted(set(folds)):
-        model = make_pipeline(SimpleImputer(strategy='median', keep_empty_features=True), StandardScaler(),
-                              LogisticRegression(C=1.0, max_iter=2000, random_state=42))
-        model.fit(X[folds != k], y[folds != k])
-        prob[folds == k] = model.predict_proba(X[folds == k])[:, 1]
-    return [{'field_id': int(r['OBJECTID']), 'year': int(r['year']), 'reference_label': r['label'],
-             'predicted_label': 'Silage' if p >= 0.5 else 'Grain', 'silage_probability': float(p),
-             'fold': int(r['fold']), 'valid_dates': int(r['valid_dates'])} for r, p in zip(rows, prob)]
-
+from app.artifacts import ArtifactUnavailable  # noqa: E402
+from harvest.asof import predictions_as_of  # noqa: E402
 
 def run(year: int, as_of: str, out: Path) -> dict:
-    as_of_date = date.fromisoformat(as_of)
-    if as_of_date.year != year:
-        raise SystemExit('--as-of must fall in --year')
-    features, mode = features_as_of(year, as_of_date)
-    if mode == 'saved full-season model':
-        all_preds = [p.model_dump() for p in artifacts.read_predictions()]
-    elif features:
-        all_preds = refit_predictions(features)
-    else:
-        all_preds = []
+    try:
+        state = predictions_as_of(year, as_of)
+    except (ValueError, RuntimeError) as exc:
+        raise SystemExit(str(exc)) from exc
+    mode, features, objs = state['mode'], state['features'], state['predictions']
+    all_preds = [p.model_dump() for p in objs]
     preds = [p for p in all_preds if p['year'] == year]
 
     out.mkdir(parents=True, exist_ok=True)
-    pending = [] if preds else [{'field_id': p.field_id, 'year': p.year} for p in artifacts.read_predictions()
-                                if p.year == year]
+    pending = [{'field_id': f, 'year': year} for f in state['pending']]
     with (out / 'predictions.csv').open('w', encoding='utf-8', newline='') as f:
         w = csv.writer(f)
         w.writerow(['OBJECTID', 'year', 'as_of', 'class', 'p_silage', 'reference_label', 'fold', 'model'])
@@ -94,7 +51,6 @@ def run(year: int, as_of: str, out: Path) -> dict:
 
     metrics = {'as_of': as_of, 'mode': mode, 'features': features}
     if preds:
-        objs = [Prediction(**p) for p in all_preds]
         metrics.update(tools.evaluate_predictions(objs, year))
         rollup = artifacts.compute_rollup(objs)
         rollup.years = [y for y in rollup.years if y.year == year]

@@ -51,6 +51,13 @@ def get_timeseries(field_id: int, year: int) -> dict:
 def classify(year: int | None = None, field_ids: list[int] | None = None) -> dict:
     """Saved held-out predictions (label, silage probability, fold, usable dates) with the
     feature values behind each call. Reference labels are returned separately as reference_label."""
+    return classify_predictions(artifacts.read_predictions(), year, field_ids,
+                                'logistic regression, held out by field (saved)')
+
+
+def classify_predictions(predictions, year: int | None = None, field_ids: list[int] | None = None,
+                         model: str = '') -> dict:
+    """classify() on any list of Prediction objects (used for as-of runs)."""
     feats = {}
     try:
         features = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
@@ -63,13 +70,13 @@ def classify(year: int | None = None, field_ids: list[int] | None = None) -> dic
     except (OSError, KeyError, ValueError, TypeError) as exc:
         raise ArtifactUnavailable('Saved prediction feature evidence is missing or invalid.') from exc
     rows = []
-    for p in artifacts.read_predictions():
+    for p in predictions:
         if year is not None and p.year != year:
             continue
         if field_ids and p.field_id not in field_ids:
             continue
         rows.append({**p.model_dump(), 'evidence': feats.get((p.field_id, p.year), {})})
-    return {'model': 'logistic regression, held out by field (saved)', 'n': len(rows), 'predictions': rows}
+    return {'model': model, 'n': len(rows), 'predictions': rows}
 
 
 def wilson(successes: int, n: int, z: float = 1.96) -> list[float] | None:
