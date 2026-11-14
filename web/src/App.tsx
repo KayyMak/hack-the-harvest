@@ -103,11 +103,6 @@ export default function App() {
   return (
     <ThemeContext.Provider value={theme}>
       <div className="app">
-        {stub && (
-          <div className="stub-banner" role="status">
-            FAKE STUB DATA — placeholder numbers and shapes for building the UI. Not results.
-          </div>
-        )}
         <header className="bar">
           <div className="brand">
             <span className="brand__mark" aria-hidden>
