@@ -28,8 +28,28 @@ export function MetricsPanel({ data, error, asOf }: Props) {
   if (!data) return <div className="skeleton skeleton--panel" />
   const total = data.confusion.flat().reduce((a, b) => a + b, 0)
   const correct = data.labels.reduce((a, _, i) => a + (data.confusion[i]?.[i] ?? 0), 0)
+  const si = data.labels.indexOf('Silage')
+  const gi = data.labels.indexOf('Grain')
+  const sHit = data.confusion[si]?.[si] ?? 0
+  const sN = data.confusion[si]?.reduce((a, b) => a + b, 0) ?? 0
+  const S = data.per_class.Silage
+  const G = data.per_class.Grain
   return (
     <div className="metrics">
+      <p className="finding">
+        On held-out years the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
+        <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.
+      </p>
+      <section className="reliability" aria-label="Reliability of these scores">
+        <h3>Reliability of these scores</h3>
+        <p>
+          Chances are 19 out of 20 (95% confidence) that silage recall on a new year lies between <b>{num(S.recall.lo)}</b> and <b>{num(S.recall.hi)}</b>, and silage precision between{' '}
+          <b>{num(S.precision.lo)}</b> and <b>{num(S.precision.hi)}</b>.
+        </p>
+        <p className="muted small">
+          Based on {data.n_evaluated ?? total} labeled field-years scored out of fold. With few silage examples the ranges are wide; read overlapping ranges as "not yet distinguishable".
+        </p>
+      </section>
       <div className="tiles">
         <Tile kicker="Evaluated field-years" value={String(data.n_evaluated ?? total)} />
         <Tile kicker="Correct" value={`${correct} / ${total}`} sub={pct(total ? correct / total : null)} />

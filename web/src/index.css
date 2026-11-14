@@ -1040,3 +1040,65 @@ textarea {
     grid-template-columns: repeat(2, 1fr);
   }
 }
+
+/* ---------- NASS-style additions ---------- */
+.finding {
+  font-family: var(--font-head);
+  font-size: 19px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.finding b,
+.reliability b {
+  font-family: var(--font-mono);
+  font-weight: 500;
+}
+.reliability {
+  border-left: 4px solid var(--highlight);
+  background: var(--surface-2);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+}
+.reliability h3 {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+.reliability p {
+  margin: 4px 0;
+}
+.shortcuts {
+  margin-top: 22px;
+  text-align: left;
+}
+.shortcuts__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 6px;
+}
+.chip-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.chip-btn:hover {
+  border-color: var(--ink);
+}
+.panel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 8px 24px;
+  border-top: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--muted);
+}
+.panel__foot b {
+  font-family: var(--font-mono);
+  color: var(--ink);
+  font-weight: 500;
+}
