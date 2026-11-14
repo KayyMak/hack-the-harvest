@@ -1,10 +1,6 @@
 import { useMemo, useState } from 'react'
 import {
-  Bar,
-  BarChart,
   CartesianGrid,
-  Cell,
-  LabelList,
   Legend,
   Line,
   LineChart,
@@ -245,7 +241,6 @@ function Chip({ src, caption }: { src: string; caption: string }) {
 }
 
 function Contributions({ raw }: { raw: string | undefined }) {
-  const t = useTheme().chart
   const rows = useMemo(
     () =>
       parseTopFeatures(raw)
@@ -256,33 +251,27 @@ function Contributions({ raw }: { raw: string | undefined }) {
   if (!rows.length) return <p className="muted">No feature contributions until the field is decided.</p>
   const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
   return (
-    <ResponsiveContainer width="100%" height={rows.length * 42 + 24}>
-      <BarChart data={rows} layout="vertical" margin={{ top: 4, right: 56, bottom: 4, left: 8 }} barCategoryGap={8}>
-        <CartesianGrid stroke={t.grid} horizontal={false} />
-        <XAxis type="number" domain={[-m, m]} hide />
-        <YAxis type="category" dataKey="label" width={190} stroke={t.axis} tick={{ fill: t.ink, fontSize: 14 }} tickLine={false} />
-        <ReferenceLine x={0} stroke={t.axis} strokeWidth={1.5} />
-        <Tooltip
-          cursor={{ fill: t.grid, fillOpacity: 0.5 }}
-          content={(p) => {
-            const row = (p as unknown as { payload?: { payload: (typeof rows)[number] }[] }).payload?.[0]?.payload
-            if (!p.active || !row) return null
-            return (
-              <div className="chart-tip">
-                <div className="chart-tip__title">{row.label}</div>
-                <div className="chart-tip__row">value <span className="chart-tip__value">{num(row.value)}</span></div>
-                <div className="chart-tip__row">contribution <span className="chart-tip__value">{row.contrib > 0 ? '+' : ''}{num(row.contrib)}</span></div>
-              </div>
-            )
-          }}
-        />
-        <Bar dataKey="contrib" radius={4} isAnimationActive={false}>
-          {rows.map((r) => (
-            <Cell key={r.name} fill={r.contrib >= 0 ? DATA.silage : DATA.grain} />
-          ))}
-          <LabelList dataKey="contrib" position="right" formatter={(v: unknown) => (typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(2)}` : '')} fill={t.ink} fontSize={13} />
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
+    <div className="contrib" role="table" aria-label="Feature contributions; negative pushes toward grain, positive toward silage">
+      {rows.map((r) => {
+        const w = `${(Math.abs(r.contrib) / m) * 50}%`
+        const toSilage = r.contrib >= 0
+        return (
+          <div className="contrib__row" role="row" key={r.name} title={`value ${num(r.value)}`}>
+            <span className="contrib__label" role="rowheader">{r.label}</span>
+            <span className="contrib__track" role="cell" aria-hidden="true">
+              <span className="contrib__axis" />
+              <span
+                className="contrib__bar"
+                style={toSilage ? { left: '50%', width: w, background: DATA.silage } : { right: '50%', width: w, background: DATA.grain }}
+              />
+            </span>
+            <span className="contrib__val" role="cell">
+              {toSilage ? '+' : '−'}
+              {Math.abs(r.contrib).toFixed(2)}
+            </span>
+          </div>
+        )
+      })}
+    </div>
   )
 }

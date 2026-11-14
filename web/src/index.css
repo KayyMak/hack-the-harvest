@@ -1551,68 +1551,24 @@ textarea {
 .review__id { width: auto; min-width: 88px; white-space: nowrap; }
 .review__val { white-space: nowrap; }
 
-/* ---------- header v2: solid app bar on the top edge ---------- */
-.topbar {
-  top: 0; left: 0; right: 0;
-  height: 60px; padding: 0 20px; gap: 28px; flex-wrap: nowrap;
-  border-radius: 0; background: #0b1513; border: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); color: #e8eeeb;
-}
-.topbar .brand { gap: 10px; }
-.topbar .brand__title { font-size: 18px; font-weight: 700; letter-spacing: -0.015em; }
-.topbar .brand__sub { font-size: 13px; color: #93a59e; padding-left: 12px; margin-left: 2px; border-left: 1px solid rgba(255, 255, 255, 0.12); line-height: 18px; }
-.views { align-self: stretch; gap: 4px; }
-.views__btn { height: 100%; border-radius: 0; padding: 0 12px; background: none !important; color: #a9b8b2; font-size: 15px; font-weight: 500; border-bottom: 2px solid transparent; border-top: 2px solid transparent; }
-.views__btn:hover { color: #ffffff; }
-.views__btn.is-on { color: #ffffff; font-weight: 600; border-bottom-color: #8fcdf2; }
-.topbar .asof { gap: 10px; }
-.topbar .asof__label, .yearpick { font-size: 13px; color: #93a59e; }
-.topbar .seg { height: 34px; padding: 0; border-radius: 6px; background: transparent; border: 1px solid rgba(255, 255, 255, 0.16); overflow: hidden; }
-.topbar .seg__btn { height: 100%; border-radius: 0; padding: 0 12px; font-size: 14px; color: #c7d2ce; }
-.topbar .seg__btn + .seg__btn { border-left: 1px solid rgba(255, 255, 255, 0.12); }
-.topbar .seg__btn:hover { background: rgba(255, 255, 255, 0.06); color: #ffffff; }
-.topbar .seg__btn.is-on { background: #e8eeeb; color: #0b1513; }
+/* ---------- header controls: matched heights, real chevron on the year picker ---------- */
+.topbar .seg { height: 36px; padding: 3px; align-items: center; }
+.topbar .seg__btn { height: 30px; display: inline-flex; align-items: center; }
 .yearpick { gap: 10px; }
 .yearpick select {
-  height: 34px; min-width: 84px; padding: 0 30px 0 12px; border-radius: 6px; font-size: 14px; font-weight: 500;
-  -webkit-appearance: none; appearance: none; background-color: transparent; border: 1px solid rgba(255, 255, 255, 0.16);
+  height: 36px; min-width: 86px; padding: 0 30px 0 12px; border-radius: 10px; font-size: 15px; font-weight: 500;
+  -webkit-appearance: none; appearance: none; background-color: rgba(0, 0, 0, 0.28); border: 1px solid rgba(255, 255, 255, 0.12);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23c7d2ce' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 11px center; cursor: pointer;
 }
-.yearpick select:hover { border-color: rgba(255, 255, 255, 0.3); }
-.ghost-btn { height: 34px; display: inline-flex; align-items: center; gap: 8px; padding: 0 14px; border-radius: 6px; font-size: 14px; background: transparent; border-color: rgba(255, 255, 255, 0.16); }
-.ghost-btn:hover { background: rgba(255, 255, 255, 0.06); }
-.lead, .rail, .sheet, .drawer { top: 76px; }
-.shell .leaflet-top.leaflet-right { top: 76px; }
-.shell--overview .leaflet-top.leaflet-right { top: 372px; }
-@media (max-width: 1240px) { .topbar .brand__sub { display: none; } }
-@media (max-width: 900px) {
-  .topbar { height: auto; flex-wrap: wrap; padding: 12px; gap: 10px; border-radius: 14px; border: 1px solid rgba(255, 255, 255, 0.08); }
-  .views { align-self: auto; }
-  .views__btn { height: 40px; }
-  .topbar .seg { height: 40px; }
-  .yearpick select, .ghost-btn { height: 40px; }
-  .ghost-btn { justify-content: center; }
-}
-.shell--overview .leaflet-top.leaflet-right { top: 452px; }
-
-/* ---------- overview rail fits the screen, no scrolling ---------- */
-.rail { overflow: hidden; gap: 22px; padding: 20px 22px; justify-content: flex-start; }
-.rail > section { flex: none; }
-.rail__note { margin: 2px 0 8px; }
-.mcm__cell { height: 44px; font-size: 20px; }
-.review__row { padding: 9px 6px; }
-.review__more { margin-top: 6px; font-size: 14px; }
-@media (max-height: 820px) and (min-width: 901px) {
-  .rail { gap: 16px; padding: 16px 20px; }
-  .rail__note { display: none; }
-  .linekey { margin-top: 0; }
-}
-@media (max-width: 900px) { .rail { overflow: visible; } }
+.yearpick select:hover { border-color: rgba(255, 255, 255, 0.28); }
+.ghost-btn { height: 36px; display: inline-flex; align-items: center; gap: 8px; }
+.topbar .brand__title { font-size: 17px; }
+.shell .leaflet-top.leaflet-right { top: 96px; }
 
 /* ---------- laptop widths: keep the bar on one line, zoom buttons in the free corner ---------- */
 .topbar * { white-space: nowrap; }
-.shell .leaflet-top.leaflet-right, .shell--overview .leaflet-top.leaflet-right { top: 76px; }
+.shell .leaflet-top.leaflet-right, .shell--overview .leaflet-top.leaflet-right { top: 96px; }
 .shell .leaflet-bottom.leaflet-right { right: 16px; bottom: 0; display: flex; flex-direction: column; align-items: flex-end; }
 .shell .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 0 12px 0 !important; }
 .shell--overview .leaflet-bottom.leaflet-right .leaflet-control-zoom,
@@ -1620,7 +1576,7 @@ textarea {
 .shell:has(.sheet) .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin-right: calc(min(780px, 56vw - 16px) + 16px) !important; margin-bottom: 16px !important; }
 .shell:has(.sheet):has(.drawer) .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin-right: calc(min(700px, 100vw - 488px) + 456px) !important; }
 @media (max-width: 1360px) and (min-width: 901px) {
-  .topbar { gap: 18px; padding: 0 16px; }
+  .topbar { gap: 16px; padding: 10px 12px 10px 14px; }
   .topbar .brand__sub { display: none; }
   .views__btn { padding: 0 8px; font-size: 14px; }
   .topbar .asof__label, .yearpick > :not(select) { display: none; }
@@ -1644,3 +1600,37 @@ textarea {
 }
 .shell:has(.sheet) .mapkey { max-width: calc(100% - min(780px, 56vw - 16px) - 100px); }
 .shell--overview .mapkey, .shell:has(.drawer) .mapkey { max-width: calc(100% - 530px); }
+
+/* rail height budget: it must fit between the top bar and the bottom edge without scrolling */
+.conv { height: 140px; }
+.rail { gap: 18px; padding: 18px 22px; }
+.rail__note { font-size: 13px; }
+@media (max-height: 940px) and (min-width: 901px) {
+  .rail .rail__note { display: none; }
+  .rail__head { margin-bottom: 6px; }
+  .rail h2.rail__title { margin-bottom: 6px; }
+}
+@media (max-height: 820px) and (min-width: 901px) {
+  .conv { height: 118px; }
+  .rail { gap: 14px; padding: 16px 20px; }
+  .mcm__cell { height: 38px; font-size: 18px; }
+  .review li:nth-child(n + 3) { display: none; }
+  .review__row { padding: 7px 6px; }
+}
+@media (max-width: 900px) { .conv { height: 170px; } }
+
+/* feature contributions: label | diverging bar from the center line | value */
+.contrib { display: flex; flex-direction: column; gap: 10px; }
+.contrib__row { display: grid; grid-template-columns: minmax(0, 11rem) minmax(0, 1fr) 3.5rem; align-items: center; gap: 12px; font-size: 14px; }
+.contrib__label { color: var(--ink-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.contrib__track { position: relative; height: 14px; }
+.contrib__axis { position: absolute; left: 50%; top: -5px; bottom: -5px; width: 1px; background: var(--muted); opacity: 0.6; }
+.contrib__bar { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.contrib__val { text-align: right; font-weight: 600; color: var(--ink); }
+@media (min-width: 901px) { .topbar { flex-wrap: nowrap; gap: 20px; } }
+@media (max-width: 1520px) and (min-width: 901px) {
+  .topbar .brand__sub { display: none; }
+  .views__btn { padding: 8px 10px; font-size: 14px; }
+  .topbar .seg__btn { padding: 0 10px; font-size: 14px; }
+  .ghost-btn { font-size: 14px; padding: 0 12px; }
+}

@@ -153,7 +153,8 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
   const rows = data.convergence.map((c) => ({ ...c, label: shortDate(c.as_of) }))
   const current = rows.find((r) => r.as_of === asOf)
   return (
-    <ResponsiveContainer width="100%" height={150}>
+    <div className="conv">
+    <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 16, right: 16, bottom: 0, left: -18 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
         <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} />
@@ -164,6 +165,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
         <Line dataKey="acc_decided" name="Accuracy on decided" stroke={t.accuracy} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.accuracy }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
+    </div>
   )
 }
 

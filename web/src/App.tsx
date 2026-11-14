@@ -120,11 +120,13 @@ export default function App() {
       <div className={`shell shell--${view}`}>
         <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
-        <header className="topbar">
+        <header className="glass topbar">
           <div className="brand">
-            <LogoMark size={28} />
-            <span className="brand__title">Cutline</span>
-            <span className="brand__sub">Silage or grain, field by field</span>
+            <LogoMark size={30} />
+            <div>
+              <div className="brand__title">Cutline</div>
+              <div className="brand__sub">Silage or grain, BARC fields, Beltsville MD</div>
+            </div>
           </div>
           <nav className="views" aria-label="Views">
             {VIEWS.map((v) => (
