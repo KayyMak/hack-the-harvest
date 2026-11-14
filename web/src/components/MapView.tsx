@@ -4,8 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import type { FieldFeature, FieldsResponse, Pred } from '../api'
-import { classColor, num, shortDate } from '../format'
-import { DATA } from '../theme'
+import { classColor, num } from '../format'
 
 const CENTER: [number, number] = [39.03, -76.9]
 const ESRI_IMAGERY = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -14,7 +13,6 @@ const ESRI_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics, and
 interface Props {
   fields: FieldsResponse | null
   preds: Map<number, Pred>
-  asOf: string
   selectedId: number | null
   onSelect: (id: number) => void
   error: Error | null
@@ -41,7 +39,7 @@ function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>) {
   return `<strong>Field ${f.properties.OBJECTID}</strong><br/>Label: ${label}<br/>Predicted: ${call}`
 }
 
-export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Props) {
+export function MapView({ fields, preds, selectedId, onSelect, error }: Props) {
   const geoRef = useRef<LeafletGeoJSON | null>(null)
   const predsRef = useRef(preds)
   const onSelectRef = useRef(onSelect)
@@ -60,12 +58,6 @@ export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Pr
     () => fields?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null,
     [fields, selectedId],
   )
-
-  const counts = useMemo(() => {
-    const c = { Grain: 0, Silage: 0, Pending: 0, Insufficient: 0 }
-    for (const p of preds.values()) c[p.class] += 1
-    return c
-  }, [preds])
 
   const onEachFeature = (feature: Feature, layer: Layer) => {
     const f = feature as FieldFeature
@@ -100,38 +92,12 @@ export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Pr
         )}
       </MapContainer>
 
-      <div className="map-card map-stats" aria-live="polite">
-        <div className="map-stats__title">As of {shortDate(asOf)}</div>
-        <div className="map-stats__row">
-          <Stat color={DATA.silage} label="Silage" value={counts.Silage} />
-          <Stat color={DATA.grain} label="Grain" value={counts.Grain} />
-          <Stat color={DATA.undecided} label="Pending (NA)" value={counts.Pending} />
-          <Stat color={DATA.undecided} label="Abstained (X)" value={counts.Insufficient} dashed />
-        </div>
-        <div className="map-key">
-          <span><span className="swatch swatch--fill" style={{ background: DATA.undecided }} /> Fill = prediction</span>
-          <span><span className="swatch swatch--outline swatch--key" /> Outline = BARC label</span>
-          <span><span className="swatch swatch--outline swatch--dashed" /> Dashed = abstained</span>
-        </div>
-      </div>
-
       {error && (
         <div className="map-card map-error" role="alert">
           <strong>Can't load fields.</strong> {error.message}
         </div>
       )}
-      {!selectedId && fields && <div className="map-hint">Click a field to open its evidence</div>}
     </section>
-  )
-}
-
-function Stat({ color, label, value, dashed }: { color: string; label: string; value: number; dashed?: boolean }) {
-  return (
-    <div className="map-stat">
-      <span className={`swatch swatch--fill${dashed ? ' swatch--dashed' : ''}`} style={{ background: dashed ? 'transparent' : color, borderColor: color }} />
-      <span className="map-stat__value">{value}</span>
-      <span className="map-stat__label">{label}</span>
-    </div>
   )
 }
 
@@ -142,7 +108,7 @@ function FitToFields({ fields }: { fields: FieldsResponse | null }) {
   useEffect(() => {
     if (!fields || !n) return
     const b = leafletGeoJSON(fields).getBounds()
-    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [16, 140], paddingBottomRight: [16, 16] })
+    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [40, 300], paddingBottomRight: [480, 80] })
   }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

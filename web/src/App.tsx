@@ -1,22 +1,25 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { api, STATIC, API_URL } from './api'
+import { api } from './api'
 import type { Pred } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { FieldPanel } from './components/FieldPanel'
+import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
+import { LogoMark } from './components/Logo'
 import { MapView } from './components/MapView'
 import { MetricsPanel } from './components/MetricsPanel'
+import { Overview, type ReviewItem } from './components/Overview'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
 import { THEMES, ThemeContext, applyTheme, themeById } from './theme'
 
-const TABS = [
-  { id: 'field', label: 'Field' },
-  { id: 'metrics', label: 'Metrics' },
-  { id: 'rollup', label: 'MD roll-up' },
+const VIEWS = [
+  { id: 'overview', label: 'Overview' },
+  { id: 'fields', label: 'Fields' },
+  { id: 'quality', label: 'Model quality' },
   { id: 'agent', label: 'Agent' },
 ] as const
-type TabId = (typeof TABS)[number]['id']
+type ViewId = (typeof VIEWS)[number]['id']
 
 const SHOW_DESIGN = new URLSearchParams(window.location.search).has('design')
 const LIVE_YEARS = [2021, 2022, 2023]
@@ -26,7 +29,7 @@ function initialTheme() {
   const fromUrl = new URLSearchParams(window.location.search).get('theme')
   if (fromUrl) return themeById(fromUrl)
   try {
-    return themeById(window.localStorage.getItem('htw-theme-v2'))
+    return themeById(window.localStorage.getItem('htw-theme-v3'))
   } catch {
     return themeById(null)
   }
@@ -35,16 +38,16 @@ function initialTheme() {
 export default function App() {
   const [theme, setTheme] = useState(initialTheme)
   const [year, setYear] = useState(2022)
-  const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12 — the demo date
+  const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [tab, setTab] = useState<TabId>('field')
+  const [view, setView] = useState<ViewId>('overview')
 
   useEffect(() => {
     applyTheme(theme)
     try {
-      window.localStorage.setItem('htw-theme-v2', theme.id)
+      window.localStorage.setItem('htw-theme-v3', theme.id)
     } catch {
-      /* storage unavailable — fine */
+      /* storage unavailable */
     }
   }, [theme])
 
@@ -64,138 +67,171 @@ export default function App() {
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
 
-  const shortcuts = useMemo(() => {
-    const wrong: number[] = []
-    const abstained: number[] = []
+  const counts = useMemo(() => {
+    const c = { Grain: 0, Silage: 0, Pending: 0, Insufficient: 0, total: fields.data?.features.length ?? 0 }
+    for (const p of predMap.values()) c[p.class] += 1
+    return c
+  }, [predMap, fields.data])
+
+  const review = useMemo<ReviewItem[]>(() => {
+    const out: ReviewItem[] = []
     for (const f of fields.data?.features ?? []) {
       const p = predMap.get(f.properties.OBJECTID)
       const l = f.properties.label
-      if (p && l && (p.class === 'Grain' || p.class === 'Silage') && p.class !== l) wrong.push(f.properties.OBJECTID)
-      if (p?.abstain) abstained.push(f.properties.OBJECTID)
+      if (p && l && (p.class === 'Grain' || p.class === 'Silage') && p.class !== l)
+        out.push({ id: f.properties.OBJECTID, kind: 'mismatch', reason: `BARC says ${l.toLowerCase()}, model says ${p.class.toLowerCase()}`, pred: p })
     }
-    return [
-      { title: `Disagrees with BARC label (${wrong.length})`, ids: wrong },
-      { title: `Abstained (X) (${abstained.length})`, ids: abstained },
-    ]
+    for (const f of fields.data?.features ?? []) {
+      const p = predMap.get(f.properties.OBJECTID)
+      if (p?.abstain) out.push({ id: f.properties.OBJECTID, kind: 'abstained', reason: 'Too few clear satellite looks', pred: p })
+    }
+    return out
   }, [fields.data, predMap])
 
-  const select = useCallback((id: number) => {
-    setSelectedId(id)
-    setTab('field')
-  }, [])
+  const select = useCallback((id: number) => setSelectedId(id), [])
 
-  // Presenter shortcuts: 1–4 switch panels, ←/→ step the as-of date.
+  const downloadCsv = () => {
+    const csv = rowsToCsv(buildRows(fields.data, predMap), year, asOf)
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `silage-or-grain_${year}_as-of_${asOf}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  // Presenter shortcuts: 1–4 switch views, ←/→ step the as-of date, Esc closes a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement
       if (el.closest('input, textarea, select')) return
       const n = Number(e.key)
-      if (n >= 1 && n <= TABS.length) setTab(TABS[n - 1].id)
+      if (n >= 1 && n <= VIEWS.length) setView(VIEWS[n - 1].id)
       if (e.key === 'ArrowRight') setAsOfIdx((i) => Math.min(i + 1, asOfDates.length - 1))
       if (e.key === 'ArrowLeft') setAsOfIdx((i) => Math.max(i - 1, 0))
+      if (e.key === 'Escape') setSelectedId(null)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [asOfDates.length])
 
-  const stub = STATIC && meta.data?.stub === true
-
   return (
     <ThemeContext.Provider value={theme}>
-      <div className="app">
-        <header className="bar">
+      <div className={`shell shell--${view}`}>
+        <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} />
+
+        <header className="glass topbar">
           <div className="brand">
-            <span className="brand__mark" aria-hidden>
-              <span />
-              <span />
-            </span>
+            <LogoMark size={30} />
             <div>
               <div className="brand__title">Silage or Grain?</div>
-              <div className="brand__sub">Corn harvest classification · BARC, Beltsville, MD · {year}</div>
+              <div className="brand__sub">BARC corn fields, Beltsville MD</div>
             </div>
           </div>
-
-          <AsOfSlider dates={asOfDates} index={asOfDates.indexOf(asOf)} onChange={setAsOfIdx} loading={preds.loading} />
-
-          <div className="bar__right">
-            <label className="field-select">
-              <span>Year</span>
-              <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {SHOW_DESIGN && <label className="field-select">
-              <span>Design</span>
-              <select value={theme.id} onChange={(e) => setTheme(themeById(e.target.value))} title={theme.blurb}>
+          <nav className="views" aria-label="Views">
+            {VIEWS.map((v, i) => (
+              <button key={v.id} title={`Shortcut: ${i + 1}`} aria-current={view === v.id ? 'page' : undefined} className={`views__btn${view === v.id ? ' is-on' : ''}`} onClick={() => setView(v.id)}>
+                {v.label}
+              </button>
+            ))}
+          </nav>
+          <div className="topbar__spacer" />
+          <div className="asof" role="group" aria-label="As-of date">
+            <span className="asof__label">As of</span>
+            <div className="seg">
+              {asOfDates.map((d, i) => (
+                <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)}>
+                  {shortDate(d)}
+                </button>
+              ))}
+            </div>
+            {preds.loading && <span className="asof__spin" aria-label="Loading predictions" />}
+          </div>
+          <label className="yearpick">
+            Year
+            <select value={year} onChange={(e) => setYear(Number(e.target.value))}>
+              {years.map((y) => (
+                <option key={y} value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </label>
+          {SHOW_DESIGN && (
+            <label className="yearpick">
+              Design
+              <select value={theme.id} onChange={(e) => setTheme(themeById(e.target.value))}>
                 {THEMES.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name}
                   </option>
                 ))}
               </select>
-            </label>}
-            <span className={`mode ${STATIC ? 'mode--static' : 'mode--live'}`} title={STATIC ? 'Reading public/snapshot/*.json' : API_URL}>
-              {STATIC ? 'Offline snapshot' : 'Live'}
-            </span>
-          </div>
+            </label>
+          )}
+          <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data}>
+            Download CSV
+          </button>
         </header>
 
-        <div className="disclaimer">Team BetterGreen prototype for Hack the Harvest. Not a USDA or NASS release.</div>
-        <main className="main">
-          <MapView
-            fields={fields.data}
-            preds={predMap}
+        {view === 'overview' && (
+          <Overview
+            year={year}
             asOf={asOf}
-            selectedId={selectedId}
+            counts={counts}
+            rollup={rollup.data}
+            evaluation={evaluation.data}
+            review={review}
             onSelect={select}
-            error={fields.error ?? preds.error}
+            onOpenQuality={() => setView('quality')}
           />
+        )}
 
-          <aside className="panel">
-            <nav className="tabs" role="tablist" aria-label="Panels">
-              {TABS.map((t, i) => (
-                <button key={t.id} title={`Shortcut: ${i + 1}`} role="tab" aria-selected={tab === t.id} className={`tab${tab === t.id ? ' is-active' : ''}`} onClick={() => setTab(t.id)}>
-                  <span className="tab__key">{i + 1}</span>
-                  {t.label}
-                </button>
-              ))}
-            </nav>
-            <div className="panel__body" role="tabpanel">
-              {tab === 'field' && <FieldPanel shortcuts={shortcuts} onSelect={select} field={selected} pred={selectedId != null ? predMap.get(selectedId) : undefined} year={year} asOf={asOf} stub={stub} />}
-              {tab === 'metrics' && <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />}
-              {tab === 'rollup' && <RollupPanel data={rollup.data} error={rollup.error} />}
-              {tab === 'agent' && <AgentPanel />}
-            </div>
-            <footer className="panel__foot">
-              <span><b>(NA)</b> not yet decided by the as-of date</span>
-              <span><b>(X)</b> abstained: too few clear satellite looks</span>
-              <span>Intervals are 95%</span>
-            </footer>
+        {view !== 'overview' && (
+          <section className="glass sheet" aria-label={VIEWS.find((v) => v.id === view)?.label}>
+            {view === 'fields' && (
+              <>
+                <h1 className="sheet__title">Fields</h1>
+                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.</p>
+                <FieldsTable fields={fields.data} preds={predMap} onSelect={select} selectedId={selectedId} />
+              </>
+            )}
+            {view === 'quality' && (
+              <>
+                <h1 className="sheet__title">Model quality</h1>
+                <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />
+                <h2 className="sheet__h2">Maryland roll-up</h2>
+                <RollupPanel data={rollup.data} error={rollup.error} />
+              </>
+            )}
+            {view === 'agent' && (
+              <>
+                <h1 className="sheet__title">Agent</h1>
+                <AgentPanel />
+              </>
+            )}
+          </section>
+        )}
+
+        {selected && (
+          <aside className="glass drawer" aria-label={`Field ${selected.properties.OBJECTID}`}>
+            <button className="drawer__close" aria-label="Close field" onClick={() => setSelectedId(null)}>
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2">
+                <path d="M2 2l10 10M12 2L2 12" />
+              </svg>
+            </button>
+            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} />
           </aside>
-        </main>
+        )}
+
+        <div className="glass mapkey">
+          <span><i className="k k--silage" />Silage</span>
+          <span><i className="k k--grain" />Grain</span>
+          <span><i className="k k--pending" />Not yet decided</span>
+          <span><i className="k k--abstain" />Abstained</span>
+          <span className="mapkey__note">Fill is the model's call, outline is the BARC label</span>
+        </div>
       </div>
     </ThemeContext.Provider>
-  )
-}
-
-function AsOfSlider({ dates, index, onChange, loading }: { dates: string[]; index: number; onChange: (i: number) => void; loading: boolean }) {
-  return (
-    <div className="asof" role="group" aria-label="As-of date">
-      <span className="asof__label">
-        As of
-        {loading && <span className="asof__spin" aria-label="Loading predictions" />}
-      </span>
-      <div className="seg">
-        {dates.map((d, i) => (
-          <button key={d} className={`seg__btn${i === index ? ' is-on' : ''}`} aria-pressed={i === index} onClick={() => onChange(i)}>
-            {shortDate(d)}
-          </button>
-        ))}
-      </div>
-    </div>
   )
 }

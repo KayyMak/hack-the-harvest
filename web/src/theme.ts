@@ -10,11 +10,11 @@ import { createContext, useContext } from 'react'
 
 /** Fixed data colors — identical in every variant so meaning never changes. */
 export const DATA = {
-  grain: '#c9921a',
-  silage: '#2e6b34',
-  undecided: '#a9aeb1',
-  ndti: '#8d6e63',
-  flag: '#d32f2f',
+  grain: '#e2a43a',
+  silage: '#5cbf7a',
+  undecided: '#8b9994',
+  ndti: '#c9a27c',
+  flag: '#ff9b8a',
 } as const
 
 export interface ChartTokens {
@@ -30,7 +30,7 @@ export interface ChartTokens {
 }
 
 export interface Theme {
-  id: 'analyst' | 'harvest' | 'usda' | 'deck' | 'night'
+  id: 'glass' | 'analyst' | 'harvest' | 'usda' | 'deck' | 'night'
   name: string
   blurb: string
   vars: Record<string, string>
@@ -43,6 +43,36 @@ const SERIF = "'Merriweather', Georgia, serif"
 const MONO = "'Roboto Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace"
 
 export const THEMES: Theme[] = [
+  {
+    id: 'glass',
+    name: 'Night glass',
+    blurb: 'Default: deep field-green, frosted glass panels floating over the satellite map, Public Sans throughout.',
+    vars: {
+      '--font-body': SANS_PUBLIC,
+      '--font-head': SANS_PUBLIC,
+      '--font-mono': MONO,
+      '--font-num': SANS_PUBLIC,
+      '--bg': '#0d1715',
+      '--surface': 'rgba(255, 255, 255, 0.04)',
+      '--surface-2': 'rgba(0, 0, 0, 0.22)',
+      '--ink': '#e8eeeb',
+      '--ink-2': '#c7d2ce',
+      '--muted': '#a9b8b2',
+      '--border': 'rgba(255, 255, 255, 0.1)',
+      '--bar-bg': 'transparent',
+      '--bar-ink': '#e8eeeb',
+      '--bar-muted': '#a9b8b2',
+      '--accent': '#8fcdf2',
+      '--accent-ink': '#0d1715',
+      '--eyebrow': '#a9b8b2',
+      '--highlight': '#8fcdf2',
+      '--focus': '#8fcdf2',
+      '--radius': '12px',
+      '--head-weight': '600',
+      '--head-tracking': '-0.01em',
+    },
+    chart: { ink: '#e8eeeb', muted: '#a9b8b2', grid: 'rgba(255, 255, 255, 0.08)', axis: 'rgba(255, 255, 255, 0.22)', surface: '#16241f', ndvi: '#5cbf7a', share: '#8fcdf2', accuracy: '#f0eee6' },
+  },
   {
     id: 'analyst',
     name: 'Analyst',
@@ -215,7 +245,7 @@ export function applyTheme(theme: Theme) {
   for (const t of THEMES) for (const k of Object.keys(t.vars)) root.style.removeProperty(k)
   for (const [k, v] of Object.entries(theme.vars)) root.style.setProperty(k, v)
   root.dataset.theme = theme.id
-  root.style.colorScheme = theme.id === 'night' ? 'dark' : 'light'
+  root.style.colorScheme = theme.id === 'night' || theme.id === 'glass' ? 'dark' : 'light'
 }
 
 export const ThemeContext = createContext<Theme>(THEMES[0])
