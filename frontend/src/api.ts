@@ -37,6 +37,56 @@ export interface Prediction {
   valid_dates: number;
 }
 
+export interface BarcField {
+  field_id: number;
+  farm: string | null;
+  field: string | null;
+  acres: number | null;
+}
+
+export interface Observation {
+  date: string;
+  ndvi: number | null;
+  clear_fraction: number | null;
+  scene_cloud_percent: number | null;
+  status: string;
+}
+
+export interface YearRollup {
+  year: number;
+  field_years: number;
+  total_acres: number;
+  reference_silage_acres: number;
+  predicted_silage_acres: number;
+  expected_silage_acres: number;
+  expected_silage_acres_95ci: [number, number];
+  cv_percent: number | null;
+  predicted_silage_share: number;
+  adjusted_silage_share: number | null;
+  adjusted_silage_acres: number | null;
+  adjustment_rates: Record<string, number | null>;
+  missing_acres_field_years: number;
+}
+
+export interface Rollup {
+  scope: string;
+  method: string;
+  years: YearRollup[];
+}
+
+export interface QuickStatsRow {
+  year: number | null;
+  state: string | null;
+  county: string | null;
+  aggregation_level: string | null;
+  crop_use: string | null;
+  source: string | null;
+  item: string | null;
+  value: number | null;
+  cv_percent: number | null;
+  suppressed: boolean;
+}
+
 async function get<T>(path: string, signal: AbortSignal): Promise<T> {
   const response = await fetch(path, { signal });
   if (!response.ok) throw new Error(`Results are unavailable (HTTP ${response.status}).`);
@@ -50,3 +100,33 @@ export async function loadBaseline(signal: AbortSignal) {
   ]);
   return { summary, predictions };
 }
+
+export const loadFields = (signal: AbortSignal) => get<BarcField[]>('/api/fields', signal);
+export const loadRollup = (signal: AbortSignal) => get<Rollup>('/api/baseline/rollup', signal);
+export const loadQuickStats = (signal: AbortSignal, state = 'MARYLAND',
+  filters: { year?: number; crop_use?: 'grain' | 'silage'; level?: 'STATE' | 'COUNTY' } = {}) => {
+  const params = new URLSearchParams({ state });
+  Object.entries(filters).forEach(([k, v]) => v !== undefined && params.set(k, String(v)));
+  return get<QuickStatsRow[]>(`/api/quickstats?${params}`, signal);
+};
+export const loadObservations = (fieldId: number, year: number, signal: AbortSignal) =>
+  get<Observation[]>(`/api/fields/${fieldId}/observations?year=${year}`, signal);
+
+export interface TraceStep {
+  ts: string;
+  run_id: string;
+  step: number;
+  [key: string]: unknown;
+}
+
+export async function startAgentRun(query: string): Promise<{ run_id: string }> {
+  const response = await fetch('/api/agent/run', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query }),
+  });
+  if (!response.ok) throw new Error(`Agent is unavailable (HTTP ${response.status}).`);
+  return response.json() as Promise<{ run_id: string }>;
+}
+export const loadTrace = (runId: string, signal: AbortSignal) =>
+  get<TraceStep[]>(`/api/agent/trace/${encodeURIComponent(runId)}`, signal);
