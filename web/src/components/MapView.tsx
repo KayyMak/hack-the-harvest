@@ -108,9 +108,12 @@ export function MapView({ fields, preds, asOf, selectedId, onSelect, error }: Pr
           <Stat color={DATA.undecided} label="Pending (NA)" value={counts.Pending} />
           <Stat color={DATA.undecided} label="Abstained (X)" value={counts.Insufficient} dashed />
         </div>
+        <div className="map-key">
+          <span><span className="swatch swatch--fill" style={{ background: DATA.undecided }} /> Fill = prediction</span>
+          <span><span className="swatch swatch--outline swatch--key" /> Outline = BARC label</span>
+          <span><span className="swatch swatch--outline swatch--dashed" /> Dashed = abstained</span>
+        </div>
       </div>
-
-      <Legend />
 
       {error && (
         <div className="map-card map-error" role="alert">
@@ -132,33 +135,6 @@ function Stat({ color, label, value, dashed }: { color: string; label: string; v
   )
 }
 
-function Legend() {
-  return (
-    <div className="map-card legend" aria-label="Map legend">
-      <div className="legend__group">
-        <div className="legend__head">Fill · prediction</div>
-        <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.silage }} />} text="Silage" />
-        <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.grain }} />} text="Grain" />
-        <LegendRow swatch={<span className="swatch swatch--fill" style={{ background: DATA.undecided }} />} text="Not yet decided (NA)" />
-      </div>
-      <div className="legend__group">
-        <div className="legend__head">Outline · BARC label</div>
-        <LegendRow swatch={<span className="swatch swatch--outline" style={{ borderColor: DATA.silage }} />} text="Silage" />
-        <LegendRow swatch={<span className="swatch swatch--outline" style={{ borderColor: DATA.grain }} />} text="Grain" />
-        <LegendRow swatch={<span className="swatch swatch--outline swatch--thin" />} text="Unlabeled" />
-        <LegendRow swatch={<span className="swatch swatch--outline swatch--dashed" />} text="Dashed · abstained (X)" />
-      </div>
-    </div>
-  )
-}
-
-const LegendRow = ({ swatch, text }: { swatch: React.ReactNode; text: string }) => (
-  <div className="legend__row">
-    {swatch}
-    <span>{text}</span>
-  </div>
-)
-
 /** Frame the map on the fields so they fill the view instead of floating in a zoomed-out city. */
 function FitToFields({ fields }: { fields: FieldsResponse | null }) {
   const map = useMap()
@@ -166,7 +142,7 @@ function FitToFields({ fields }: { fields: FieldsResponse | null }) {
   useEffect(() => {
     if (!fields || !n) return
     const b = leafletGeoJSON(fields).getBounds()
-    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [16, 64], paddingBottomRight: [16, 16] })
+    if (b.isValid()) map.fitBounds(b, { paddingTopLeft: [16, 140], paddingBottomRight: [16, 16] })
   }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

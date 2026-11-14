@@ -116,7 +116,7 @@ export default function App() {
             </span>
             <div>
               <div className="brand__title">Silage or Grain?</div>
-              <div className="brand__sub">BARC fields · Beltsville, Maryland · {year} · Team BetterGreen prototype, not a USDA/NASS release</div>
+              <div className="brand__sub">Corn harvest classification · BARC, Beltsville, MD · {year}</div>
             </div>
           </div>
 
@@ -149,6 +149,7 @@ export default function App() {
           </div>
         </header>
 
+        <div className="disclaimer">Team BetterGreen prototype for Hack the Harvest. Not a USDA or NASS release.</div>
         <main className="main">
           <MapView
             fields={fields.data}
@@ -188,25 +189,14 @@ export default function App() {
 
 function AsOfSlider({ dates, index, onChange, loading }: { dates: string[]; index: number; onChange: (i: number) => void; loading: boolean }) {
   return (
-    <div className="asof">
-      <div className="asof__label">
-        As of <strong>{shortDate(dates[index])}</strong>
+    <div className="asof" role="group" aria-label="As-of date">
+      <span className="asof__label">
+        As of
         {loading && <span className="asof__spin" aria-label="Loading predictions" />}
-      </div>
-      <input
-        type="range"
-        min={0}
-        max={dates.length - 1}
-        step={1}
-        value={index}
-        onChange={(e) => onChange(Number(e.target.value))}
-        aria-label="As-of date"
-        aria-valuetext={shortDate(dates[index])}
-        list="asof-ticks"
-      />
-      <div className="asof__ticks" aria-hidden>
+      </span>
+      <div className="seg">
         {dates.map((d, i) => (
-          <button key={d} className={i === index ? 'is-on' : ''} onClick={() => onChange(i)} tabIndex={-1}>
+          <button key={d} className={`seg__btn${i === index ? ' is-on' : ''}`} aria-pressed={i === index} onClick={() => onChange(i)}>
             {shortDate(d)}
           </button>
         ))}

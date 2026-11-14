@@ -10,9 +10,9 @@ import { createContext, useContext } from 'react'
 
 /** Fixed data colors — identical in every variant so meaning never changes. */
 export const DATA = {
-  grain: '#d4a017',
-  silage: '#2e7d32',
-  undecided: '#9e9e9e',
+  grain: '#c9921a',
+  silage: '#2e6b34',
+  undecided: '#a9aeb1',
   ndti: '#8d6e63',
   flag: '#d32f2f',
 } as const
