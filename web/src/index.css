@@ -1595,3 +1595,52 @@ textarea {
   .ghost-btn { justify-content: center; }
 }
 .shell--overview .leaflet-top.leaflet-right { top: 452px; }
+
+/* ---------- overview rail fits the screen, no scrolling ---------- */
+.rail { overflow: hidden; gap: 22px; padding: 20px 22px; justify-content: flex-start; }
+.rail > section { flex: none; }
+.rail__note { margin: 2px 0 8px; }
+.mcm__cell { height: 44px; font-size: 20px; }
+.review__row { padding: 9px 6px; }
+.review__more { margin-top: 6px; font-size: 14px; }
+@media (max-height: 820px) and (min-width: 901px) {
+  .rail { gap: 16px; padding: 16px 20px; }
+  .rail__note { display: none; }
+  .linekey { margin-top: 0; }
+}
+@media (max-width: 900px) { .rail { overflow: visible; } }
+
+/* ---------- laptop widths: keep the bar on one line, zoom buttons in the free corner ---------- */
+.topbar * { white-space: nowrap; }
+.shell .leaflet-top.leaflet-right, .shell--overview .leaflet-top.leaflet-right { top: 76px; }
+.shell .leaflet-bottom.leaflet-right { right: 16px; bottom: 0; display: flex; flex-direction: column; align-items: flex-end; }
+.shell .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 0 12px 0 !important; }
+.shell--overview .leaflet-bottom.leaflet-right .leaflet-control-zoom,
+.shell:has(.drawer) .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin-right: 440px !important; margin-bottom: 16px !important; }
+.shell:has(.sheet) .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin-right: calc(min(780px, 56vw - 16px) + 16px) !important; margin-bottom: 16px !important; }
+.shell:has(.sheet):has(.drawer) .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin-right: calc(min(700px, 100vw - 488px) + 456px) !important; }
+@media (max-width: 1360px) and (min-width: 901px) {
+  .topbar { gap: 18px; padding: 0 16px; }
+  .topbar .brand__sub { display: none; }
+  .views__btn { padding: 0 8px; font-size: 14px; }
+  .topbar .asof__label, .yearpick > :not(select) { display: none; }
+  .yearpick { font-size: 0; }
+  .topbar .seg__btn { padding: 0 10px; font-size: 13px; }
+  .yearpick select { min-width: 76px; font-size: 13px; }
+  .ghost-btn { padding: 0 12px; font-size: 13px; }
+  .lead { right: 440px; }
+  .rail { width: 408px; }
+  .summary { padding: 14px 18px; }
+  .summary__title { font-size: 18px; }
+  .summary__text { font-size: 14px; }
+  .summary__meta li:nth-child(n + 3) { display: none; }
+  .kpi { padding: 14px 16px; }
+  .kpi__label { font-size: 13px; }
+  .kpi__value { font-size: 28px; }
+  .kpi__sub, .kpi__foot { font-size: 12.5px; }
+}
+@media (max-width: 900px) {
+  .shell .leaflet-bottom.leaflet-right .leaflet-control-zoom { margin: 0 0 12px 0 !important; }
+}
+.shell:has(.sheet) .mapkey { max-width: calc(100% - min(780px, 56vw - 16px) - 100px); }
+.shell--overview .mapkey, .shell:has(.drawer) .mapkey { max-width: calc(100% - 530px); }

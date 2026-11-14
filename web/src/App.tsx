@@ -118,7 +118,7 @@ export default function App() {
   return (
     <ThemeContext.Provider value={theme}>
       <div className={`shell shell--${view}`}>
-        <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} />
+        <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
         <header className="topbar">
           <div className="brand">
@@ -127,8 +127,8 @@ export default function App() {
             <span className="brand__sub">Silage or grain, field by field</span>
           </div>
           <nav className="views" aria-label="Views">
-            {VIEWS.map((v, i) => (
-              <button key={v.id} title={`Shortcut: ${i + 1}`} aria-current={view === v.id ? 'page' : undefined} className={`views__btn${view === v.id ? ' is-on' : ''}`} onClick={() => setView(v.id)}>
+            {VIEWS.map((v) => (
+              <button key={v.id} aria-current={view === v.id ? 'page' : undefined} className={`views__btn${view === v.id ? ' is-on' : ''}`} onClick={() => setView(v.id)}>
                 {v.label}
               </button>
             ))}
@@ -184,6 +184,7 @@ export default function App() {
             review={review}
             onSelect={select}
             onOpenQuality={() => setView('quality')}
+            onOpenFields={() => setView('fields')}
           />
         )}
 

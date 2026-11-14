@@ -16,6 +16,8 @@ interface Props {
   selectedId: number | null
   onSelect: (id: number) => void
   error: Error | null
+  /** changes whenever the panels over the map change, so the map re-frames the fields */
+  layoutKey: string
 }
 
 function styleFor(f: FieldFeature, preds: Map<number, Pred>): PathOptions {
@@ -39,7 +41,7 @@ function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>) {
   return `<strong>Field ${f.properties.OBJECTID}</strong><br/>Label: ${label}<br/>Predicted: ${call}`
 }
 
-export function MapView({ fields, preds, selectedId, onSelect, error }: Props) {
+export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey }: Props) {
   const geoRef = useRef<LeafletGeoJSON | null>(null)
   const predsRef = useRef(preds)
   const onSelectRef = useRef(onSelect)
@@ -69,8 +71,8 @@ export function MapView({ fields, preds, selectedId, onSelect, error }: Props) {
     <section className="map-wrap" aria-label="Map of BARC fields">
       <MapContainer center={CENTER} zoom={13} zoomSnap={0.25} zoomControl={false} className="map" attributionControl>
         <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
-        <ZoomControl position="topright" />
-        <FitToFields fields={fields} />
+        <ZoomControl position="bottomright" />
+        <FitToFields fields={fields} layoutKey={layoutKey} />
         <Pane name="halo" style={{ zIndex: 395 }}>
           {selected && (
             <GeoJSON
@@ -101,17 +103,39 @@ export function MapView({ fields, preds, selectedId, onSelect, error }: Props) {
   )
 }
 
-/** Frame the map on the fields so they fill the view instead of floating in a zoomed-out city. */
-function FitToFields({ fields }: { fields: FieldsResponse | null }) {
+/**
+ * Frame the fields in the part of the map no panel covers. Measures the panels that are open
+ * (top bar, summary, right rail / sheet / drawer, map key) and re-fits whenever `layoutKey` changes.
+ */
+function FitToFields({ fields, layoutKey }: { fields: FieldsResponse | null; layoutKey: string }) {
   const map = useMap()
   const n = fields?.features.length ?? 0
   useEffect(() => {
     if (!fields || !n) return
     const b = leafletGeoJSON(fields).getBounds()
     if (!b.isValid()) return
-    const phone = window.innerWidth <= 900
-    map.invalidateSize()
-    map.fitBounds(b, phone ? { padding: [12, 12] } : { paddingTopLeft: [40, 460], paddingBottomRight: [480, 80] })
-  }, [map, n]) // eslint-disable-line react-hooks/exhaustive-deps
+    const raf = requestAnimationFrame(() => {
+      map.invalidateSize()
+      const box = map.getContainer().getBoundingClientRect()
+      if (window.innerWidth <= 900) {
+        map.fitBounds(b, { padding: [12, 12] })
+        return
+      }
+      const rect = (sel: string) => document.querySelector(sel)?.getBoundingClientRect()
+      const rightPanels = ['.rail', '.sheet', '.drawer'].map(rect).filter((r): r is DOMRect => !!r)
+      const freeRight = rightPanels.length ? Math.min(...rightPanels.map((r) => r.left)) : box.right
+      const tops = ['.topbar', '.lead'].map(rect).filter((r): r is DOMRect => !!r && r.left < freeRight)
+      const freeTop = tops.length ? Math.max(...tops.map((r) => r.bottom)) : box.top
+      const key = rect('.mapkey')
+      const freeBottom = key && key.left < freeRight ? key.top : box.bottom
+      const pad = 24
+      map.fitBounds(b, {
+        paddingTopLeft: [pad, freeTop - box.top + pad],
+        paddingBottomRight: [box.right - freeRight + pad, box.bottom - freeBottom + pad],
+        animate: true,
+      })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [map, n, layoutKey]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

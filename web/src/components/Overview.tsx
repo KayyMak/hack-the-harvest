@@ -20,10 +20,13 @@ interface Props {
   review: ReviewItem[]
   onSelect: (id: number) => void
   onOpenQuality: () => void
+  onOpenFields: () => void
 }
 
+const REVIEW_ROWS = 3
+
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality }: Props) {
+export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality, onOpenFields }: Props) {
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
   const mismatches = review.filter((r) => r.kind === 'mismatch').length
@@ -122,7 +125,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
             <p className="rail__note">Nothing to review at this date.</p>
           ) : (
             <ul className="review">
-              {review.map((r) => (
+              {review.slice(0, REVIEW_ROWS).map((r) => (
                 <li key={r.id}>
                   <button className="review__row" onClick={() => onSelect(r.id)}>
                     <span className={`review__mark review__mark--${r.kind}`} aria-hidden="true" />
@@ -133,6 +136,11 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
                 </li>
               ))}
             </ul>
+          )}
+          {review.length > REVIEW_ROWS && (
+            <button className="link review__more" onClick={onOpenFields}>
+              See all {review.length} in Fields
+            </button>
           )}
         </section>
       </aside>
@@ -145,7 +153,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
   const rows = data.convergence.map((c) => ({ ...c, label: shortDate(c.as_of) }))
   const current = rows.find((r) => r.as_of === asOf)
   return (
-    <ResponsiveContainer width="100%" height={190}>
+    <ResponsiveContainer width="100%" height={150}>
       <LineChart data={rows} margin={{ top: 16, right: 16, bottom: 0, left: -18 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
         <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} />
