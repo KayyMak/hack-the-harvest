@@ -1,0 +1,68 @@
+{
+  "fields": 83,
+  "labeled_field_years": 44,
+  "labeled_fields": 34,
+  "label_counts": {
+    "2021": {
+      "Grain": 14,
+      "Silage": 4,
+      "blank": 65
+    },
+    "2022": {
+      "Grain": 3,
+      "Silage": 4,
+      "blank": 76
+    },
+    "2023": {
+      "Grain": 15,
+      "Silage": 4,
+      "blank": 64
+    }
+  },
+  "crs_wkt": "PROJCRS[\"NAD83 / Maryland (ftUS)\",BASEGEOGCRS[\"NAD83\",DATUM[\"North American Datum 1983\",ELLIPSOID[\"GRS 1980\",6378137,298.257222101,LENGTHUNIT[\"metre\",1]]],PRIMEM[\"Greenwich\",0,ANGLEUNIT[\"degree\",0.0174532925199433]],ID[\"EPSG\",4269]],CONVERSION[\"unnamed\",METHOD[\"Lambert Conic Conformal (2SP)\",ID[\"EPSG\",9802]],PARAMETER[\"Latitude of false origin\",37.6666666666667,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8821]],PARAMETER[\"Longitude of false origin\",-77,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8822]],PARAMETER[\"Latitude of 1st standard parallel\",38.3,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8823]],PARAMETER[\"Latitude of 2nd standard parallel\",39.45,ANGLEUNIT[\"degree\",0.0174532925199433],ID[\"EPSG\",8824]],PARAMETER[\"Easting at false origin\",1312333.33333333,LENGTHUNIT[\"US survey foot\",0.304800609601219],ID[\"EPSG\",8826]],PARAMETER[\"Northing at false origin\",0,LENGTHUNIT[\"US survey foot\",0.304800609601219],ID[\"EPSG\",8827]]],CS[Cartesian,2],AXIS[\"easting\",east,ORDER[1],LENGTHUNIT[\"US survey foot\",0.304800609601219,ID[\"EPSG\",9003]]],AXIS[\"northing\",north,ORDER[2],LENGTHUNIT[\"US survey foot\",0.304800609601219,ID[\"EPSG\",9003]]]]",
+  "crs_authority": null,
+  "equivalent_epsg2248": false,
+  "epsg2248_max_bounds_difference_degrees": 1.1733760629795142e-09,
+  "wgs84_bounds": [
+    -76.93846251824495,
+    39.0037933915537,
+    -76.81170779502,
+    39.04303759273366
+  ],
+  "source_sha256": "9647257991ab9466d578743bc407093232fab40606bc8c5d90113039a6a50c40",
+  "config": {
+    "version": 1,
+    "collection": "sentinel-2-l2a",
+    "catalog": "https://planetarycomputer.microsoft.com/api/stac/v1",
+    "months": [
+      7,
+      8,
+      9,
+      10,
+      11
+    ],
+    "scene_cloud_lt": 40,
+    "bands": [
+      "B04",
+      "B08",
+      "SCL"
+    ],
+    "valid_scl": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "min_pixels": 3,
+    "min_clear_fraction": 0.2,
+    "pixel_selection": "center inside polygon",
+    "ndvi_range": [
+      -1,
+      1
+    ],
+    "scl_resampling": "nearest",
+    "resolution_m": 10,
+    "expected_crs": "EPSG:32618"
+  },
+  "cache_signature": "58ac1575aed42f21e132a3f6487af5474bd06ef31b3408857c78d7b34fe3476f"
+}

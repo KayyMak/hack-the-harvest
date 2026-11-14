@@ -1,0 +1,88 @@
+[
+  {
+    "processing_baseline": "03.00",
+    "item_id": "S2A_MSIL2A_20210704T154911_R054_T18SUJ_20210705T054204",
+    "metadata_url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2021/07/04/S2A_MSIL2A_20210704T154911_N0300_R054_T18SUJ_20210705T054204.SAFE/MTD_MSIL2A.xml",
+    "quantification": {
+      "BOA_QUANTIFICATION_VALUE": 10000.0
+    },
+    "boa_add_offsets": {},
+    "expected_dn_offset": 0,
+    "passed": true
+  },
+  {
+    "processing_baseline": "04.00",
+    "item_id": "S2B_MSIL2A_20211119T160549_R097_T18SUJ_20230130T063849",
+    "metadata_url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2021/11/19/S2B_MSIL2A_20211119T160549_N0400_R097_T18SUJ_20230130T063849.SAFE/MTD_MSIL2A.xml",
+    "quantification": {
+      "BOA_QUANTIFICATION_VALUE": 10000.0
+    },
+    "boa_add_offsets": {
+      "0": -1000.0,
+      "1": -1000.0,
+      "2": -1000.0,
+      "3": -1000.0,
+      "4": -1000.0,
+      "5": -1000.0,
+      "6": -1000.0,
+      "7": -1000.0,
+      "8": -1000.0,
+      "9": -1000.0,
+      "10": -1000.0,
+      "11": -1000.0,
+      "12": -1000.0
+    },
+    "expected_dn_offset": -1000,
+    "passed": true
+  },
+  {
+    "processing_baseline": "05.09",
+    "item_id": "S2A_MSIL2A_20230714T154941_R054_T18SUJ_20230715T012847",
+    "metadata_url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/07/14/S2A_MSIL2A_20230714T154941_N0509_R054_T18SUJ_20230715T012847.SAFE/MTD_MSIL2A.xml",
+    "quantification": {
+      "BOA_QUANTIFICATION_VALUE": 10000.0
+    },
+    "boa_add_offsets": {
+      "0": -1000.0,
+      "1": -1000.0,
+      "2": -1000.0,
+      "3": -1000.0,
+      "4": -1000.0,
+      "5": -1000.0,
+      "6": -1000.0,
+      "7": -1000.0,
+      "8": -1000.0,
+      "9": -1000.0,
+      "10": -1000.0,
+      "11": -1000.0,
+      "12": -1000.0
+    },
+    "expected_dn_offset": -1000,
+    "passed": true
+  },
+  {
+    "processing_baseline": "05.10",
+    "item_id": "S2A_MSIL2A_20220712T155921_R097_T18SUJ_20240713T031722",
+    "metadata_url": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2022/07/12/S2A_MSIL2A_20220712T155921_N0510_R097_T18SUJ_20240713T031722.SAFE/MTD_MSIL2A.xml",
+    "quantification": {
+      "BOA_QUANTIFICATION_VALUE": 10000.0
+    },
+    "boa_add_offsets": {
+      "0": -1000.0,
+      "1": -1000.0,
+      "2": -1000.0,
+      "3": -1000.0,
+      "4": -1000.0,
+      "5": -1000.0,
+      "6": -1000.0,
+      "7": -1000.0,
+      "8": -1000.0,
+      "9": -1000.0,
+      "10": -1000.0,
+      "11": -1000.0,
+      "12": -1000.0
+    },
+    "expected_dn_offset": -1000,
+    "passed": true
+  }
+]
