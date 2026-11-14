@@ -82,6 +82,11 @@ class Rollup(BaseModel):
 class QuickStatsRow(BaseModel):
     year: int | None
     state: str | None
+    county: str | None = None
+    aggregation_level: str | None = None
+    crop_use: str | None = None
+    source: str | None = None
     item: str | None
     value: float | None
+    cv_percent: float | None = None
     suppressed: bool

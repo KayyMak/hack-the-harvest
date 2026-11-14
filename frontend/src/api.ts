@@ -77,8 +77,13 @@ export interface Rollup {
 export interface QuickStatsRow {
   year: number | null;
   state: string | null;
+  county: string | null;
+  aggregation_level: string | null;
+  crop_use: string | null;
+  source: string | null;
   item: string | null;
   value: number | null;
+  cv_percent: number | null;
   suppressed: boolean;
 }
 
@@ -98,8 +103,12 @@ export async function loadBaseline(signal: AbortSignal) {
 
 export const loadFields = (signal: AbortSignal) => get<BarcField[]>('/api/fields', signal);
 export const loadRollup = (signal: AbortSignal) => get<Rollup>('/api/baseline/rollup', signal);
-export const loadQuickStats = (signal: AbortSignal, state = 'MARYLAND') =>
-  get<QuickStatsRow[]>(`/api/quickstats?state=${encodeURIComponent(state)}`, signal);
+export const loadQuickStats = (signal: AbortSignal, state = 'MARYLAND',
+  filters: { year?: number; crop_use?: 'grain' | 'silage'; level?: 'STATE' | 'COUNTY' } = {}) => {
+  const params = new URLSearchParams({ state });
+  Object.entries(filters).forEach(([k, v]) => v !== undefined && params.set(k, String(v)));
+  return get<QuickStatsRow[]>(`/api/quickstats?${params}`, signal);
+};
 export const loadObservations = (fieldId: number, year: number, signal: AbortSignal) =>
   get<Observation[]>(`/api/fields/${fieldId}/observations?year=${year}`, signal);
 

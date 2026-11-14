@@ -83,7 +83,12 @@ def wilson(successes: int, n: int, z: float = 1.96) -> list[float] | None:
 def evaluate(year: int | None = None) -> dict:
     """Held-out metrics vs always-Grain, with Wilson 95% intervals on precision and recall for
     both classes. Overall adds the saved metrics.json; per year is computed from saved predictions."""
-    preds = [p for p in artifacts.read_predictions() if year is None or p.year == year]
+    return evaluate_predictions(artifacts.read_predictions(), year)
+
+
+def evaluate_predictions(predictions, year: int | None = None) -> dict:
+    """evaluate() on any list of Prediction objects (used by the one command for as-of runs)."""
+    preds = [p for p in predictions if year is None or p.year == year]
     tp = sum(p.reference_label == 'Silage' and p.predicted_label == 'Silage' for p in preds)
     fn = sum(p.reference_label == 'Silage' and p.predicted_label == 'Grain' for p in preds)
     fp = sum(p.reference_label == 'Grain' and p.predicted_label == 'Silage' for p in preds)
@@ -123,11 +128,12 @@ def aggregate(year: int | None = None) -> dict:
     return r
 
 
-def get_quickstats(state: str = 'MARYLAND', year: int | None = None) -> dict:
-    """NASS QuickStats corn rows for a state; suppressed values are null, never zero."""
-    rows = [q.model_dump() for q in artifacts.read_quickstats(state)
-            if year is None or q.year == year]
-    return {'state': state, 'year': year, 'n': len(rows), 'rows': rows}
+def get_quickstats(state: str = 'MARYLAND', year: int | None = None, crop_use: str | None = None,
+                   level: str | None = None) -> dict:
+    """NASS QuickStats corn acres (domain TOTAL) for a state; crop_use is grain or silage, level is
+    STATE or COUNTY. Suppressed values are null, never zero."""
+    rows = [q.model_dump() for q in artifacts.read_quickstats(state, year, crop_use, level)]
+    return {'state': state, 'year': year, 'crop_use': crop_use, 'level': level, 'n': len(rows), 'rows': rows}
 
 
 def get_chip(field_id: int, year: int) -> dict:
@@ -152,7 +158,7 @@ def log_step(run_id: str, **fields) -> dict:
     the same file and format as agent/trace.py."""
     p = TRACES_DIR / f'{_check_run_id(run_id)}.jsonl'
     p.parent.mkdir(parents=True, exist_ok=True)
-    step = sum(1 for _ in p.open(encoding='utf-8')) + 1 if p.exists() else 1
+    step = len(p.read_text(encoding='utf-8').splitlines()) + 1 if p.exists() else 1
     line = {**fields, 'run_id': run_id, 'step': step,
             'ts': datetime.now(timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')}
     with p.open('a', encoding='utf-8') as f:
@@ -174,7 +180,8 @@ _PARAMS = {
     'classify': ({'year': _INT, 'field_ids': {'type': 'array', 'items': _INT}}, []),
     'evaluate': ({'year': _INT}, []),
     'aggregate': ({'year': _INT}, []),
-    'get_quickstats': ({'state': _STR, 'year': _INT}, []),
+    'get_quickstats': ({'state': _STR, 'year': _INT, 'crop_use': {'type': 'string', 'enum': ['grain', 'silage']},
+                        'level': {'type': 'string', 'enum': ['STATE', 'COUNTY']}}, []),
     'get_chip': ({'field_id': _INT, 'year': _INT}, ['field_id', 'year']),
     'write_report': ({'run_id': _STR, 'markdown': _STR}, ['run_id', 'markdown']),
 }

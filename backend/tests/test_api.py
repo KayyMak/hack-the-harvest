@@ -83,6 +83,29 @@ class ApiChecks(unittest.TestCase):
         with patch.dict('os.environ', {}, clear=True):
             self.assertEqual(self.client.get('/api/quickstats').status_code, 503)
 
+    def test_quickstats_lab_format(self):
+        header = ('year,aggregation_level,state_name,state_ansi,county_name,county_ansi,commodity,crop_use,'
+                  'measurement,statistic,unit,value,cv_percent,source,domain,domain_category,reference_period,'
+                  'frequency,short_description\n')
+        rows = ('2022,STATE,MARYLAND,24,,,CORN,silage,harvested,AREA HARVESTED,ACRES,"52,000",4.1,CENSUS,TOTAL,'
+                'NOT SPECIFIED,YEAR,ANNUAL,"CORN, SILAGE - ACRES HARVESTED"\n'
+                '2022,COUNTY,MARYLAND,24,FREDERICK,021,CORN,silage,harvested,AREA HARVESTED,ACRES,'
+                '                 (D),(D),CENSUS,TOTAL,NOT SPECIFIED,YEAR,ANNUAL,"CORN, SILAGE - ACRES HARVESTED"\n'
+                '2022,STATE,MARYLAND,24,,,CORN,grain,harvested,AREA HARVESTED,ACRES,"400,000",2.0,CENSUS,'
+                'IRRIGATION,X,YEAR,ANNUAL,"CORN, GRAIN, IRRIGATED - ACRES HARVESTED"\n')
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'qs.csv'
+            path.write_text(header + rows, encoding='utf-8')
+            with patch.dict('os.environ', {'QUICKSTATS_CSV': str(path)}):
+                all_rows = self.client.get('/api/quickstats').json()
+                state = self.client.get('/api/quickstats', params={'crop_use': 'silage', 'level': 'STATE'}).json()
+        self.assertEqual(len(all_rows), 2)  # irrigated (non-TOTAL) row dropped
+        self.assertEqual((state[0]['value'], state[0]['cv_percent'], state[0]['source']), (52000.0, 4.1, 'CENSUS'))
+        county = [r for r in all_rows if r['county']][0]
+        self.assertEqual((county['value'], county['cv_percent'], county['suppressed']), (None, None, True))
+        export = self.client.get('/api/baseline/rollup.csv').text.splitlines()[0]
+        self.assertEqual(export, header.strip())
+
     def test_new_endpoints_return_503_without_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)), \
@@ -132,7 +155,7 @@ class ApiChecks(unittest.TestCase):
         csv_text = self.client.get('/api/baseline/rollup.csv')
         self.assertEqual(csv_text.status_code, 200)
         lines = csv_text.text.strip().splitlines()
-        self.assertIn('CV (%)', lines[0])
+        self.assertIn('cv_percent', lines[0])
         self.assertEqual(len(lines), len(years) + 1)
 
     def test_evaluate_has_both_classes_with_wilson_intervals(self):
@@ -144,6 +167,28 @@ class ApiChecks(unittest.TestCase):
             self.assertLessEqual(e['per_class'][cls]['recall'], high)
         self.assertEqual(sum(sum(c.values()) for c in e['counts_by_year_and_class'].values()), e['n'])
         self.assertEqual(tools.wilson(0, 0), None)
+
+    def test_one_command_full_season_and_too_early(self):
+        import json
+        import sys
+        root = str(Path(__file__).resolve().parents[2])
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from harvest.run import run
+        with tempfile.TemporaryDirectory() as directory:
+            full = run(2022, '2022-11-30', Path(directory) / 'full')
+            self.assertEqual(full['mode'], 'saved full-season model')
+            self.assertEqual(full['decided'], 7)
+            names = {p.name for p in (Path(directory) / 'full').iterdir()}
+            self.assertTrue({'predictions.csv', 'metrics.json', 'rollup.json', 'quickstats_export.csv',
+                             'run.json'} <= names)
+            saved = self.client.get('/api/baseline/rollup').json()['years']
+            self.assertEqual(full['silage_acres_expected'],
+                             next(y['expected_silage_acres'] for y in saved if y['year'] == 2022))
+            early = run(2022, '2022-07-15', Path(directory) / 'early')
+            self.assertEqual((early['decided'], early['pending']), (0, 7))
+            rows = (Path(directory) / 'early' / 'predictions.csv').read_text().splitlines()[1:]
+            self.assertTrue(all(',Pending,' in r for r in rows))
 
 
 if __name__ == '__main__':

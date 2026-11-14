@@ -63,8 +63,10 @@ def observations(field_id: int, year: int) -> list[Observation]:
 
 
 @app.get('/api/quickstats', response_model=list[QuickStatsRow])
-def quickstats(state: str = 'MARYLAND') -> list[QuickStatsRow]:
-    return _serve(read_quickstats, state)
+def quickstats(state: str = 'MARYLAND', year: int | None = None, crop_use: str | None = None,
+               level: str | None = None) -> list[QuickStatsRow]:
+    """Lab QuickStats rows (domain TOTAL). Filter by year, crop_use (grain|silage), level (STATE|COUNTY)."""
+    return _serve(read_quickstats, state, year, crop_use, level)
 
 
 class AgentRequest(BaseModel):

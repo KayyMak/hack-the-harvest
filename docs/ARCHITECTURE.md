@@ -43,10 +43,10 @@ are separate fields.
 | `GET /api/baseline/summary` | Evaluation counts, quality counts, logistic and always-Grain metrics |
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
 | `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using rates from the other years (labeled field-years only) |
-| `GET /api/baseline/rollup.csv` | The roll-up in QuickStats column shape (`Value`, `CV (%)`), as a CSV download |
+| `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
-| `GET /api/quickstats?state=` | NASS QuickStats rows from optional `QUICKSTATS_CSV`; suppressed values are null; 503 if unset |
+| `GET /api/quickstats?state=&year=&crop_use=&level=` | Lab QuickStats rows (domain TOTAL) from optional `QUICKSTATS_CSV`, with value, `cv_percent`, source; suppressed `(D)` values are null; 503 if unset |
 | `POST /api/agent/run` `{query}` | `{run_id}`; starts `agent.run.run_agent(query, run_id)` in the background; 501 until the agent exists |
 | `GET /api/agent/trace/{run_id}` | Trace lines logged so far from `<traces>/<run_id>.jsonl` (the folder `agent/trace.py` writes; `/workspace/data/handoff/traces` on Keeboh, `agent_runs/traces` locally, or `AGENT_TRACES_DIR`); `[]` before the first step |
 | `GET /docs` | Interactive generated API documentation |
@@ -69,6 +69,19 @@ wraps the same tools as LangChain tools (`from harvest.tools import TOOLS`)
 for the LangGraph agent. Traces and reports are the only writes, and are not
 committed. `evaluate` adds Wilson 95% intervals for precision and recall of
 both classes and counts by year and class.
+
+## One command
+
+```sh
+python -m harvest.run --year 2022 --as-of 2022-10-12 --out runs/2022-10-12
+```
+
+Writes `predictions.csv`, `metrics.json`, `rollup.json`, `quickstats_export.csv`
+(the lab QuickStats file's columns) and `run.json`. An as-of date uses only the
+monthly NDVI medians complete by then: before Nov 30 the baseline's logistic
+pipeline is refit on the saved field folds with those features (needs
+scikit-learn); from Nov 30 the saved predictions are used; before Jul 31 every
+field is Pending. This is a command-line step, not an API route.
 
 ## Deliberate limits
 
