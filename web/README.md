@@ -18,6 +18,6 @@ Dev server: http://localhost:5173
 - `src/api.ts` is the only place that talks to the backend; snapshot file names are in `snap`.
 - `public/snapshot/` currently holds **FAKE stub data** (see its README). Regenerate with
   `node scripts/make-stub-snapshot.mjs`; replace with Backend's real export before any demo.
-- Design variants: header "Design" menu or `?theme=usda|deck|night`.
+- Design variants: header "Design" menu or `?theme=harvest|usda|deck|night`.
 - Presenter keys: `1`–`4` switch panels, `←`/`→` step the as-of date.
 - No API keys in the browser, ever.

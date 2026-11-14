@@ -244,9 +244,9 @@ textarea {
 .map-card {
   position: absolute;
   z-index: 500;
-  background: var(--surface);
-  color: var(--ink);
-  border: 1px solid var(--border);
+  background: var(--overlay-bg, var(--surface));
+  color: var(--overlay-ink, var(--ink));
+  border: 1px solid var(--overlay-border, var(--border));
   border-radius: var(--radius);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
 }
@@ -261,7 +261,7 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--eyebrow);
+  color: var(--overlay-muted, var(--eyebrow));
 }
 .map-stats__row {
   display: flex;
@@ -280,7 +280,7 @@ textarea {
 }
 .map-stat__label {
   font-size: 15px;
-  color: var(--ink-2);
+  color: var(--overlay-ink-2, var(--ink-2));
 }
 
 .legend {
@@ -295,7 +295,7 @@ textarea {
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--overlay-muted, var(--muted));
   margin-bottom: 6px;
 }
 .legend__row {

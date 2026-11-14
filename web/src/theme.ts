@@ -1,5 +1,5 @@
 /**
- * Three design variants, switchable at runtime (header "Design" menu or ?theme=usda|deck|night).
+ * Three design variants, switchable at runtime (header "Design" menu or ?theme=harvest|usda|deck|night).
  *
  * Colors come from the challenge materials: the "Silage or Grain?" deck (field green-black
  * #19251e, harvest gold #e8a82e, cream paper #f5efe4, olive #3d6b2a) and the Hack the Harvest
@@ -30,7 +30,7 @@ export interface ChartTokens {
 }
 
 export interface Theme {
-  id: 'usda' | 'deck' | 'night'
+  id: 'harvest' | 'usda' | 'deck' | 'night'
   name: string
   blurb: string
   vars: Record<string, string>
@@ -43,6 +43,40 @@ const SERIF = "'Merriweather', Georgia, serif"
 const MONO = "'Roboto Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace"
 
 export const THEMES: Theme[] = [
+  {
+    id: 'harvest',
+    name: 'Mix · Harvest',
+    blurb: 'Default: cream paper (B), Source Sans + Merriweather and green buttons (A), dark field-green bar and map cards (C).',
+    vars: {
+      '--font-body': SANS_SOURCE,
+      '--font-head': SERIF,
+      '--font-mono': MONO,
+      '--bg': '#ebe4d3',
+      '--surface': '#f7f2e7',
+      '--surface-2': '#efe8d8',
+      '--ink': '#19251e',
+      '--ink-2': '#36443b',
+      '--muted': '#5d6858',
+      '--border': '#d6cbb1',
+      '--bar-bg': '#19251e',
+      '--bar-ink': '#f5efe4',
+      '--bar-muted': '#c9bb92',
+      '--accent': '#1f5c38',
+      '--accent-ink': '#ffffff',
+      '--eyebrow': '#3d6b2a',
+      '--highlight': '#e8a82e',
+      '--focus': '#e8a82e',
+      '--radius': '8px',
+      '--head-weight': '700',
+      '--head-tracking': '0',
+      '--overlay-bg': 'rgba(25, 37, 30, 0.94)',
+      '--overlay-ink': '#f5efe4',
+      '--overlay-ink-2': '#ddd6c5',
+      '--overlay-muted': '#c9bb92',
+      '--overlay-border': '#2f3f35',
+    },
+    chart: { ink: '#19251e', muted: '#5d6858', grid: '#e2d9c5', axis: '#b3a88c', surface: '#f7f2e7', ndvi: '#2e7d32', share: '#2f6fa3', accuracy: '#b4532a' },
+  },
   {
     id: 'usda',
     name: 'A · USDA field',
@@ -137,6 +171,7 @@ export const themeById = (id: string | null | undefined): Theme =>
 
 export function applyTheme(theme: Theme) {
   const root = document.documentElement
+  for (const t of THEMES) for (const k of Object.keys(t.vars)) root.style.removeProperty(k)
   for (const [k, v] of Object.entries(theme.vars)) root.style.setProperty(k, v)
   root.dataset.theme = theme.id
   root.style.colorScheme = theme.id === 'night' ? 'dark' : 'light'
