@@ -1,5 +1,8 @@
 # Current architecture
 
+Commands for every part (API, dashboard, one command, agent, notebook, static
+fallback) and the required citations are in [HOW_TO_RUN.md](HOW_TO_RUN.md).
+
 ```text
 Source BARC polygons + labels     Public Sentinel-2 L2A COGs
               \                  /
