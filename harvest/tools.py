@@ -28,19 +28,30 @@ except ImportError as exc:  # pragma: no cover
     raise ImportError('harvest.tools needs langchain-core: pip install langchain-core') from exc
 
 
+SCOPE = ('Only BARC field-years that have a Grain or Silage reference label are scored; blank labels are '
+         'unknown and excluded. n counts those labeled field-years, not satellite coverage.')
+
+
+def _scoped(out: dict) -> dict:
+    """Say what n counts, so a report never explains it as a data gap."""
+    if isinstance(out, dict) and 'error' not in out:
+        out.setdefault('scope', SCOPE)
+    return out
+
+
 def classify(year: int | None = None, as_of: str | None = None, field_ids: list[int] | None = None) -> dict:
     """Silage/Grain call per field for a year with silage probability and the NDVI evidence
     behind it. With as_of (YYYY-MM-DD) only satellite months complete by that date are used and
     undecided fields are Pending. Reference labels are returned separately as reference_label."""
     if as_of is None:
-        return core.classify(year, field_ids)
+        return _scoped(core.classify(year, field_ids))
     if year is None:
         return {'error': 'as_of needs year'}
     s = predictions_as_of(year, as_of)
     out = core.classify_predictions(s['predictions'], year, field_ids, model_label(s['mode']), only=s['features'])
     pending = [f for f in s['pending'] if field_ids is None or f in field_ids]
     out.update(as_of=as_of, features=s['features'], pending=pending, n_pending=len(pending))
-    return out
+    return _scoped(out)
 
 
 def evaluate(year: int | None = None, as_of: str | None = None) -> dict:
@@ -48,14 +59,14 @@ def evaluate(year: int | None = None, as_of: str | None = None) -> dict:
     with Wilson 95% intervals, counts by year and class, always-Grain comparison. With as_of
     (needs year) the model only sees satellite months complete by that date."""
     if as_of is None:
-        return core.evaluate(year)
+        return _scoped(core.evaluate(year))
     if year is None:
         return {'error': 'as_of needs year'}
     s = predictions_as_of(year, as_of)
     if not s['predictions']:
         return {'as_of': as_of, 'mode': s['mode'], 'n': 0, 'note': 'no fields decided yet'}
-    return {'as_of': as_of, 'mode': s['mode'], 'features': s['features'],
-            **core.evaluate_predictions(s['predictions'], year)}
+    return _scoped({'as_of': as_of, 'mode': s['mode'], 'features': s['features'],
+                    **core.evaluate_predictions(s['predictions'], year)})
 
 
 def aggregate(year: int | None = None, as_of: str | None = None) -> dict:
