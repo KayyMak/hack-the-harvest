@@ -1,0 +1,24 @@
+{
+  "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+  "prompt": "Predict whether a corn field was harvested for Grain or Silage using\nonly its nine numerical satellite vegetation features and the labeled training\nexamples supplied below. NDVI measures greenness. ndvi_07 through ndvi_11 are\nJuly through November monthly median NDVI. peak_ndvi is the maximum observed\nJuly-November NDVI; peak_doy is its day of year. late_ndvi is median NDVI from\nSeptember onward. early_minus_late is the July-August median minus the\nOctober-November median. Values are in original units. Missing values have been\nimputed with training-fold medians (zero for an entirely missing training column).\nInfer the relationship from the examples; no harvest-date rule is definitive.\nReturn exactly one JSON object: {\"harvest_type\":\"Grain\"} or\n{\"harvest_type\":\"Silage\"}. Do not include an explanation or other keys.",
+  "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10",
+    "ndvi_11",
+    "peak_ndvi",
+    "peak_doy",
+    "late_ndvi",
+    "early_minus_late"
+  ],
+  "inputs": {
+    "heldout_predictions.csv": "34075d041e3f25689c5911f3e3d18ed18a01936ec34ebd121f5ea49f3471a411",
+    "metrics.json": "b9469e534bd329c12966d775c221645d4543e29736fcb458b3c522803593247a"
+  },
+  "temperature": 0,
+  "top_p": 1,
+  "max_tokens": 128,
+  "seed": 42,
+  "enable_thinking": false
+}

@@ -1,0 +1,87 @@
+{
+  "field_id": 323,
+  "year": 2023,
+  "date": "2023-09-07",
+  "item_id": "S2B_MSIL2A_20230907T154819_R054_T18SUJ_20241025T002512",
+  "scene_cloud_percent": 8.679235,
+  "processing_baseline": 5.1,
+  "calibration": {
+    "B04": {
+      "scale": 0.0001,
+      "offset": -0.1
+    },
+    "B03": {
+      "scale": 0.0001,
+      "offset": -0.1
+    },
+    "B02": {
+      "scale": 0.0001,
+      "offset": -0.1
+    },
+    "B08": {
+      "scale": 0.0001,
+      "offset": -0.1
+    }
+  },
+  "fingerprint": "6a16f65575b1505609472fd5e904fb2a357089ce4ee5638d4f35769a10eb66e0",
+  "crs": "EPSG:32618",
+  "transform": [
+    10.0,
+    0.0,
+    338920.0,
+    0.0,
+    -10.0,
+    4321870.0
+  ],
+  "reference": {
+    "OBJECTID": 323,
+    "year": 2023,
+    "item_id": "S2B_MSIL2A_20230907T154819_R054_T18SUJ_20241025T002512",
+    "date": "2023-09-07",
+    "scene_cloud_percent": 8.679235,
+    "field_pixels": 1031,
+    "clear_pixels": 542,
+    "clear_fraction": 0.5257032007759457,
+    "ndvi": 0.731316864490509,
+    "status": "ok",
+    "calibration": {
+      "processing_baseline": 5.1,
+      "red": {
+        "scale": 0.0001,
+        "offset": -0.1
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": -0.1
+      }
+    }
+  },
+  "measured": {
+    "field_pixels": 1031,
+    "clear_pixels": 542,
+    "clear_fraction": 0.5257032007759457,
+    "ndvi": 0.731316864490509
+  },
+  "matches_cached_measurements": true,
+  "scl_counts": {
+    "Shadow": 489,
+    "Vegetation": 530,
+    "Unclassified": 12
+  },
+  "ndvi_quantiles": {
+    "0.1": 0.5234397649765015,
+    "0.25": 0.622129499912262,
+    "0.5": 0.731316864490509,
+    "0.75": 0.7779601812362671,
+    "0.9": 0.8057113289833069
+  },
+  "fraction_usable_ndvi_over_06": 0.7915129151291513,
+  "rgb_display": "Fixed reflectance range 0..0.3, gamma 1/2.2, no per-scene stretch",
+  "unsigned_assets": {
+    "B04": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/09/07/S2B_MSIL2A_20230907T154819_N0510_R054_T18SUJ_20241025T002512.SAFE/GRANULE/L2A_T18SUJ_A033971_20230907T155745/IMG_DATA/R10m/T18SUJ_20230907T154819_B04_10m.tif",
+    "B03": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/09/07/S2B_MSIL2A_20230907T154819_N0510_R054_T18SUJ_20241025T002512.SAFE/GRANULE/L2A_T18SUJ_A033971_20230907T155745/IMG_DATA/R10m/T18SUJ_20230907T154819_B03_10m.tif",
+    "B02": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/09/07/S2B_MSIL2A_20230907T154819_N0510_R054_T18SUJ_20241025T002512.SAFE/GRANULE/L2A_T18SUJ_A033971_20230907T155745/IMG_DATA/R10m/T18SUJ_20230907T154819_B02_10m.tif",
+    "B08": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/09/07/S2B_MSIL2A_20230907T154819_N0510_R054_T18SUJ_20241025T002512.SAFE/GRANULE/L2A_T18SUJ_A033971_20230907T155745/IMG_DATA/R10m/T18SUJ_20230907T154819_B08_10m.tif",
+    "SCL": "https://sentinel2l2a01.blob.core.windows.net/sentinel2-l2/18/S/UJ/2023/09/07/S2B_MSIL2A_20230907T154819_N0510_R054_T18SUJ_20241025T002512.SAFE/GRANULE/L2A_T18SUJ_A033971_20230907T155745/IMG_DATA/R20m/T18SUJ_20230907T154819_SCL_20m.tif"
+  }
+}

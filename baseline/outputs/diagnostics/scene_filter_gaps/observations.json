@@ -1,0 +1,170 @@
+[
+  {
+    "OBJECTID": 323,
+    "year": 2023,
+    "item_id": "S2A_MSIL2A_20230912T154841_R054_T18SUJ_20241105T100647",
+    "date": "2023-09-12",
+    "scene_cloud_percent": 58.974218,
+    "field_pixels": 1031,
+    "clear_pixels": 709,
+    "clear_fraction": 0.6876818622696411,
+    "ndvi": 0.25823086500167847,
+    "status": "ok",
+    "calibration": {
+      "processing_baseline": 5.1,
+      "red": {
+        "scale": 0.0001,
+        "offset": -0.1
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": -0.1
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 323,
+    "year": 2023,
+    "item_id": "S2B_MSIL2A_20230917T154819_R054_T18SUJ_20230917T231232",
+    "date": "2023-09-17",
+    "scene_cloud_percent": 99.496388,
+    "field_pixels": 1031,
+    "clear_pixels": 0,
+    "clear_fraction": 0.0,
+    "ndvi": null,
+    "status": "insufficient_clear_pixels",
+    "calibration": {
+      "processing_baseline": 5.09,
+      "red": {
+        "scale": 0.0001,
+        "offset": -0.1
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": -0.1
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 323,
+    "year": 2023,
+    "item_id": "S2A_MSIL2A_20230922T154951_R054_T18SUJ_20230922T232537",
+    "date": "2023-09-22",
+    "scene_cloud_percent": 95.415622,
+    "field_pixels": 1031,
+    "clear_pixels": 0,
+    "clear_fraction": 0.0,
+    "ndvi": null,
+    "status": "insufficient_clear_pixels",
+    "calibration": {
+      "processing_baseline": 5.09,
+      "red": {
+        "scale": 0.0001,
+        "offset": -0.1
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": -0.1
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 323,
+    "year": 2023,
+    "item_id": "S2B_MSIL2A_20230927T154929_R054_T18SUJ_20230928T161302",
+    "date": "2023-09-27",
+    "scene_cloud_percent": 57.696933,
+    "field_pixels": 1031,
+    "clear_pixels": 7,
+    "clear_fraction": 0.006789524733268671,
+    "ndvi": null,
+    "status": "insufficient_clear_pixels",
+    "calibration": {
+      "processing_baseline": 5.09,
+      "red": {
+        "scale": 0.0001,
+        "offset": -0.1
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": -0.1
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 327,
+    "year": 2021,
+    "item_id": "S2B_MSIL2A_20211007T155039_R054_T18SUJ_20211008T033857",
+    "date": "2021-10-07",
+    "scene_cloud_percent": 50.245198,
+    "field_pixels": 894,
+    "clear_pixels": 846,
+    "clear_fraction": 0.9463087248322147,
+    "ndvi": 0.41834020614624023,
+    "status": "ok",
+    "calibration": {
+      "processing_baseline": 3.0,
+      "red": {
+        "scale": 0.0001,
+        "offset": 0.0
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": 0.0
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 327,
+    "year": 2021,
+    "item_id": "S2A_MSIL2A_20211012T155211_R054_T18SUJ_20211013T053621",
+    "date": "2021-10-12",
+    "scene_cloud_percent": 99.764679,
+    "field_pixels": 894,
+    "clear_pixels": 0,
+    "clear_fraction": 0.0,
+    "ndvi": null,
+    "status": "insufficient_clear_pixels",
+    "calibration": {
+      "processing_baseline": 3.0,
+      "red": {
+        "scale": 0.0001,
+        "offset": 0.0
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": 0.0
+      }
+    },
+    "old_scene_filter_would_keep": false
+  },
+  {
+    "OBJECTID": 327,
+    "year": 2021,
+    "item_id": "S2A_MSIL2A_20211111T155511_R054_T18SUJ_20211112T062548",
+    "date": "2021-11-11",
+    "scene_cloud_percent": 86.060512,
+    "field_pixels": 894,
+    "clear_pixels": 0,
+    "clear_fraction": 0.0,
+    "ndvi": null,
+    "status": "insufficient_clear_pixels",
+    "calibration": {
+      "processing_baseline": 3.0,
+      "red": {
+        "scale": 0.0001,
+        "offset": 0.0
+      },
+      "nir": {
+        "scale": 0.0001,
+        "offset": 0.0
+      }
+    },
+    "old_scene_filter_would_keep": false
+  }
+]

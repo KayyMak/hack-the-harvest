@@ -1,0 +1,101 @@
+{
+  "cases": [
+    {
+      "field_id": 323,
+      "year": 2023,
+      "fold": 2,
+      "reference_label": "Silage",
+      "logistic_prediction": "Grain",
+      "logistic_silage_probability": 0.3658413120477452,
+      "nemotron_prediction": "Silage",
+      "nemotron_raw_response": "{\"harvest_type\":\"Silage\"}",
+      "logistic_intercept": -1.4230978852345582,
+      "logistic_logit": -0.5500995538318573,
+      "usable_dates": 12,
+      "usable_dates_by_month": {
+        "7": 1,
+        "8": 3,
+        "9": 2,
+        "10": 2,
+        "11": 4
+      },
+      "rejected_scenes": 3,
+      "read_errors": 0,
+      "gaps_over_14_days": [
+        {
+          "start": "2023-07-14",
+          "end": "2023-08-08",
+          "days": 25
+        },
+        {
+          "start": "2023-08-18",
+          "end": "2023-09-02",
+          "days": 15
+        },
+        {
+          "start": "2023-09-07",
+          "end": "2023-10-02",
+          "days": 25
+        },
+        {
+          "start": "2023-10-12",
+          "end": "2023-11-01",
+          "days": 20
+        }
+      ]
+    },
+    {
+      "field_id": 327,
+      "year": 2021,
+      "fold": 3,
+      "reference_label": "Silage",
+      "logistic_prediction": "Grain",
+      "logistic_silage_probability": 0.011199625954209333,
+      "nemotron_prediction": "Grain",
+      "nemotron_raw_response": "{\"harvest_type\":\"Grain\"}",
+      "logistic_intercept": -2.1496866860952766,
+      "logistic_logit": -4.480612084188147,
+      "usable_dates": 12,
+      "usable_dates_by_month": {
+        "7": 3,
+        "8": 2,
+        "9": 5,
+        "10": 1,
+        "11": 1
+      },
+      "rejected_scenes": 3,
+      "read_errors": 0,
+      "gaps_over_14_days": [
+        {
+          "start": "2021-07-24",
+          "end": "2021-08-08",
+          "days": 15
+        },
+        {
+          "start": "2021-08-08",
+          "end": "2021-08-23",
+          "days": 15
+        },
+        {
+          "start": "2021-10-02",
+          "end": "2021-11-16",
+          "days": 45
+        }
+      ]
+    }
+  ],
+  "input_sha256": {
+    "features.csv": "a7eb55cda278fb9f1ba603f69181526f80669e3a6f0c2adededf781d305d71ab",
+    "heldout_predictions.csv": "34075d041e3f25689c5911f3e3d18ed18a01936ec34ebd121f5ea49f3471a411",
+    "metrics.json": "b9469e534bd329c12966d775c221645d4543e29736fcb458b3c522803593247a",
+    "observations.csv": "38f1d4c05e16d7ebb62046a56961229d53097deeedf166dc969191174e6f8100",
+    "nemotron/responses/323_2023.json": "3e69b7883a3f4173eb2ca3bc745f7aac589532f200d7e31cf4cf3ab656f5e418",
+    "nemotron/responses/327_2021.json": "1c0fb927e042f909719d3db0ea2a7d468ee634dce7684aedf58fb012dfe4610a"
+  },
+  "checks": [
+    "Held-out field absent from training",
+    "All predictions in reconstructed folds match saved probabilities",
+    "Intercept plus feature contributions equals saved decision logit",
+    "Nemotron target inputs match logistic raw features"
+  ]
+}
