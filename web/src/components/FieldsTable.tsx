@@ -52,7 +52,7 @@ const COLS: { key: SortKey; label: string; num?: boolean }[] = [
   { key: 'call', label: 'Model call' },
   { key: 'p', label: 'P(silage)', num: true },
   { key: 'result', label: 'Result' },
-  { key: 'cover', label: 'CDL crop' },
+  { key: 'cover', label: 'USDA land cover' },
 ]
 
 export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seasonEnd, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; cover: Map<number, FieldLandcover>; coverError?: Error | null; seasonEnd: boolean; onSelect: (id: number) => void; selectedId: number | null }) {
@@ -83,7 +83,7 @@ export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seaso
         </label>
         <span className="muted small">{rows.length} {showUnlabeled ? 'fields' : `of ${all.length} fields (labeled)`}</span>
       </div>
-      {coverError && <p className="inline-error" role="alert">USDA Cropland Data Layer cover could not be loaded, so the CDL crop column is empty.</p>}
+      {coverError && <p className="inline-error" role="alert">USDA Cropland Data Layer cover could not be loaded, so the USDA land cover column is empty.</p>}
       <div className="ftable__scroll">
         <table>
           <thead>
