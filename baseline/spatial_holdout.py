@@ -17,6 +17,7 @@ farm, and does not contradict the farm result. Field centroids
 (run_baseline.build_model) on the training blocks only. Every k in K is reported; none is chosen
 after seeing scores. Reported gaps are the distance from each test block's fields to the nearest
 training field.
+Uses the v1 pipeline (nine NDVI features, C = 1): run before the switch to model v2, not regenerated.
 """
 import json
 from pathlib import Path
@@ -87,7 +88,8 @@ def main():
                     f'k in {list(K)}, all reported; seed {SEED}',
         'scope': ('Tests leakage between neighbouring fields, not transfer to a new farm. Leave-one-farm-out is in '
                   'the submission notebook: holding out Central Farm (11 of 12 silage field-years) leaves one silage '
-                  'example for training and no Central Farm silage is found.'),
+                  'example for training and no Central Farm silage is found. Uses the v1 pipeline (nine NDVI '
+                  'features, C = 1); run before the switch to model v2 and not regenerated.'),
         'labeled_field_years_by_farm': {f: {c: int(v) for c, v in row.items()} for f, row in by_farm.iterrows()},
         'field_held_out_reference': json.loads((OUT / 'metrics.json').read_text())['logistic'],
         'results': [run(fields, table, k) for k in K],

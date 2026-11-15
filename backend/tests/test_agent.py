@@ -168,3 +168,26 @@ class AgentChecks(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class MalformedToolCallNames(unittest.TestCase):
+    """A malformed model reply (non-string name, missing function) is a tool error, never a crash."""
+
+    def test_non_string_and_missing_names_become_tool_errors(self):
+        import importlib
+        run = importlib.import_module('agent.run')
+        state = {'run_id': 'r-malformed', 'messages': [], 'pending': [
+            {'id': 'a', 'function': {'name': ['x'], 'arguments': '{}'}},
+            {'id': 'b', 'function': None},
+            {'id': 'c'},
+        ]}
+        with patch.object(run, 'log_step'):
+            out = run.run_tools(state)
+        replies = [m for m in out['messages'] if m.get('role') == 'tool']
+        self.assertEqual(len(replies), 3)
+        self.assertTrue(all('unknown tool' in m['content'] for m in replies))
+
+    def test_market_run_tool_rejects_non_string_names(self):
+        from app import market
+        self.assertIn('error', market.run_tool(['x'], {}))
+        self.assertIn('error', market.run_tool({'a': 1}, {}))

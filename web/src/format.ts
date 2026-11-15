@@ -28,5 +28,9 @@ const FEATURE_NAMES: Record<string, string> = {
   ndti_post: 'Residue after (NDTI)',
   decline_doy_rel: 'Decline vs. local norm',
   dairy_dist_km: 'Distance to dairy',
+  decline_doy: 'Decline date',
+  drop_doy: 'Largest drop date',
+  drop_size: 'Largest drop size',
+  regrowth: 'Regrowth after low',
 }
 export const featureName = (raw: string) => FEATURE_NAMES[raw] ?? raw.replace(/_/g, ' ')

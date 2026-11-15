@@ -19,7 +19,7 @@ from app import artifacts  # noqa: E402
 from app import tools as core  # noqa: E402
 from app.artifacts import ArtifactUnavailable  # noqa: E402
 from app.tools import call_tool, log_step  # noqa: E402,F401
-from harvest.asof import predictions_as_of  # noqa: E402
+from harvest.asof import model_label, predictions_as_of  # noqa: E402
 
 try:
     from langchain_core.tools import StructuredTool
@@ -37,7 +37,7 @@ def classify(year: int | None = None, as_of: str | None = None, field_ids: list[
     if year is None:
         return {'error': 'as_of needs year'}
     s = predictions_as_of(year, as_of)
-    out = core.classify_predictions(s['predictions'], year, field_ids, s['mode'], only=s['features'])
+    out = core.classify_predictions(s['predictions'], year, field_ids, model_label(s['mode']), only=s['features'])
     pending = [f for f in s['pending'] if field_ids is None or f in field_ids]
     out.update(as_of=as_of, features=s['features'], pending=pending, n_pending=len(pending))
     return out

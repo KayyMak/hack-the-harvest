@@ -15,7 +15,8 @@ Raw estimate
 Calibrated estimate (the misclassification adjustment in backend compute_rollup)
     q = acre share of scored sample fields called Silage at the 0.5 threshold
     share = (q - FPR) / (TPR - FPR), clipped to [0, 1]
-    TPR and FPR are acre-weighted and come from the saved held-out BARC predictions.
+    TPR and FPR are acre-weighted and come from the saved held-out BARC predictions
+    (for v2, the seed-42 split seen during model selection, so they are likely optimistic).
 
 Intervals are percentile bootstraps (2,000 draws, seeded). Raw: sample fields are
 redrawn within county. Calibrated: sample fields are redrawn within county and BARC
@@ -211,7 +212,11 @@ def main():
             predicted_silage_acre_share=round(q, 4), undefined_bootstrap_draws=undefined,
             method=('share = (q - FPR) / (TPR - FPR), clipped to [0, 1]; q is the acre share of scored '
                     'sample fields called Silage at 0.5; TPR and FPR are acre-weighted rates from the '
-                    f'{len(heldout)} saved held-out BARC field-years'))
+                    f'{len(heldout)} saved held-out BARC field-years'
+                    + ('' if version == 'v1' else
+                       ' (the seed-42 model v2 held-out calls; that split was seen while model v2 was chosen, '
+                       'so TPR and FPR are likely optimistic, and a lower true TPR would raise the calibrated '
+                       'silage estimate)')))
     headline = 'calibrated' if calibrated else 'raw'
 
     # The estimate is final above this line. The reference is read only to report errors.
@@ -279,6 +284,8 @@ def main():
             f"median longest gap {gaps['barc_training']['median_longest_gap_days']:.0f}.",
             'Model v2 was chosen on BARC held-out data (selection-corrected balanced accuracy about 0.87 vs 0.80 for v1; '
             'the bootstrap interval for the gain touches zero); its timing features are untested outside BARC.',
+            'The calibration TPR and FPR come from the seed-42 model v2 held-out calls, a split that was seen while '
+            'model v2 was chosen, so they are likely optimistic; a lower true TPR would raise the calibrated silage estimate.',
         ]),
         **({} if gaps is None else dict(look_gaps_days=gaps)),
         sources=[

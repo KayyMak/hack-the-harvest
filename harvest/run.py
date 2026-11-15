@@ -12,7 +12,8 @@ Writes into --out:
 As-of: monthly NDVI medians are complete at month end, so a date uses only the months
 finished by then. Before Nov 30 the same logistic pipeline is refit on the saved field
 folds with just those features (needs scikit-learn); from Nov 30 the saved full-season
-predictions are used as is. Before Jul 31 nothing is decided: every field is Pending.
+predictions (model v2) are used as is; the 'model' column and field name the version.
+Before Jul 31 nothing is decided: every field is Pending.
 """
 import argparse
 import csv
@@ -27,7 +28,8 @@ for _p in (_ROOT, _ROOT / 'backend'):
 
 from app import artifacts, tools  # noqa: E402
 from app.artifacts import ArtifactUnavailable  # noqa: E402
-from harvest.asof import predictions_as_of  # noqa: E402
+from harvest.asof import model_label, predictions_as_of  # noqa: E402
+
 
 def run(year: int, as_of: str, out: Path) -> dict:
     try:
@@ -35,6 +37,7 @@ def run(year: int, as_of: str, out: Path) -> dict:
     except (ValueError, RuntimeError) as exc:
         raise SystemExit(str(exc)) from exc
     mode, features, objs = state['mode'], state['features'], state['predictions']
+    model = model_label(mode)
     all_preds = [p.model_dump() for p in objs]
     preds = [p for p in all_preds if p['year'] == year]
 
@@ -45,11 +48,11 @@ def run(year: int, as_of: str, out: Path) -> dict:
         w.writerow(['OBJECTID', 'year', 'as_of', 'class', 'p_silage', 'reference_label', 'fold', 'model'])
         for p in preds:
             w.writerow([p['field_id'], year, as_of, p['predicted_label'], round(p['silage_probability'], 4),
-                        p['reference_label'], p['fold'], mode])
+                        p['reference_label'], p['fold'], model])
         for p in pending:
-            w.writerow([p['field_id'], year, as_of, 'Pending', '', '', '', mode])
+            w.writerow([p['field_id'], year, as_of, 'Pending', '', '', '', model])
 
-    metrics = {'as_of': as_of, 'mode': mode, 'features': features}
+    metrics = {'as_of': as_of, 'mode': mode, 'model': model, 'features': features}
     if preds:
         metrics.update(tools.evaluate_predictions(objs, year))
         rollup = artifacts.compute_rollup(objs)
@@ -68,7 +71,7 @@ def run(year: int, as_of: str, out: Path) -> dict:
     if rollup:
         (out / 'quickstats_export.csv').write_text(artifacts.rollup_quickstats_csv(rollup), encoding='utf-8')
 
-    summary = {'year': year, 'as_of': as_of, 'mode': mode, 'features': features,
+    summary = {'year': year, 'as_of': as_of, 'mode': mode, 'model': model, 'features': features,
                'decided': len(preds), 'pending': len(pending), 'out': str(out),
                'balanced_accuracy': metrics.get('balanced_accuracy'),
                'silage_acres_expected': roll['years'][0]['expected_silage_acres'] if roll['years'] else None}

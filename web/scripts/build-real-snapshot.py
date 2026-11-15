@@ -107,7 +107,23 @@ def write(name: str, data) -> None:
     (OUT / f'{name}.json').write_text(json.dumps(data, separators=(',', ':')), encoding='utf-8')
 
 
+def check_model_versions() -> None:
+    """Never mix models: the saved 2025 estimate and unlabeled calls must record the model version that
+    metrics.json records (files written by v1 have no model_version). Runs before the snapshot is cleared."""
+    saved = json.loads((BASE / 'metrics.json').read_text(encoding='utf-8')).get('model_version', 'v1')
+    for rel in ('estimate_2025/summary.json', 'unlabeled/summary.json'):
+        path = BASE / rel
+        if not path.exists():
+            continue
+        model = json.loads(path.read_text(encoding='utf-8')).get('model')
+        version = model.get('model_version', 'v1') if isinstance(model, dict) else 'v1'
+        if version != saved:
+            raise SystemExit(f'{rel} records model {version} but metrics.json records {saved}: regenerate it '
+                             'with the same model (see baseline/model_version.py) before building the snapshot.')
+
+
 def main() -> None:
+    check_model_versions()
     OUT.mkdir(parents=True, exist_ok=True)
     for p in OUT.iterdir():
         if p.name in KEEP:

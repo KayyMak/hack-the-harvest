@@ -1,5 +1,7 @@
 # First review of the logistic regression baseline
 
+> **Note:** this review describes the v1 baseline. The submitted model is now model v2 (see `baseline/model_v2/results.md`).
+
 These results use all 44 labeled field-years (32 Grain, 12 Silage) from 34 BARC
 fields. Five-fold validation holds out fields, keeping all years of each field
 together. Imputation and scaling are fitted only on training folds. The model

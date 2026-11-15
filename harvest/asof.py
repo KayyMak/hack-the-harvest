@@ -33,6 +33,14 @@ REFIT = 'refit on months complete by as-of'  # saved model is v1: the refit is t
 REFIT_V1 = 'v1 month-cut refit'  # saved model is v2: mid-season dates use the v1 refit, labelled as such
 
 
+def model_label(mode: str) -> str:
+    """The as-of mode with the model version named, e.g. 'saved full-season model (model v2)'."""
+    if mode in (EARLY, REFIT_V1):  # no model yet / already says v1
+        return mode
+    version = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8')).get('model_version', 'v1')
+    return f'{mode} (model {version})'
+
+
 def features_as_of(year: int, as_of: date) -> tuple[list[str], str]:
     try:
         saved = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))

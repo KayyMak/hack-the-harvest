@@ -1,7 +1,7 @@
 {
   "year": 2025,
   "state": "MARYLAND",
-  "generated_utc": "2026-11-15T09:18:09+00:00",
+  "generated_utc": "2026-11-15T10:22:09+00:00",
   "headline": "calibrated",
   "population": {
     "source": "USDA Crop Sequence Boundaries (2016-2023 polygons), Maryland, checked against the 2025 Cropland Data Layer",
@@ -86,7 +86,7 @@
     "fpr": 0.0372,
     "predicted_silage_acre_share": 0.1391,
     "undefined_bootstrap_draws": 0,
-    "method": "share = (q - FPR) / (TPR - FPR), clipped to [0, 1]; q is the acre share of scored sample fields called Silage at 0.5; TPR and FPR are acre-weighted rates from the 44 saved held-out BARC field-years"
+    "method": "share = (q - FPR) / (TPR - FPR), clipped to [0, 1]; q is the acre share of scored sample fields called Silage at 0.5; TPR and FPR are acre-weighted rates from the 44 saved held-out BARC field-years (the seed-42 model v2 held-out calls; that split was seen while model v2 was chosen, so TPR and FPR are likely optimistic, and a lower true TPR would raise the calibrated silage estimate)"
   },
   "nass_2025": {
     "silage_acres": 40000,
@@ -124,7 +124,8 @@
     "Corn acres here are mapped field acres, not NASS acres harvested; abandoned or failed corn is not removed.",
     "Fields with fewer than 3 clear Sentinel-2 dates are skipped and listed, not filled in.",
     "The timing feature drop_size is the largest NDVI fall between consecutive clear looks, so it grows with the gap between looks. BARC fields share scenes and cloud gaps; the statewide sample does not. Days between clear looks: 2025 sample median 5, 90th percentile 15, median longest gap per field 23; BARC training median 5, 90th percentile 15, median longest gap 29.",
-    "Model v2 was chosen on BARC held-out data (selection-corrected balanced accuracy about 0.87 vs 0.80 for v1; the bootstrap interval for the gain touches zero); its timing features are untested outside BARC."
+    "Model v2 was chosen on BARC held-out data (selection-corrected balanced accuracy about 0.87 vs 0.80 for v1; the bootstrap interval for the gain touches zero); its timing features are untested outside BARC.",
+    "The calibration TPR and FPR come from the seed-42 model v2 held-out calls, a split that was seen while model v2 was chosen, so they are likely optimistic; a lower true TPR would raise the calibrated silage estimate."
   ],
   "look_gaps_days": {
     "sample_2025": {

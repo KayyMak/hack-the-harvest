@@ -47,6 +47,23 @@ class SnapshotSourceChecks(unittest.TestCase):
             meta = json.loads((output / '_meta.json').read_text(encoding='utf-8'))
             self.assertFalse(meta['has_acres_convergence'])
 
+    def test_mixed_model_versions_stop_the_build_before_clearing(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            inputs, output = root / 'inputs', root / 'snapshot'
+            (inputs / 'estimate_2025').mkdir(parents=True)
+            output.mkdir()
+            (output / 'keep.json').write_text('{}', encoding='utf-8')
+            (inputs / 'metrics.json').write_text(json.dumps({'model_version': 'v2'}), encoding='utf-8')
+            (inputs / 'estimate_2025' / 'summary.json').write_text(json.dumps({'model': {'name': 'v1 run'}}),
+                                                                   encoding='utf-8')  # v1 records no version
+            env = {**os.environ, 'CUTLINE_BASE': str(inputs), 'CUTLINE_OUT': str(output)}
+            result = subprocess.run([sys.executable, str(ROOT / 'web' / 'scripts' / 'build-real-snapshot.py')],
+                                    env=env, cwd=ROOT, capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('estimate_2025/summary.json records model v1 but metrics.json records v2', result.stderr)
+            self.assertTrue((output / 'keep.json').exists())
+
 
 if __name__ == '__main__':
     unittest.main()
