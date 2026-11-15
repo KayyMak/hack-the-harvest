@@ -2348,3 +2348,13 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .kpi__what { font-style: italic; opacity: 0.85; }
 :root[data-mode='light'] .kpi__margin { color: #2c3a35; }
 :root[data-mode='light'] .kpi__margin.is-in { color: #1f7a3f; }
+
+/* state panel: back to the table, step through states */
+.drawer__nav { display: flex; align-items: center; gap: 10px; margin: 0 48px 10px 0; flex-wrap: wrap; }
+.drawer__back { padding: 6px 12px; font-size: 13px; }
+.drawer__step { display: inline-flex; align-items: center; gap: 6px; }
+.drawer__step .ghost-btn { width: 34px; height: 32px; padding: 0; font-size: 18px; line-height: 1; display: inline-grid; place-items: center; }
+.drawer__pos { font-size: 13px; color: #a9b8b2; min-width: 56px; text-align: center; }
+:root[data-mode='light'] .drawer__pos { color: #4a5a55; }
+/* clickable tiles (buttons) line up with the others: content from the top, left-aligned */
+.kpis .kpi--button { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; text-align: left; }

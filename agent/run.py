@@ -379,7 +379,7 @@ def verifier(state: AgentState) -> AgentState:
         state['flags'] = []
         return state
     log_step(run_id, node='verifier', type='flag',
-             summary=f"numbers not found in any tool result: {', '.join(bad)}")
+             summary=f"draft numbers not found in any tool result, sent back to be fixed: {', '.join(bad)}")
     state['flags'] = bad
     if rounds < MAX_VERIFY_ROUNDS:
         state['messages'] += [{'role': 'assistant', 'content': state['draft']},
