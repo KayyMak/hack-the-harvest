@@ -43,6 +43,18 @@ class Prediction(BaseModel):
     valid_dates: int = Field(ge=0)
 
 
+class SignalContribution(BaseModel):
+    """One feature's push on one field-year's saved call: coefficient x standardized value (log-odds).
+    Positive pushes toward Silage. intercept + sum(contribution) = the model's log-odds."""
+    field_id: int
+    year: int
+    feature: str
+    value: float | None
+    contribution: float
+    intercept: float
+    fold: int = Field(ge=1)
+
+
 class AsOfPrediction(BaseModel):
     field_id: int
     predicted_label: HarvestType
