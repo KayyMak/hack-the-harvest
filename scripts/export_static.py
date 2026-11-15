@@ -11,8 +11,9 @@ Agent runs are not exported: the snapshot is read-only.
 """
 import argparse
 import json
+import re
 import sys
-from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -27,7 +28,8 @@ def file_for(out: Path, url: str) -> Path:
     year = parse_qs(parsed.query).get('year')
     if path.endswith('/observations') and year:
         return out / f'{path.lstrip("/")}/{year[0]}.json'
-    return out / f'{path.lstrip("/")}.json'
+    target = out / (path.lstrip('/') if path.endswith('.csv') else f'{path.lstrip("/")}.json')
+    return target
 
 
 def export(out: Path) -> dict:
@@ -43,12 +45,15 @@ def export(out: Path) -> dict:
     for url in urls:
         r = client.get(url)
         if r.status_code != 200:
+            file_for(out, url).unlink(missing_ok=True)
             skipped[url] = r.status_code  # e.g. QuickStats 503 without QUICKSTATS_CSV
             continue
         f = file_for(out, url)
         f.parent.mkdir(parents=True, exist_ok=True)
         f.write_text(json.dumps(r.json(), indent=1), encoding='utf-8')
         written += 1
+    else:
+        (out / 'api/baseline/rollup.csv').unlink(missing_ok=True)
     csv = client.get('/api/baseline/rollup.csv')
     if csv.status_code == 200:
         (out / 'api/baseline').mkdir(parents=True, exist_ok=True)
@@ -57,15 +62,53 @@ def export(out: Path) -> dict:
     return {'out': str(out), 'written': written, 'skipped': skipped}
 
 
-def serve(out: Path, port: int) -> None:
-    class Handler(SimpleHTTPRequestHandler):
+def make_server(out: Path, port: int) -> ThreadingHTTPServer:
+    out = out.resolve()
+
+    class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
             parsed = urlparse(self.path)
-            target = out / parsed.path.lstrip('/') if parsed.path.endswith('.csv') else file_for(out, self.path)
-            if not target.is_file():
+            allowed = {urlparse(u).path for u in ROUTES} | {'/api/baseline/rollup.csv'}
+            observations = re.fullmatch(r'/api/fields/\d+/observations', parsed.path)
+            query = parse_qs(parsed.query)
+            if parsed.path not in allowed and not observations:
                 self.send_error(404, 'Not in snapshot')
                 return
-            body = target.read_bytes()
+            if observations and (len(query.get('year', [])) != 1 or
+                                 not re.fullmatch(r'\d{4}', query['year'][0])):
+                self.send_error(422, 'A four-digit year is required')
+                return
+            target = file_for(out, self.path).resolve()
+            if not target.is_relative_to(out):
+                self.send_error(404, 'Not in snapshot')
+                return
+            if not target.is_file():
+                self.send_error(503, 'Not in snapshot')
+                return
+            try:
+                body = target.read_bytes()
+                if parsed.path == '/api/quickstats':
+                    if query.get('state', ['MARYLAND']) != ['MARYLAND']:
+                        self.send_error(503, 'Only Maryland is exported')
+                        return
+                    rows = json.loads(body)
+                    for key, column, choices in [('year', 'year', None),
+                            ('crop_use', 'crop_use', ('grain', 'silage')),
+                            ('level', 'aggregation_level', ('STATE', 'COUNTY'))]:
+                        if key not in query:
+                            continue
+                        value = query[key][-1]
+                        if (choices and value not in choices) or (key == 'year' and not value.isdigit()):
+                            self.send_error(422, 'Invalid QuickStats filter')
+                            return
+                        if any(r[column] is None for r in rows):
+                            self.send_error(503, 'Snapshot cannot apply the requested filter')
+                            return
+                        rows = [r for r in rows if str(r[column]) == value]
+                    body = json.dumps(rows).encode('utf-8')
+            except (OSError, ValueError, KeyError, TypeError):
+                self.send_error(503, 'Snapshot is unreadable or invalid')
+                return
             self.send_response(200)
             self.send_header('Content-Type', 'text/csv' if target.suffix == '.csv' else 'application/json')
             self.send_header('Content-Length', str(len(body)))
@@ -76,8 +119,13 @@ def serve(out: Path, port: int) -> None:
         def do_POST(self):
             self.send_error(501, 'Static snapshot is read-only (no agent runs)')
 
+    return ThreadingHTTPServer(('127.0.0.1', port), Handler)
+
+
+def serve(out: Path, port: int) -> None:
     print(f'Serving {out} at http://127.0.0.1:{port}/api/...')
-    ThreadingHTTPServer(('127.0.0.1', port), Handler).serve_forever()
+    with make_server(out, port) as server:
+        server.serve_forever()
 
 
 def main():

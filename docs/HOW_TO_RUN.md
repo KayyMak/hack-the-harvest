@@ -1,6 +1,7 @@
 # How to run
 
-Everything below works offline from the versioned outputs in `baseline/outputs/`. Only the
+After installing dependencies, the API, dashboard, one command, notebook and static fallback
+work offline from the versioned outputs in `baseline/outputs/`. Only the
 satellite extraction (`baseline/run_baseline.py extract`) and the Nemotron agent need network
 access. Setup details for Windows are in [START_HERE.md](../START_HERE.md).
 
@@ -44,17 +45,15 @@ Writes `predictions.csv`, `metrics.json`, `rollup.json`, `quickstats_export.csv`
 
 ## 4. Agent (Nemotron)
 
-```sh
-.venv/bin/python -m pip install -r agent/requirements.txt
-.venv/bin/python -m agent.run
-```
-
-Needs `NVIDIA_API_KEY` in `.env` (never committed). See `agent/README.md` once the agent is
-merged; the API's `POST /api/agent/run` starts the same run in the background.
+The agent implementation is not included yet. `POST /api/agent/run` returns 501 until
+`agent.run.run_agent` is installed. Follow `agent/README.md` when that component lands
+for its dependencies, NVIDIA credentials and launch commands. The saved logistic
+predictions and the dashboard do not require Nemotron.
 
 ## 5. Submission notebook
 
-On Keeboh: set `QUICKSTATS_CSV` as above, `pip install scikit-learn` if missing, open
+Install `numpy pandas matplotlib scikit-learn jupyter nbconvert ipykernel` in the notebook
+environment. On Keeboh: set `QUICKSTATS_CSV` as above, open
 `Submission/harvest_submission.ipynb`, run all cells and save so outputs are stored. Or:
 
 ```sh
@@ -73,13 +72,16 @@ python3 scripts/export_static.py snapshot/ --serve-only        # later: no FastA
 
 It serves the same `/api/...` URLs on port 8000, so the dashboard works unchanged. Agent
 runs are not available from a snapshot (read-only; POST returns 501).
+QuickStats exports cover Maryland only; requests for another state return 503. Year,
+crop-use and level filters apply to saved rows. Missing exports return 503. Re-export
+after outputs change; a failed re-export removes the old response for that route.
 
 ## 7. Checks
 
 ```sh
-cd backend && ../.venv/bin/python -m unittest discover -s tests -v
-cd frontend && npm run build
-python scripts/smoke_test.py
+(cd backend && ../.venv/bin/python -m unittest discover -s tests -v)
+(cd frontend && npm run build)
+.venv/bin/python scripts/smoke_test.py
 ```
 
 ## 8. Re-running the analysis
