@@ -143,7 +143,9 @@ class ApiChecks(unittest.TestCase):
                 self.assertEqual(self.client.get('/api/agent/trace/bad id!').status_code, 400)
 
     def test_agent_run_without_agent_returns_501(self):
-        response = self.client.post('/api/agent/run', json={'query': 'classify 2022'})
+        # Simulate a build without agent/ (None in sys.modules makes the import fail).
+        with patch.dict('sys.modules', {'agent.run': None}):
+            response = self.client.post('/api/agent/run', json={'query': 'classify 2022'})
         self.assertEqual(response.status_code, 501)
 
     def test_rollup_statistics_and_csv(self):

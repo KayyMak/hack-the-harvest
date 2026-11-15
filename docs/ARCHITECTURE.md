@@ -59,6 +59,9 @@ are separate fields.
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
 | `GET /api/quickstats?state=&year=&crop_use=&level=` | Lab QuickStats rows (domain TOTAL) from optional `QUICKSTATS_CSV`, with value, `cv_percent`, source; suppressed `(D)` values are null; 503 if unset |
+| `GET /api/market/status` | `{configured, model, how_to_configure}`; whether the server has an NVIDIA key (never the key) |
+| `GET /api/market/outlook?season=&as_of=` | Month-by-month outlook known on `as_of`: 2025 US/Maryland (NASS forecasts + team silage estimates, supply change, price pressure) or 2021-2023 BARC model calls; no LLM |
+| `POST /api/market/report` `{year, as_of?}` | Nemotron writes a sample outlook as of a date from tool results and project-document passages (no later data); every sentence is cited and checked, unsupported ones are removed and listed in `grounding`; 503 with instructions when no key |
 | `POST /api/agent/run` `{query}` | `{run_id}`; starts `agent.run.run_agent(query, run_id)` in the background; 501 until the agent exists |
 | `GET /api/agent/trace/{run_id}` | Trace lines logged so far from `<traces>/<run_id>.jsonl` (the folder `agent/trace.py` writes; `/workspace/data/handoff/traces` on Keeboh, `agent_runs/traces` locally, or `AGENT_TRACES_DIR`); `[]` before the first step |
 | `GET /docs` | Interactive generated API documentation |

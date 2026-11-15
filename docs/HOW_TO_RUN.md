@@ -43,6 +43,17 @@ The Vite dev server proxies `/api` to port 8000.
 Writes `predictions.csv`, `metrics.json`, `rollup.json`, `quickstats_export.csv` and
 `run.json`. The as-of date uses only the monthly NDVI medians complete by then.
 
+## 3b. Sample market outlook (optional, Nemotron)
+
+Cutline's **Market** tab is a month-by-month corn market outlook that only uses what was known on the
+chosen date: the 2025 US/Maryland outlook (NASS forecasts plus the team's silage estimates) or the
+2021-2023 BARC model calls. Its figures and chart need no key. To let NVIDIA Nemotron write the outlook,
+copy `.env.example` to `.env` in the repo root and paste your key (`NVIDIA_API_KEY=...`, free at
+build.nvidia.com); the backend re-reads `.env` on each request, so no restart is needed. On Render, set
+`NVIDIA_API_KEY` as an environment variable. The key never reaches the browser. Every sentence of the
+report must cite our tool results or project documents; unsupported sentences are removed and listed.
+Data and rebuild commands: `market/README.md`.
+
 ## 4. Agent (Nemotron)
 
 The agent implementation is not included yet. `POST /api/agent/run` returns 501 until

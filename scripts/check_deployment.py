@@ -43,12 +43,14 @@ def check(base: str) -> None:
     request = Request(base + '/api/agent/run', data=b'{"query":"test"}',
                       headers={'Content-Type': 'application/json'})
     try:
-        urlopen(request, timeout=30)
-    except HTTPError as exc:
+        with urlopen(request, timeout=30) as response:  # agent installed: a run starts
+            agent = json.loads(response.read())
+        assert agent.get('run_id', '').startswith('r-'), f'Unexpected agent response: {agent}'
+        agent_state = 'agent run started'
+    except HTTPError as exc:  # no agent in this build: it must say so explicitly
         assert exc.code == 501, f'Unexpected agent response: {exc.code}'
-    else:
-        raise AssertionError('This deployment should explicitly report the missing agent')
-    print('Deployment checks passed: frontend, assets, saved data, API, and missing agent.')
+        agent_state = 'missing agent reported'
+    print(f'Deployment checks passed: frontend, assets, saved data, API, and {agent_state}.')
 
 
 if __name__ == '__main__':
