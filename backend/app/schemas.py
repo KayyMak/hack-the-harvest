@@ -165,3 +165,27 @@ class DeclineRuleBaseline(BaseModel):
     always_grain_same_rows: RuleMetrics
     by_year: dict[str, DeclineRuleYear]
     limitations: list[str]
+
+
+class ConvergencePoint(BaseModel):
+    as_of: date
+    mode: str
+    field_years: int = Field(ge=0)
+    expected_silage_acres: float = Field(ge=0)
+    expected_silage_acres_95ci: tuple[float, float]
+    cv_percent: float | None
+    predicted_silage_acres: float = Field(ge=0)
+    reference_silage_acres: float = Field(ge=0)
+    total_acres: float = Field(ge=0)
+    missing_acres_field_years: int = Field(ge=0)
+
+
+class ConvergenceYear(BaseModel):
+    year: int
+    points: list[ConvergencePoint]
+
+
+class Convergence(BaseModel):
+    scope: str
+    method: str
+    years: list[ConvergenceYear]

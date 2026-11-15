@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -60,6 +60,36 @@ def read_asof() -> AsOfResults:
         return AsOfResults.model_validate_json((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ArtifactUnavailable('Saved as-of results are missing or invalid; run python -m harvest.export_asof.') from exc
+
+
+def compute_convergence() -> Convergence:
+    """Silage-acre estimate at each saved as-of date, per year, next to BARC reference acres.
+
+    Same arithmetic as compute_rollup, applied to the saved as-of calls: expected = sum(p * acres),
+    95% interval from independent Bernoulli variance. The interval reflects the model's own
+    probabilities only; it does not include error in the probabilities themselves.
+    """
+    acres = {f.field_id: f.acres for f in read_fields()}
+    results = read_asof()
+    by_year: dict[int, list[ConvergencePoint]] = {}
+    for d in sorted(results.dates, key=lambda x: (x.year, x.as_of)):
+        known = [(p, acres[p.field_id]) for p in d.predictions if acres.get(p.field_id) is not None]
+        if not known:
+            continue
+        expected = sum(p.silage_probability * a for p, a in known)
+        sd = math.sqrt(sum(a * a * p.silage_probability * (1 - p.silage_probability) for p, a in known))
+        by_year.setdefault(d.year, []).append(ConvergencePoint(as_of=d.as_of, mode=d.mode,
+            field_years=len(d.predictions), expected_silage_acres=round(expected, 2),
+            expected_silage_acres_95ci=(round(max(0.0, expected - 1.96 * sd), 2), round(expected + 1.96 * sd, 2)),
+            cv_percent=round(100 * sd / expected, 1) if expected else None,
+            predicted_silage_acres=round(sum(a for p, a in known if p.predicted_label == 'Silage'), 2),
+            reference_silage_acres=round(sum(a for p, a in known if p.reference_label == 'Silage'), 2),
+            total_acres=round(sum(a for _, a in known), 2),
+            missing_acres_field_years=len(d.predictions) - len(known)))
+    return Convergence(scope='Labeled BARC field-years only; not a Maryland statewide estimate',
+        method=('expected = sum(p_silage * acres) from the saved as-of calls; 95% interval and CV% from '
+                'independent Bernoulli variance, as in /api/baseline/rollup'),
+        years=[ConvergenceYear(year=y, points=pts) for y, pts in sorted(by_year.items())])
 
 
 def _num(value: str | None) -> float | None:

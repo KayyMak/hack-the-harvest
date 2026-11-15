@@ -68,3 +68,34 @@ class DeclineRuleRoute(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ConvergenceRoute(unittest.TestCase):
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def test_matches_rollup_at_season_end_and_has_ordered_dates(self):
+        body = self.client.get('/api/baseline/convergence').json()
+        rollup = {y['year']: y for y in self.client.get('/api/baseline/rollup').json()['years']}
+        self.assertEqual([y['year'] for y in body['years']], [2021, 2022, 2023])
+        for year in body['years']:
+            dates = [p['as_of'] for p in year['points']]
+            self.assertEqual(dates, sorted(dates))
+            self.assertEqual(len(dates), 5)
+            last = year['points'][-1]
+            self.assertEqual(last['as_of'], f"{year['year']}-11-30")
+            expected = rollup[year['year']]
+            # as-of file stores probabilities to 6 decimals, so allow rounding noise
+            self.assertAlmostEqual(last['expected_silage_acres'], expected['expected_silage_acres'], delta=0.1)
+            for got, want in zip(last['expected_silage_acres_95ci'], expected['expected_silage_acres_95ci']):
+                self.assertAlmostEqual(got, want, delta=0.1)
+            for point in year['points']:
+                low, high = point['expected_silage_acres_95ci']
+                self.assertLessEqual(low, point['expected_silage_acres'])
+                self.assertLessEqual(point['expected_silage_acres'], high)
+                self.assertEqual(point['reference_silage_acres'], expected['reference_silage_acres'])
+
+    def test_missing_as_of_file_is_503(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/baseline/convergence').status_code, 503)
