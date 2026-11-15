@@ -24,6 +24,8 @@ from shapely.ops import unary_union
 import run_baseline as baseline
 
 OUT = HERE / 'outputs' / 'experiments' / 'no_scene_cloud_filter'
+# Frozen against the v1 (nine-feature) baseline it was run on; model v2 kept a byte-identical copy there.
+REFERENCE = HERE / 'outputs' / 'v1_backup'
 
 
 def fingerprint(value):
@@ -32,12 +34,12 @@ def fingerprint(value):
 
 def setup():
     baseline.verify_originals()
-    reference = pd.read_csv(HERE / 'outputs' / 'heldout_predictions.csv')
+    reference = pd.read_csv(REFERENCE / 'heldout_predictions.csv')
     fields = gpd.read_file(baseline.SOURCE, layer=baseline.LAYER)[['OBJECTID', 'geometry']]
     jobs = gpd.GeoDataFrame(reference[['OBJECTID', 'year', 'label']].merge(fields,
         on='OBJECTID', validate='many_to_one'), geometry='geometry', crs=fields.crs).to_crs(4326)
     jobs = jobs.sort_values(['year', 'OBJECTID']).reset_index(drop=True)
-    metadata = json.loads((HERE / 'outputs' / 'metrics.json').read_text())
+    metadata = json.loads((REFERENCE / 'metrics.json').read_text())
     assert len(jobs) == metadata['evaluated_field_years']
     assert jobs.label.isin(['Grain', 'Silage']).all()
     original = {(int(r.OBJECTID), int(r.year)): baseline.load_cache(r) for r in jobs.itertuples()}
@@ -45,7 +47,7 @@ def setup():
         raise ValueError('Original extraction cache is incomplete')
     config = dict(version=1, baseline_config=baseline.CONFIG,
         changed_policy='No scene-wide cloud threshold; original pixel mask/acceptance unchanged',
-        inputs={name: hashlib.sha256((HERE / 'outputs' / name).read_bytes()).hexdigest()
+        inputs={name: hashlib.sha256((REFERENCE / name).read_bytes()).hexdigest()
                 for name in ['heldout_predictions.csv', 'metrics.json']},
         original_cache_hashes={f'{fid}_{year}': fingerprint(cache) for (fid, year), cache in original.items()})
     path = OUT / 'protocol.json'

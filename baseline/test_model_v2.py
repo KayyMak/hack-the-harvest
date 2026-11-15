@@ -10,7 +10,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'model_v2'))
 import candidate  # noqa: E402
 import experiment as ex  # noqa: E402
-from features import (BASE_FEATURES, BASELINE_OUT, NO_DECLINE_DOY, build_table, daily_series,  # noqa: E402
+from features import (BASE_FEATURES, BASELINE_OUT, V1_REFERENCE, NO_DECLINE_DOY, build_table, daily_series,  # noqa: E402
                       timing_features)
 
 
@@ -108,7 +108,7 @@ class CandidateTest(unittest.TestCase):
     def test_saved_candidate_predictions_match_experiment(self):
         path = ex.OUT / 'heldout_predictions_candidate.csv'
         saved = pd.read_csv(path)
-        base = pd.read_csv(BASELINE_OUT / 'heldout_predictions.csv')
+        base = pd.read_csv(V1_REFERENCE / 'heldout_predictions.csv')
         self.assertEqual([c for c in saved.columns if c not in candidate.TIMING_FEATURES], list(base.columns))
         table, _ = build_table()
         proba, pred, folds, _ = ex.heldout(candidate.SPEC, table, ex.REFERENCE_SEED)

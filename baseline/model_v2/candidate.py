@@ -33,7 +33,7 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 import run_baseline as rb  # noqa: E402
-from features import (BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, base_features, build_table,  # noqa: E402
+from features import (BASE_FEATURES, TIMING_FEATURES, V1_REFERENCE, base_features, build_table,  # noqa: E402
                       daily_series, timing_features)
 from experiment import BY_NAME, REFERENCE_SEED, fit, heldout  # noqa: E402
 
@@ -111,7 +111,7 @@ def main():
     rb.verify_originals()
     OUT.mkdir(parents=True, exist_ok=True)
     table, _ = build_table()
-    saved = pd.read_csv(BASELINE_OUT / 'heldout_predictions.csv')
+    saved = pd.read_csv(V1_REFERENCE / 'heldout_predictions.csv')
     assert (saved[['OBJECTID', 'year', 'label']].to_numpy() == table[['OBJECTID', 'year', 'label']].to_numpy()).all()
     proba, pred, folds, cs = heldout(SPEC, table, REFERENCE_SEED)
     assert (folds == saved.fold.to_numpy()).all()
@@ -129,7 +129,7 @@ def main():
     final = build_model().fit(table[FEATURES], y, table.OBJECTID.to_numpy())
     report = dict(candidate='H', description=SPEC.description, features=FEATURES, threshold=0.5,
                   seed=REFERENCE_SEED, C_by_fold=cs, heldout_seed42=rb.metrics(y, pred, proba),
-                  baseline_seed42=json.loads((BASELINE_OUT / 'metrics.json').read_text())['logistic'],
+                  baseline_seed42=json.loads((V1_REFERENCE / 'metrics.json').read_text())['logistic'],
                   full_fit=dict(C=final.C_, **final.coefficients()),
                   changed_calls_vs_baseline=[dict(OBJECTID=int(r.OBJECTID), year=int(r.year), label=r.label,
                       baseline=b, candidate=c) for r, b, c in zip(saved.itertuples(), saved.predicted_label,
