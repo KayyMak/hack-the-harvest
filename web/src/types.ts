@@ -103,6 +103,136 @@ export interface RollupResponse {
   note?: string
 }
 
+/** GET /api/forecast_2025: `summary` is forecast/outputs/summary.json as saved (the graded output). */
+export interface ForecastStateRow {
+  state: string
+  silage: number
+  silage_low: number
+  silage_high: number
+  silage_se: number
+  /** null where NASS published no grain area for the state */
+  grain: number | null
+  grain_low: number | null
+  grain_high: number | null
+  grain_se: number | null
+}
+/** Percent errors are already percent (11.5 = 11.5%); coverage is a 0-1 fraction. */
+export interface ForecastBacktest {
+  state_years: number
+  median_abs_pct_error: number
+  mean_abs_pct_error: number
+  covered_by_95_interval: number
+  us_total?: Record<string, { est: number; truth: number; pct_error: number }>
+}
+export interface Forecast2025Summary {
+  method: string
+  answer_key_excluded: string
+  sources: Record<string, { title: string; released: string | null; url: string }>
+  backtest: { silage: ForecastBacktest; grain: ForecastBacktest }
+  /** the US total has no published grain range */
+  us: { silage: number; silage_se: number; silage_low: number; silage_high: number; grain: number; grain_se: number; grain_low?: number | null; grain_high?: number | null }
+  states: ForecastStateRow[]
+  convergence: { as_of: string; source: string }[]
+}
+export interface NassAcres {
+  silage: number | null
+  grain: number | null
+}
+/** One forecast figure next to NASS 2025 acres harvested; null comparison when NASS is unavailable. */
+export interface ForecastCrop {
+  value: number
+  low: number | null
+  high: number | null
+  nass: number | null
+  /** forecast - NASS, in acres */
+  error: number | null
+  /** error / NASS */
+  relative_error: number | null
+}
+export interface Forecast2025 {
+  summary: Forecast2025Summary
+  nass_source: string | null
+  maryland: { silage: ForecastCrop; grain: ForecastCrop }
+  us: { silage: ForecastCrop; grain: ForecastCrop }
+  /** years of the saved US backtest, e.g. ["2023", "2024"] */
+  backtest_years: string[]
+}
+
+/** GET /api/estimate_2025: `summary` is baseline/outputs/estimate_2025/summary.json as saved. */
+export interface EstimateAcres {
+  silage_acres: number
+  silage_acres_95ci: [number, number]
+  grain_acres: number
+  grain_acres_95ci: [number, number]
+  silage_share: number
+}
+/** error = model estimate - NASS, in acres; relative_error = error / NASS */
+export interface EstimateError {
+  error: number
+  relative_error: number
+}
+export interface EstimateErrors {
+  silage: EstimateError
+  grain: EstimateError
+}
+export interface Estimate2025Summary {
+  year: number
+  state: string
+  generated_utc: string
+  headline: 'calibrated' | 'raw'
+  population: {
+    source: string; corn_rule: string; csb_fields_maryland: number; corn_fields_2025: number; corn_acres_2025: number
+    /** all Maryland CDL 2025 corn pixels, for context */
+    cdl_corn_acres_2025?: number
+  }
+  sample: {
+    seed: number; stratified_by: string; requested_fields: number
+    sampled_fields: number; sampled_acres: number
+    scored_fields: number; scored_acres: number
+    skipped_fields: number; skipped_reasons: Record<string, number>
+    min_valid_dates: number
+    /** the sample is drawn in random batches; the estimate uses whole finished batches only */
+    batches_used?: number[]
+    batches_drawn?: number
+  }
+  model: {
+    name: string; training_field_years: number; features: string[]; threshold: number
+    training_silage_field_years?: number
+    sample_fields_called_silage?: number
+  }
+  raw: EstimateAcres
+  /** null when the misclassification adjustment is undefined; the raw numbers are then the headline */
+  calibrated: (EstimateAcres & {
+    method: string; tpr: number | null; fpr: number | null
+    predicted_silage_acre_share?: number
+    undefined_bootstrap_draws?: number
+  }) | null
+  nass_2025: { silage_acres: number; grain_acres: number; source: string }
+  benchmark: { raw: EstimateErrors; calibrated: EstimateErrors | null }
+  method: string
+  limitations: string[]
+  sources: { name: string; url: string; accessed: string }[]
+}
+/** One crop's headline: our model estimate next to NASS survey acres harvested. */
+export interface EstimateCrop {
+  acres: number
+  ci: [number, number]
+  nass_acres: number
+  error: number
+  relative_error: number
+  /** the uncalibrated figures, always present */
+  raw: { acres: number; ci: [number, number]; error: number; relative_error: number }
+}
+export interface Estimate2025 {
+  summary: Estimate2025Summary
+  /** unmodified `python -m harvest.benchmark` report, or null when it was not saved */
+  benchmark: Record<string, unknown> | null
+  /** false when calibration is unavailable and the headline is the raw estimate */
+  calibrated: boolean
+  silage: EstimateCrop
+  grain: EstimateCrop
+}
+
 /** GET /fields/{id}/series?year= */
 export interface SeriesPoint {
   date: string

@@ -13,6 +13,8 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
+  baseline/outputs/estimate_2025/summary.json (+ benchmark.json) -> estimate_2025.json (2025 Maryland estimate)
+  forecast/outputs/summary.json (+ data/reference NASS 2025 acres) -> forecast_2025.json (graded 2025 forecast)
   baseline/outputs/unlabeled/                -> unlabeled.json (model calls on blank-label corn fields)
 Agent execution is unavailable in static mode.
 
@@ -249,11 +251,15 @@ def main() -> None:
 
     # ---- per-date NDVI series for scored field-years ----
     series = defaultdict(list)
-    with (BASE / 'observations.csv').open(encoding='utf-8', newline='') as f:
-        for r in csv.DictReader(f):
-            if r['status'] != 'ok' or not r['ndvi']:
-                continue
-            series[(int(r['OBJECTID']), int(r['year']))].append({'date': r['date'], 'ndvi': round(float(r['ndvi']), 4), 'ndti': None})
+    sources = [BASE / 'observations.csv']
+    if (BASE / 'unlabeled' / 'observations.csv').exists():  # unlabeled field-years with model calls
+        sources.append(BASE / 'unlabeled' / 'observations.csv')
+    for source in sources:
+        with source.open(encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                if r['status'] != 'ok' or not r['ndvi']:
+                    continue
+                series[(int(r['OBJECTID']), int(r['year']))].append({'date': r['date'], 'ndvi': round(float(r['ndvi']), 4), 'ndti': None})
     for (oid, year), pts in series.items():
         pts.sort(key=lambda p: p['date'])
         write(f'series_{oid}_{year}', {'OBJECTID': oid, 'year': year, 'points': pts, 'decline_date': None})
@@ -313,6 +319,25 @@ def main() -> None:
         for png in cdir.glob('*.png'):
             shutil.copy2(png, OUT / 'chips' / png.name)
             has_chips = True
+
+    # ---- optional: 2025 Maryland estimate, in the same {summary, benchmark} shape as GET /api/estimate_2025 ----
+    edir = BASE / 'estimate_2025'
+    if (edir / 'summary.json').exists():
+        bpath = edir / 'benchmark.json'
+        write('estimate_2025', {
+            'summary': json.loads((edir / 'summary.json').read_text(encoding='utf-8')),
+            'benchmark': json.loads(bpath.read_text(encoding='utf-8')) if bpath.exists() else None,
+        })
+    else:  # not generated yet: the dashboard shows a pending slot instead
+        print(f"skipped estimate_2025.json ({edir / 'summary.json'} not found)")
+
+    # ---- graded 2025 forecast: the backend's own reader, so the snapshot matches GET /api/forecast_2025 ----
+    try:
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app.artifacts import read_forecast_2025
+        write('forecast_2025', read_forecast_2025().model_dump(mode='json', exclude_unset=True))
+    except Exception as exc:  # missing forecast or backend deps: the dashboard shows a pending slot instead
+        print(f'skipped forecast_2025.json ({exc})')
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:

@@ -10,13 +10,14 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow, SignalContribution,
-    Rollup, UnlabeledCall, UnlabeledCalls, YearRollup)
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Estimate2025, Forecast2025, Nass2025, Observation, Prediction, QuickStatsRow, Rollup, YearRollup, UnlabeledCall, UnlabeledCalls, SignalContribution)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / 'baseline' / 'outputs'
 FIELDS_GPKG = ROOT / 'BARC_Corn.2021-2023.gpkg'
 FIELDS_TABLE = 'barc_silage_grain_corn20212023'
+FORECAST_SUMMARY = ROOT / 'forecast' / 'outputs' / 'summary.json'
+NASS_2025_CSV = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
 
 
 class ArtifactUnavailable(Exception):
@@ -108,6 +109,49 @@ def compute_convergence() -> Convergence:
         years=[ConvergenceYear(year=y, points=pts) for y, pts in sorted(by_year.items())])
 
 
+def read_estimate_2025() -> Estimate2025:
+    """Saved 2025 Maryland estimate, written offline by baseline/estimate_2025 (never computed here).
+    benchmark.json is the unmodified `python -m harvest.benchmark` report; null when it was not saved."""
+    directory = OUTPUT_DIR / 'estimate_2025'
+    try:
+        summary = json.loads((directory / 'summary.json').read_text(encoding='utf-8'))
+        benchmark = None
+        if (directory / 'benchmark.json').exists():
+            benchmark = json.loads((directory / 'benchmark.json').read_text(encoding='utf-8'))
+            if not isinstance(benchmark, dict):
+                raise ValueError('Benchmark report is not a JSON object')
+        return Estimate2025.model_validate({'summary': summary, 'benchmark': benchmark})
+    except (OSError, ValueError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved 2025 Maryland estimate is missing or invalid; '
+            'expected baseline/outputs/estimate_2025/summary.json.') from exc
+
+
+def read_nass_2025() -> Nass2025 | None:
+    """Maryland and US 2025 acres harvested from the judges' QuickStats file; None if unreadable."""
+    from .benchmark import BenchmarkError, read_rows
+    try:
+        rows = read_rows(NASS_2025_CSV, 'NASS 2025 reference')['rows']
+    except BenchmarkError:
+        return None
+    def value(geography: str, crop: str) -> float | None:
+        found = [r['value'] for r in rows if r['year'] == 2025 and r['geography'] == geography
+                 and r['crop_use'] == crop and r['geo_kind'] in ('STATE', 'NATIONAL')]
+        return found[0] if len(found) == 1 else None
+    return Nass2025(source=f'NASS QuickStats 2025 acres harvested ({NASS_2025_CSV.name})',
+        maryland={'silage': value('MARYLAND', 'Silage'), 'grain': value('MARYLAND', 'Grain')},
+        us={'silage': value('US TOTAL', 'Silage'), 'grain': value('US TOTAL', 'Grain')})
+
+
+def read_forecast_2025() -> Forecast2025:
+    """Saved 2025 forecast from forecast/outputs/summary.json (written by forecast/estimate_2025.py)."""
+    try:
+        summary = json.loads(FORECAST_SUMMARY.read_text(encoding='utf-8'))
+        return Forecast2025.model_validate({'summary': summary, 'nass_2025': read_nass_2025()})
+    except (OSError, ValueError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved 2025 forecast is missing or invalid; '
+            'expected forecast/outputs/summary.json.') from exc
+
+
 def read_unlabeled() -> UnlabeledCalls:
     """Saved model calls on blank-label field-years that CDL marks as corn.
 
@@ -176,6 +220,12 @@ def read_observations(field_id: int, year: int) -> list[Observation]:
         with (OUTPUT_DIR / 'observations.csv').open(encoding='utf-8', newline='') as file:
             rows = [r for r in csv.DictReader(file)
                     if r['OBJECTID'] == str(field_id) and r['year'] == str(year)]
+        unlabeled = OUTPUT_DIR / 'unlabeled' / 'observations.csv'
+        if not rows and unlabeled.exists():
+            # Unlabeled field-years with season-end model calls, same columns and recipe.
+            with unlabeled.open(encoding='utf-8', newline='') as file:
+                rows = [r for r in csv.DictReader(file)
+                        if r['OBJECTID'] == str(field_id) and r['year'] == str(year)]
         return sorted((Observation(date=r['date'], ndvi=_num(r['ndvi']),
             clear_fraction=_num(r['clear_fraction']),
             scene_cloud_percent=_num(r['scene_cloud_percent']), status=r['status'])

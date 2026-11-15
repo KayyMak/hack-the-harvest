@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSummary, adaptUnlabeled, fieldLayerKey, unlabeledCallsAt } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey, adaptUnlabeled, unlabeledCallsAt } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -119,6 +119,101 @@ test('live client uses existing /api routes and the published response shapes', 
   assert.equal(meta.season_end_only, false)
   assert.equal(meta.as_of_dates.length, 15)
 })
+// Synthetic values for shape checks only; these are not results.
+const estimateSummary = () => ({
+  year: 2025, state: 'MARYLAND', generated_utc: '2000-01-01T00:00:00+00:00', headline: 'calibrated',
+  population: { source: 'synthetic', corn_rule: 'synthetic', csb_fields_maryland: 100, corn_fields_2025: 40, corn_acres_2025: 1000 },
+  sample: { seed: 1, stratified_by: 'county', requested_fields: 10, sampled_fields: 10, sampled_acres: 250, scored_fields: 8,
+    scored_acres: 200, skipped_fields: 2, skipped_reasons: { too_few_clear_dates: 1, read_error: 1 }, min_valid_dates: 3 },
+  model: { name: 'synthetic', training_field_years: 4, features: ['ndvi_07'], threshold: 0.5 },
+  raw: { silage_acres: 300, silage_acres_95ci: [200, 400], grain_acres: 700, grain_acres_95ci: [600, 800], silage_share: 0.3 },
+  calibrated: { silage_acres: 250, silage_acres_95ci: [100, 400], grain_acres: 750, grain_acres_95ci: [600, 900], silage_share: 0.25,
+    method: 'synthetic', tpr: 0.5, fpr: 0.1 },
+  nass_2025: { silage_acres: 200, grain_acres: 800, source: 'synthetic' },
+  benchmark: {
+    raw: { silage: { error: 100, relative_error: 0.5 }, grain: { error: -100, relative_error: -0.125 } },
+    calibrated: { silage: { error: 50, relative_error: 0.25 }, grain: { error: -50, relative_error: -0.0625 } },
+  },
+  method: 'synthetic', limitations: ['synthetic'], sources: [{ name: 'synthetic', url: 'https://example.invalid/', accessed: '2000-01-01' }],
+})
+
+test('2025 estimate comes from /api/estimate_2025 with the calibrated numbers as the headline', async (t) => {
+  const calls = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url)
+    return Response.json({ summary: estimateSummary(), benchmark: { model_name: 'synthetic' } })
+  })
+  const result = await api.estimate2025()
+  assert.deepEqual(calls, ['/api/estimate_2025'])
+  assert.equal(result.calibrated, true)
+  assert.deepEqual(result.silage, { acres: 250, ci: [100, 400], nass_acres: 200, error: 50, relative_error: 0.25,
+    raw: { acres: 300, ci: [200, 400], error: 100, relative_error: 0.5 } })
+  assert.deepEqual([result.grain.acres, result.grain.nass_acres, result.grain.error, result.grain.raw.acres], [750, 800, -50, 700])
+  assert.deepEqual(result.summary, estimateSummary())
+  assert.deepEqual(result.benchmark, { model_name: 'synthetic' })
+})
+
+test('without calibration the raw 2025 estimate is the headline and is marked uncalibrated', () => {
+  const summary = { ...estimateSummary(), headline: 'raw', calibrated: null }
+  summary.benchmark.calibrated = null
+  const result = adaptEstimate2025({ summary, benchmark: null })
+  assert.equal(result.calibrated, false)
+  assert.equal(result.benchmark, null)
+  assert.deepEqual([result.silage.acres, result.silage.ci, result.silage.error], [300, [200, 400], 100])
+  assert.deepEqual([result.grain.acres, result.grain.relative_error], [700, -0.125])
+})
+
+test('a missing or incomplete 2025 estimate rejects instead of showing numbers', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('{"detail":"missing"}', { status: 503 }))
+  await assert.rejects(api.estimate2025(), (error) => error.status === 503 && /estimate_2025/.test(error.message))
+  assert.throws(() => adaptEstimate2025({}), /incomplete/)
+  const noErrors = estimateSummary()
+  delete noErrors.benchmark.calibrated
+  assert.throws(() => adaptEstimate2025({ summary: noErrors, benchmark: null }), /incomplete/)
+  const noRange = estimateSummary()
+  delete noRange.raw.grain_acres_95ci
+  assert.throws(() => adaptEstimate2025({ summary: noRange, benchmark: null }), /incomplete/)
+})
+
+const forecast = JSON.parse(readFileSync(new URL('../../forecast/outputs/summary.json', import.meta.url), 'utf8'))
+// Synthetic reference values for shape checks only; real NASS values are read by the backend.
+const nassFixture = { source: 'synthetic', maryland: { silage: 50000, grain: 400000 }, us: { silage: 6000000, grain: null } }
+
+test('2025 forecast comes from /api/forecast_2025 and picks the Maryland and US rows', async (t) => {
+  const calls = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url)
+    return Response.json({ summary: forecast, nass_2025: nassFixture })
+  })
+  const result = await api.forecast2025()
+  assert.deepEqual(calls, ['/api/forecast_2025'])
+  const md = forecast.states.find((s) => s.state === 'MARYLAND')
+  assert.equal(result.maryland.silage.value, md.silage)
+  assert.deepEqual([result.maryland.silage.low, result.maryland.silage.high], [md.silage_low, md.silage_high])
+  assert.equal(result.maryland.silage.error, md.silage - 50000)
+  assert.equal(result.maryland.silage.relative_error, (md.silage - 50000) / 50000)
+  assert.equal(result.maryland.grain.value, md.grain)
+  assert.equal(result.us.silage.value, forecast.us.silage)
+  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [null, null, null], 'no US grain range or NASS: nothing invented')
+  assert.deepEqual(result.backtest_years, Object.keys(forecast.backtest.silage.us_total).sort())
+})
+
+test('without NASS reference acres the forecast still shows but no error is computed', () => {
+  const result = adaptForecast2025({ summary: forecast, nass_2025: null })
+  assert.equal(result.nass_source, null)
+  for (const c of [result.maryland.silage, result.maryland.grain]) {
+    assert.deepEqual([c.nass, c.error, c.relative_error], [null, null, null])
+    assert.ok(c.value > 0)
+  }
+})
+
+test('a missing forecast or one without Maryland rejects instead of showing numbers', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('{"detail":"missing"}', { status: 503 }))
+  await assert.rejects(api.forecast2025(), (error) => error.status === 503 && /forecast_2025/.test(error.message))
+  const noMaryland = { ...forecast, states: forecast.states.filter((s) => s.state !== 'MARYLAND') }
+  assert.throws(() => adaptForecast2025({ summary: noMaryland, nass_2025: nassFixture }), /no Maryland row/)
+  assert.throws(() => adaptForecast2025({}), /no Maryland row/)
+})
 
 const unlabeledFixture = {
   caveat: 'These are model calls on BARC field-years that have no silage/grain label.',
@@ -159,4 +254,9 @@ test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-
   for (const asOf of ['2022-08-12', '2022-09-12', '2022-10-12', '2022-11-12']) assert.deepEqual(unlabeledCallsAt(view, 2022, asOf), [])
   assert.deepEqual(unlabeledCallsAt(view, 2023, '2023-11-30'), [], 'another year\'s calls are never shown')
   assert.deepEqual(unlabeledCallsAt(null, 2022, '2022-11-30'), [])
+})
+
+test('field acres are rounded to one decimal for display', () => {
+  const f = adaptFields(fields, 2022).features.find((x) => x.properties.OBJECTID === 231)
+  assert.equal(f.properties.ACRES, 9.8)
 })

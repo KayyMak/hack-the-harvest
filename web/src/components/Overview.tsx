@@ -1,8 +1,10 @@
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { EvaluateResponse, Pred, RollupResponse, UnlabeledYearView } from '../api'
+import type { EvaluateResponse, Forecast2025, Pred, RollupResponse, UnlabeledYearView } from '../api'
 import { acres, num, pct, shortDate } from '../format'
+import type { AsyncState } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps } from './charts'
+import { ForecastCards } from './Forecast2025'
 import { Pending } from './Pending'
 
 export interface ReviewItem {
@@ -17,6 +19,8 @@ interface Props {
   asOf: string
   counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number }
   rollup: RollupResponse | null
+  /** graded 2025 Maryland forecast vs NASS; pending until the saved forecast exists */
+  forecast: AsyncState<Forecast2025>
   /** season-end model calls on blank-label fields that CDL marks as corn */
   unlabeled?: UnlabeledYearView | null
   unlabeledError?: Error | null
@@ -34,7 +38,7 @@ interface Props {
 const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError, unlabeledAtSeasonEnd = false, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
+export function Overview({ year, asOf, counts, rollup, forecast, unlabeled, unlabeledError, unlabeledAtSeasonEnd = false, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
   const chart = useTheme().chart
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
@@ -48,6 +52,7 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
   return (
     <>
       <div className="lead">
+      <ForecastCards state={forecast} />
       <section className="kpis" aria-label="Key figures">
         {rollup || !base ? (
           <article className="glass kpi">
