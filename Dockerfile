@@ -25,6 +25,7 @@ COPY data/reference/quickstats_2025_judges.csv ./data/reference/quickstats_2025_
 ENV QUICKSTATS_CSV=/app/data/reference/quickstats_2025_judges.csv
 COPY market/data/nass_market.csv market/data/nass_sources.json market/data/market_timeline.json ./market/data/
 COPY forecast/outputs/summary.json ./forecast/outputs/summary.json
+COPY forecast_v2/outputs/summary.json ./forecast_v2/outputs/summary.json
 # Project documents the market report retrieves from (backend/app/docsearch.py CORPUS).
 COPY data_sources.md ./
 COPY data/README.md ./data/README.md
