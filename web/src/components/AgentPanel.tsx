@@ -4,7 +4,7 @@ import type { AgentTraceResponse, TraceLine } from '../api'
 import { Markdown } from './Markdown'
 
 const DEFAULT_QUERY =
-  "Classify BARC's 2022 fields as of October 12, score them against the labels, and roll Maryland up against the 2022 Census."
+  "Score BARC's 2022 fields as of October 12 against the labels. Then look up NASS 2025 Maryland corn acres harvested for silage and for grain, and say whether BARC's labeled fields look more silage-heavy than Maryland as a whole."
 const POLL_MS = 1000
 
 export function AgentPanel() {
@@ -18,6 +18,7 @@ export function AgentPanel() {
   const run = async () => {
     setError(null)
     setTrace(null)
+    setRunId(null)
     setStarting(true)
     try {
       const res = await api.agentRun(query)
@@ -55,7 +56,7 @@ export function AgentPanel() {
     listRef.current?.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [trace?.lines.length])
 
-  const status = starting ? 'starting' : (trace?.status ?? (runId ? 'running' : 'idle'))
+  const status = starting ? 'starting' : error ? 'error' : (trace?.status ?? (runId ? 'running' : 'idle'))
   const flags = trace?.lines.filter((l) => l.type === 'flag').length ?? 0
   const report = trace?.lines.findLast((l) => l.type === 'report')
 

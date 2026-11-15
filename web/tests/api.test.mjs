@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey, adaptUnlabeled, unlabeledCallsAt } from '../src/adapter.ts'
-import { api } from '../src/api.ts'
+import { api, traceStatus } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
 const fields = artifact('fields.geojson')
@@ -273,4 +273,32 @@ test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-
 test('field acres are rounded to one decimal for display', () => {
   const f = adaptFields(fields, 2022).features.find((x) => x.properties.OBJECTID === 231)
   assert.equal(f.properties.ACRES, 9.8)
+})
+
+test('an agent run that ends with an error before its report is shown as an error, not done', async (t) => {
+  const traces = {
+    'r-key': [
+      { step: 1, node: 'analyst', type: 'plan', summary: 'request: anything' },
+      { step: 2, node: 'writer', type: 'error', summary: 'NVIDIA_API_KEY is not set (environment or the repo-root .env).' },
+      { step: 3, node: 'writer', type: 'report', summary: 'The agent stopped before finishing: NVIDIA_API_KEY is not set' },
+    ],
+    'r-ok': [
+      { step: 1, node: 'analyst', type: 'plan', summary: 'request: score 2022' },
+      { step: 2, node: 'tools', type: 'tool_result', summary: 'n=7' },
+      { step: 3, node: 'verifier', type: 'check', summary: 'every number in the draft appears in a tool result' },
+      { step: 4, node: 'writer', type: 'report', summary: '## Answer' },
+    ],
+    'r-fallback': [
+      { step: 1, node: 'writer', type: 'error', summary: 'Could not get a reply from the NVIDIA API' },
+      { step: 2, node: 'writer', type: 'plan', summary: 'still no usable report: writing a summary of the tool results' },
+      { step: 3, node: 'writer', type: 'report', summary: '## Summary of tool results' },
+    ],
+    'r-live': [{ step: 1, node: 'analyst', type: 'plan', summary: 'request: anything' }],
+  }
+  t.mock.method(globalThis, 'fetch', async (url) => Response.json(traces[url.split('/').at(-1)]))
+  assert.equal((await api.agentTrace('r-key')).status, 'error')
+  assert.equal((await api.agentTrace('r-ok')).status, 'done')
+  assert.equal((await api.agentTrace('r-fallback')).status, 'done', 'a fallback summary is still a finished report')
+  assert.equal((await api.agentTrace('r-live')).status, 'running')
+  assert.equal(traceStatus([]), 'running')
 })

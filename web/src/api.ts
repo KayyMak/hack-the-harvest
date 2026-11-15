@@ -93,6 +93,16 @@ const post = <T>(path: string, body: unknown) =>
 const LIVE_YEARS = [2021, 2022, 2023]
 const LIVE_MONTH_DAYS = ['08-12', '09-12', '10-12', '11-12', '11-30']
 const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
+
+/**
+ * Run status from its trace. The agent always ends a trace with a report line, even when it fails;
+ * a failed run logs an `error` line right before that report ("The agent stopped before finishing: …").
+ */
+export function traceStatus(lines: AgentTraceResponse['lines']): AgentTraceResponse['status'] {
+  const last = lines.findLastIndex((line) => line.type === 'report')
+  if (last < 0) return 'running'
+  return last > 0 && lines[last - 1].type === 'error' ? 'error' : 'done'
+}
 // The signal breakdown is optional: without it the field panel shows its pending state.
 const contributions = () =>
   getJson<SavedContribution[]>(`${API_URL}/api/baseline/contributions`).catch((): SavedContribution[] => [])
@@ -195,7 +205,7 @@ export const api = {
   agentTrace: async (runId: string): Promise<AgentTraceResponse> => {
     if (STATIC) throw new ApiError('No agent ran for this static snapshot.', 501)
     const lines = await getJson<AgentTraceResponse['lines']>(`${API_URL}/api/agent/trace/${encodeURIComponent(runId)}`)
-    return { run_id: runId, lines, status: lines.some((line) => line.type === 'report') ? 'done' : 'running' }
+    return { run_id: runId, lines, status: traceStatus(lines) }
   },
 
   /** Before/after image chip URL for a field-year. */

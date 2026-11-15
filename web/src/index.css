@@ -1459,6 +1459,7 @@ textarea {
 [data-theme='glass'] .status { text-transform: none; letter-spacing: 0; font-weight: 600; }
 [data-theme='glass'] .status--running, [data-theme='glass'] .status--starting { color: #f2c46d; }
 [data-theme='glass'] .status--done { color: #a6e3b7; }
+[data-theme='glass'] .status--error { color: #ff9e92; }
 [data-theme='glass'] .trace__item { background: rgba(0, 0, 0, 0.18); border-color: rgba(255, 255, 255, 0.06); border-left-width: 3px; border-radius: 12px; }
 [data-theme='glass'] .trace__type { text-transform: none; letter-spacing: 0; font-weight: 500; }
 [data-theme='glass'] .node { background: rgba(255, 255, 255, 0.1); color: #e8eeeb; border-radius: 6px; font-weight: 600; }
@@ -1834,6 +1835,7 @@ textarea {
 :root[data-theme='glass'][data-mode='light'] .status--running,
 :root[data-theme='glass'][data-mode='light'] .status--starting { color: #8a5a00; }
 :root[data-theme='glass'][data-mode='light'] .status--done { color: #1f6a2a; }
+:root[data-theme='glass'][data-mode='light'] .status--error { color: #b3261e; }
 :root[data-theme='glass'][data-mode='light'] .node { background: rgba(20, 45, 38, 0.08); color: #13221d; }
 :root[data-theme='glass'][data-mode='light'] .node--verifier { background: #f2c46d; color: #13221d; }
 :root[data-theme='glass'][data-mode='light'] .node--writer { background: transparent; color: #13221d; border-color: #13221d; }
