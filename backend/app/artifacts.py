@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, BaselineSummary, BarcField, Estimate2025, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,6 +51,23 @@ def read_asof() -> AsOfResults:
         return AsOfResults.model_validate_json((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ArtifactUnavailable('Saved as-of results are missing or invalid; run python -m harvest.export_asof.') from exc
+
+
+def read_estimate_2025() -> Estimate2025:
+    """Saved 2025 Maryland estimate, written offline by baseline/estimate_2025 (never computed here).
+    benchmark.json is the unmodified `python -m harvest.benchmark` report; null when it was not saved."""
+    directory = OUTPUT_DIR / 'estimate_2025'
+    try:
+        summary = json.loads((directory / 'summary.json').read_text(encoding='utf-8'))
+        benchmark = None
+        if (directory / 'benchmark.json').exists():
+            benchmark = json.loads((directory / 'benchmark.json').read_text(encoding='utf-8'))
+            if not isinstance(benchmark, dict):
+                raise ValueError('Benchmark report is not a JSON object')
+        return Estimate2025.model_validate({'summary': summary, 'benchmark': benchmark})
+    except (OSError, ValueError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved 2025 Maryland estimate is missing or invalid; '
+            'expected baseline/outputs/estimate_2025/summary.json.') from exc
 
 
 def _num(value: str | None) -> float | None:

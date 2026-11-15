@@ -48,6 +48,7 @@ are separate fields.
 | `GET /api/baseline/asof?year=` | Saved mid-season calls for Aug 12, Sep 12, Oct 12, Nov 12 and Nov 30 of each year, with scores pooled over 2021-2023; written by `python -m harvest.export_asof`; 503 if missing |
 | `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using acre-weighted rates from the other years (labeled field-years only) |
 | `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
+| `GET /api/estimate_2025` | `{summary, benchmark}`: the saved 2025 Maryland silage and grain acre estimate from a sample of corn fields (raw and misclassification-adjusted, 95% ranges, sample and skipped-field counts) next to NASS 2025 survey acres harvested, plus the `python -m harvest.benchmark` report or null; read from `baseline/outputs/estimate_2025/`; a model estimate, not a USDA/NASS release; 503 if missing or invalid |
 | `GET /api/fields.geojson` | All 83 field polygons (EPSG:4326, GeoJSON) with `field_id`, farm, field, acres and `reference_<year>` labels (null = unlabeled); from `baseline/outputs/fields.geojson`; 503 if missing |
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |

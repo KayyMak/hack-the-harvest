@@ -7,11 +7,11 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_rollup, read_asof, rollup_quickstats_csv, read_fields, read_fields_geojson,
-    read_observations,
+    read_estimate_2025, read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import AsOfResults, BaselineSummary, BarcField, Estimate2025, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -62,6 +62,14 @@ def rollup_csv() -> PlainTextResponse:
     """Roll-up in QuickStats column shape, for download."""
     return PlainTextResponse(_serve(rollup_quickstats_csv), media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="quickstats_export.csv"'})
+
+
+# Optional keys the saved file does not carry are left out of the response, not sent as null.
+@app.get('/api/estimate_2025', response_model=Estimate2025, response_model_exclude_unset=True)
+def estimate_2025() -> Estimate2025:
+    """Saved 2025 Maryland silage/grain acre estimate from a sample of corn fields, next to
+    NASS survey acres harvested. A model estimate, not a USDA/NASS release. 503 until saved."""
+    return _serve(read_estimate_2025)
 
 
 @app.get('/api/fields.geojson')

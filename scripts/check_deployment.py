@@ -28,6 +28,8 @@ def check(base: str) -> None:
     assert json.loads(get('/api/fields.geojson'))['features']
     assert json.loads(get('/api/baseline/rollup'))['years']
     assert json.loads(get('/api/baseline/asof'))['pooled']
+    estimate = json.loads(get('/api/estimate_2025'))['summary']
+    assert estimate['year'] == 2025 and estimate[estimate['headline']]['silage_acres'] > 0
     row = rows[0]
     assert json.loads(get(f"/api/fields/{row['field_id']}/observations?year={row['year']}"))
     assert json.loads(get('/openapi.json'))['paths']
