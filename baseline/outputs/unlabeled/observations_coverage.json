@@ -1,0 +1,10 @@
+{
+ "scope": "every blank-label field-year in corn_check.csv; model calls only for the likely-corn ones",
+ "blank_field_years": 205,
+ "with_series": 205,
+ "with_model_call": 33,
+ "evidence_only": 172,
+ "missing_cache": [],
+ "no_usable_looks": [],
+ "scenes_still_failing_to_read": {}
+}
