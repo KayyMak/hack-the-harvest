@@ -84,7 +84,9 @@ the forecast's backtest, not a classifier split.
 - **Silage is still over-called in several states.** US silage is +5.2% and 22 of 48 states are within 10%. The largest
   over-calls are Arkansas (+73%), North Dakota (+62%), Louisiana (+57%), South Carolina (+52%), Iowa (+43%) and Kansas (+42%)
   (`forecast_v2/outputs/benchmark.json`): in 2025 those states shifted corn toward grain, which past shares cannot see before
-  January. Maryland silage moved from -6.0% (first forecast) to -8.4%.
+  January. After the fact, 16 of the 18 states over-called by more than 10% had 2025 silage below their own 2020-2024
+  average (Iowa 250,000 vs a 342,000 average), and 7 of the 8 under-called states had it above
+  (`web/public/forecast_2025.json`, `why_silage`). Maryland silage moved from -6.0% (first forecast) to -8.4%.
 - **Ranges are honest but wide for small states.** NASS fell inside our 95% range for 48 of 48 silage and 38 of 41 grain
   states; ranges are calibrated on the 2018-2024 backtest for each release date, so they narrow only as far as history
   supports (silage accuracy does not improve from June to November; grain does).
