@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_STATIC?: string
 }
 
+declare const __BUILD_DATE__: string
+
 interface ImportMeta {
   readonly env: ImportMetaEnv
 }

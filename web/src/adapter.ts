@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { EvaluateResponse, FieldsResponse, Label, Pred, SeriesResponse } from './types'
+import type { BarcRollupYear, BaselineSummary, EvaluateResponse, FieldsResponse, Label, Pred, SeriesResponse } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -48,7 +48,7 @@ export function adaptFields(data: SavedFields, year: number): FieldsResponse {
     features: data.features.map((f) => ({
       type: 'Feature', geometry: f.geometry,
       properties: { OBJECTID: f.properties.field_id, label: f.properties[reference] ?? null,
-        FIELD: f.properties.field ?? undefined, ACRES: f.properties.acres ?? undefined },
+        FIELD: f.properties.field ?? undefined, ACRES: f.properties.acres == null ? undefined : Math.round(f.properties.acres * 10) / 10 },
     })),
   }
 }
@@ -100,4 +100,63 @@ export function adaptSeries(data: { date: string; ndvi: number | null; status: s
 /** Leaflet data is immutable; remount when the year's reference labels change. */
 export function fieldLayerKey(data: FieldsResponse): string {
   return data.features.map((f) => `${f.properties.OBJECTID}:${f.properties.label ?? ''}`).join('|')
+}
+
+/** Scores for one set of held-out rows, in the same shape as the saved metrics. */
+function score(rows: { truth: Label; call: Label; p: number }[]): BaselineSummary {
+  const order: Label[] = ['Grain', 'Silage']
+  const cm = order.map((t) => order.map((c) => rows.filter((r) => r.truth === t && r.call === c).length))
+  const [[gg, gs], [sg, ss]] = cm
+  const recallG = gg + gs ? gg / (gg + gs) : 0
+  const recallS = sg + ss ? ss / (sg + ss) : 0
+  return {
+    n: rows.length,
+    silage_precision: gs + ss ? ss / (gs + ss) : 0,
+    silage_recall: recallS,
+    balanced_accuracy: (recallG + recallS) / 2,
+    brier_score: rows.length ? rows.reduce((a, r) => a + (r.p - (r.truth === 'Silage' ? 1 : 0)) ** 2, 0) / rows.length : 0,
+    confusion_matrix: cm,
+  }
+}
+
+/**
+ * Per-year model vs always-grain scores, computed from the same saved held-out predictions
+ * (the public summary route only carries the pooled numbers).
+ */
+export function byYearFromPredictions(data: SavedPrediction[]): NonNullable<EvaluateResponse['by_year']> {
+  const out: NonNullable<EvaluateResponse['by_year']> = {}
+  for (const year of [...new Set(data.map((p) => p.year))].sort()) {
+    const rows = data.filter((p) => p.year === year)
+    out[String(year)] = {
+      model: score(rows.map((p) => ({ truth: p.reference_label, call: p.predicted_label, p: p.silage_probability }))),
+      baseline: { ...score(rows.map((p) => ({ truth: p.reference_label, call: 'Grain' as Label, p: 0 }))), name: 'Always grain' },
+    }
+  }
+  return out
+}
+
+export interface SavedRollup {
+  scope: string
+  method: string
+  years: {
+    year: number
+    field_years: number
+    total_acres: number
+    reference_silage_acres: number
+    expected_silage_acres: number
+    expected_silage_acres_95ci: [number, number]
+    cv_percent: number | null
+    adjusted_silage_acres: number | null
+  }[]
+}
+
+/** The saved BARC-only acre roll-up for one year (labeled BARC fields; not a statewide estimate). */
+export function adaptBarcRollup(data: SavedRollup, year: number): BarcRollupYear | null {
+  const y = data.years.find((r) => r.year === year)
+  if (!y) return null
+  return {
+    year, scope: data.scope, method: data.method, field_years: y.field_years, total_acres: y.total_acres,
+    labeled_silage_acres: y.reference_silage_acres, expected_silage_acres: y.expected_silage_acres,
+    ci: y.expected_silage_acres_95ci, cv_pct: y.cv_percent, adjusted_silage_acres: y.adjusted_silage_acres,
+  }
 }

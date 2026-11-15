@@ -10,6 +10,7 @@
 import type {
   AgentRunResponse,
   AgentTraceResponse,
+  BarcRollupYear,
   EvaluateResponse,
   FieldsResponse,
   Pred,
@@ -17,8 +18,8 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
-import { adaptFields, adaptPredictions, adaptSeries, adaptSummary } from './adapter.ts'
-import type { SavedFields, SavedPrediction, SavedSummary } from './adapter'
+import { adaptBarcRollup, adaptFields, adaptPredictions, adaptSeries, adaptSummary, byYearFromPredictions } from './adapter.ts'
+import type { SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
 
 export * from './types.ts'
 
@@ -84,7 +85,15 @@ export const api = {
   evaluate: (split = 'strict') =>
     STATIC
       ? fromSnapshot<EvaluateResponse>(snap.evaluate(split))
-      : getJson<SavedSummary>(`${API_URL}/api/baseline/summary`).then(adaptSummary),
+      : Promise.all([
+          getJson<SavedSummary>(`${API_URL}/api/baseline/summary`),
+          getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`),
+        ]).then(([summary, preds]) => ({ ...adaptSummary(summary), by_year: byYearFromPredictions(preds) })),
+
+  /** Acre roll-up over BARC's labeled fields for one year. Live: /api/baseline/rollup; snapshot: barc_rollup.json. */
+  barcRollup: (year: number): Promise<BarcRollupYear | null> =>
+    (STATIC ? fromSnapshot<SavedRollup>('barc_rollup') : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`))
+      .then((data) => adaptBarcRollup(data, year)),
 
   rollup: (year: number) =>
     STATIC
