@@ -326,7 +326,6 @@ def main() -> None:
 
     # ---- graded 2025 forecast: the backend's own reader, so the snapshot matches GET /api/forecast_2025 ----
     try:
-        import sys
         sys.path.insert(0, str(ROOT / 'backend'))
         from app.artifacts import read_forecast_2025
         write('forecast_2025', read_forecast_2025().model_dump(mode='json', exclude_unset=True))
