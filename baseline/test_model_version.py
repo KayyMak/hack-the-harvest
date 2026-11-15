@@ -25,6 +25,30 @@ def unix_newlines(data: bytes) -> bytes:
     return data.replace(CRLF, LF)
 
 
+def same_numbers(fresh: Path, kept: Path) -> None:
+    """Equal up to floating-point noise across platforms (last-digit differences in libm/BLAS)."""
+    if fresh.suffix == '.csv':
+        a, b = pd.read_csv(fresh), pd.read_csv(kept)
+        pd.testing.assert_frame_equal(a, b, check_exact=False, rtol=1e-9, atol=1e-12)
+    elif fresh.suffix == '.json':
+        def walk(x, y, where):
+            if isinstance(x, dict):
+                assert isinstance(y, dict) and x.keys() == y.keys(), where
+                for k in x:
+                    walk(x[k], y[k], f'{where}.{k}')
+            elif isinstance(x, list):
+                assert isinstance(y, list) and len(x) == len(y), where
+                for i, (u, v) in enumerate(zip(x, y)):
+                    walk(u, v, f'{where}[{i}]')
+            elif isinstance(x, float) or isinstance(y, float):
+                assert np.isclose(x, y, rtol=1e-9, atol=1e-12), (where, x, y)
+            else:
+                assert x == y, (where, x, y)
+        walk(json.loads(fresh.read_text(encoding='utf-8')), json.loads(kept.read_text(encoding='utf-8')), fresh.name)
+    else:
+        assert unix_newlines(fresh.read_bytes()) == unix_newlines(kept.read_bytes()), fresh.name
+
+
 class Switch(unittest.TestCase):
     def test_environment_override_and_validation(self):
         with patch.dict(os.environ, {mv.ENV: 'V1 '}):
@@ -60,7 +84,7 @@ class Switch(unittest.TestCase):
         self.assertEqual(metrics['features'], mv.features(version))
         self.assertIn('logistic', metrics)  # the API schema reads this key for either version
 
-    def test_v1_switch_reproduces_the_backup_byte_for_byte(self):
+    def test_v1_switch_reproduces_the_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             code = ('import sys; from pathlib import Path; import run_baseline as rb; '
                     'rb.OUT = Path(sys.argv[1]); rb.evaluate(rb.read_labels())')
@@ -69,8 +93,8 @@ class Switch(unittest.TestCase):
                            stdout=subprocess.DEVNULL)
             for name in ['heldout_predictions.csv', 'metrics.json', 'features.csv', 'results.md',
                          'missing_features.csv', 'excluded_no_observations.csv']:
-                fresh, kept = (unix_newlines((p / name).read_bytes()) for p in (Path(directory), BACKUP))
-                self.assertEqual(fresh, kept, name)  # line endings may differ by platform
+                # Text is compared exactly; numbers up to last-digit float noise (Linux vs Windows).
+                same_numbers(Path(directory) / name, BACKUP / name)
 
 
 if __name__ == '__main__':
