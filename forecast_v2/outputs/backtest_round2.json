@@ -1,0 +1,828 @@
+{
+ "preregistration": "forecast_v2/PREREGISTRATION.md, section \"Round 2\" (written after round 1's 2025 score was seen)",
+ "window": "2018-2024",
+ "methods": {
+  "S1": "D (baseline): forecast/estimate_2025.py method D, 3 prior years",
+  "S5": "BLEND_PD: (S1 + S2) / 2",
+  "R1": "SHRINK3: (D' + PERSIST) / 2, D' shares = 3-year means shrunk toward the USDA farm production region (empirical Bayes)",
+  "R2": "MED5: (D' + PERSIST) / 2, D' shares = 5-year medians",
+  "R3": "SHRINK5: (D' + PERSIST) / 2, D' shares = 5-year means shrunk toward the region (empirical Bayes)"
+ },
+ "pooled": {
+  "S1": {
+   "state_years": 336,
+   "acre_weighted_mape": 13.778,
+   "median_ape": 12.36,
+   "mean_ape": 17.68,
+   "within_10pct": 0.461
+  },
+  "S5": {
+   "state_years": 336,
+   "acre_weighted_mape": 13.303,
+   "median_ape": 10.58,
+   "mean_ape": 15.81,
+   "within_10pct": 0.485
+  },
+  "R1": {
+   "state_years": 336,
+   "acre_weighted_mape": 13.261,
+   "median_ape": 10.6,
+   "mean_ape": 15.82,
+   "within_10pct": 0.488
+  },
+  "R2": {
+   "state_years": 336,
+   "acre_weighted_mape": 12.679,
+   "median_ape": 10.26,
+   "mean_ape": 15.78,
+   "within_10pct": 0.491
+  },
+  "R3": {
+   "state_years": 336,
+   "acre_weighted_mape": 12.899,
+   "median_ape": 10.11,
+   "mean_ape": 15.85,
+   "within_10pct": 0.497
+  }
+ },
+ "per_year": {
+  "S1": {
+   "2018": {
+    "state_years": 48,
+    "acre_weighted_mape": 16.745,
+    "median_ape": 13.22,
+    "mean_ape": 18.35,
+    "within_10pct": 0.438,
+    "sum_of_states_pct_error": 3.74
+   },
+   "2019": {
+    "state_years": 48,
+    "acre_weighted_mape": 15.263,
+    "median_ape": 10.52,
+    "mean_ape": 16.71,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": -1.51
+   },
+   "2020": {
+    "state_years": 48,
+    "acre_weighted_mape": 13.62,
+    "median_ape": 9.41,
+    "mean_ape": 18.0,
+    "within_10pct": 0.521,
+    "sum_of_states_pct_error": 2.23
+   },
+   "2021": {
+    "state_years": 48,
+    "acre_weighted_mape": 12.49,
+    "median_ape": 13.82,
+    "mean_ape": 17.79,
+    "within_10pct": 0.438,
+    "sum_of_states_pct_error": 2.66
+   },
+   "2022": {
+    "state_years": 48,
+    "acre_weighted_mape": 17.314,
+    "median_ape": 15.24,
+    "mean_ape": 20.64,
+    "within_10pct": 0.375,
+    "sum_of_states_pct_error": -7.77
+   },
+   "2023": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.183,
+    "median_ape": 12.56,
+    "mean_ape": 15.41,
+    "within_10pct": 0.438,
+    "sum_of_states_pct_error": 1.51
+   },
+   "2024": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.642,
+    "median_ape": 8.84,
+    "mean_ape": 16.9,
+    "within_10pct": 0.521,
+    "sum_of_states_pct_error": 4.57
+   }
+  },
+  "S5": {
+   "2018": {
+    "state_years": 48,
+    "acre_weighted_mape": 17.952,
+    "median_ape": 15.39,
+    "mean_ape": 19.59,
+    "within_10pct": 0.396,
+    "sum_of_states_pct_error": 4.29
+   },
+   "2019": {
+    "state_years": 48,
+    "acre_weighted_mape": 15.676,
+    "median_ape": 10.18,
+    "mean_ape": 14.34,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": -4.37
+   },
+   "2020": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.198,
+    "median_ape": 8.44,
+    "mean_ape": 13.59,
+    "within_10pct": 0.562,
+    "sum_of_states_pct_error": 1.15
+   },
+   "2021": {
+    "state_years": 48,
+    "acre_weighted_mape": 13.277,
+    "median_ape": 10.78,
+    "mean_ape": 16.21,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 2.18
+   },
+   "2022": {
+    "state_years": 48,
+    "acre_weighted_mape": 14.875,
+    "median_ape": 12.5,
+    "mean_ape": 18.88,
+    "within_10pct": 0.417,
+    "sum_of_states_pct_error": -6.8
+   },
+   "2023": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.614,
+    "median_ape": 10.18,
+    "mean_ape": 12.68,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 3.77
+   },
+   "2024": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.602,
+    "median_ape": 9.02,
+    "mean_ape": 15.39,
+    "within_10pct": 0.521,
+    "sum_of_states_pct_error": 4.33
+   }
+  },
+  "R1": {
+   "2018": {
+    "state_years": 48,
+    "acre_weighted_mape": 17.751,
+    "median_ape": 15.36,
+    "mean_ape": 19.35,
+    "within_10pct": 0.417,
+    "sum_of_states_pct_error": 4.24
+   },
+   "2019": {
+    "state_years": 48,
+    "acre_weighted_mape": 15.691,
+    "median_ape": 10.67,
+    "mean_ape": 14.23,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": -4.38
+   },
+   "2020": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.007,
+    "median_ape": 8.71,
+    "mean_ape": 13.48,
+    "within_10pct": 0.562,
+    "sum_of_states_pct_error": 0.98
+   },
+   "2021": {
+    "state_years": 48,
+    "acre_weighted_mape": 13.168,
+    "median_ape": 10.77,
+    "mean_ape": 16.44,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 2.13
+   },
+   "2022": {
+    "state_years": 48,
+    "acre_weighted_mape": 14.715,
+    "median_ape": 12.26,
+    "mean_ape": 18.62,
+    "within_10pct": 0.438,
+    "sum_of_states_pct_error": -6.77
+   },
+   "2023": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.605,
+    "median_ape": 10.26,
+    "mean_ape": 12.64,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 4.06
+   },
+   "2024": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.984,
+    "median_ape": 9.89,
+    "mean_ape": 15.99,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 4.65
+   }
+  },
+  "R2": {
+   "2018": {
+    "state_years": 48,
+    "acre_weighted_mape": 17.458,
+    "median_ape": 13.81,
+    "mean_ape": 18.77,
+    "within_10pct": 0.396,
+    "sum_of_states_pct_error": 3.59
+   },
+   "2019": {
+    "state_years": 48,
+    "acre_weighted_mape": 14.932,
+    "median_ape": 9.45,
+    "mean_ape": 14.22,
+    "within_10pct": 0.542,
+    "sum_of_states_pct_error": -4.09
+   },
+   "2020": {
+    "state_years": 48,
+    "acre_weighted_mape": 9.624,
+    "median_ape": 8.43,
+    "mean_ape": 13.06,
+    "within_10pct": 0.562,
+    "sum_of_states_pct_error": 1.55
+   },
+   "2021": {
+    "state_years": 48,
+    "acre_weighted_mape": 12.779,
+    "median_ape": 10.85,
+    "mean_ape": 16.43,
+    "within_10pct": 0.458,
+    "sum_of_states_pct_error": 2.79
+   },
+   "2022": {
+    "state_years": 48,
+    "acre_weighted_mape": 14.184,
+    "median_ape": 12.45,
+    "mean_ape": 19.35,
+    "within_10pct": 0.458,
+    "sum_of_states_pct_error": -6.62
+   },
+   "2023": {
+    "state_years": 48,
+    "acre_weighted_mape": 9.622,
+    "median_ape": 9.65,
+    "mean_ape": 12.3,
+    "within_10pct": 0.521,
+    "sum_of_states_pct_error": 2.96
+   },
+   "2024": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.252,
+    "median_ape": 9.8,
+    "mean_ape": 16.28,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 4.04
+   }
+  },
+  "R3": {
+   "2018": {
+    "state_years": 48,
+    "acre_weighted_mape": 17.327,
+    "median_ape": 13.13,
+    "mean_ape": 18.57,
+    "within_10pct": 0.375,
+    "sum_of_states_pct_error": 3.46
+   },
+   "2019": {
+    "state_years": 48,
+    "acre_weighted_mape": 15.261,
+    "median_ape": 9.45,
+    "mean_ape": 14.32,
+    "within_10pct": 0.542,
+    "sum_of_states_pct_error": -3.97
+   },
+   "2020": {
+    "state_years": 48,
+    "acre_weighted_mape": 9.773,
+    "median_ape": 7.92,
+    "mean_ape": 13.23,
+    "within_10pct": 0.583,
+    "sum_of_states_pct_error": 1.27
+   },
+   "2021": {
+    "state_years": 48,
+    "acre_weighted_mape": 12.851,
+    "median_ape": 11.41,
+    "mean_ape": 16.8,
+    "within_10pct": 0.458,
+    "sum_of_states_pct_error": 2.46
+   },
+   "2022": {
+    "state_years": 48,
+    "acre_weighted_mape": 14.269,
+    "median_ape": 11.42,
+    "mean_ape": 19.0,
+    "within_10pct": 0.479,
+    "sum_of_states_pct_error": -6.92
+   },
+   "2023": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.293,
+    "median_ape": 9.54,
+    "mean_ape": 12.82,
+    "within_10pct": 0.542,
+    "sum_of_states_pct_error": 3.28
+   },
+   "2024": {
+    "state_years": 48,
+    "acre_weighted_mape": 10.609,
+    "median_ape": 9.93,
+    "mean_ape": 16.22,
+    "within_10pct": 0.5,
+    "sum_of_states_pct_error": 4.32
+   }
+  }
+ },
+ "robustness_2013_2024": {
+  "S1": {
+   "state_years": 576,
+   "acre_weighted_mape": 16.375,
+   "median_ape": 13.67,
+   "mean_ape": 31.18,
+   "within_10pct": 0.42
+  },
+  "S5": {
+   "state_years": 576,
+   "acre_weighted_mape": 14.458,
+   "median_ape": 11.13,
+   "mean_ape": 22.2,
+   "within_10pct": 0.458
+  },
+  "R1": {
+   "state_years": 576,
+   "acre_weighted_mape": 14.498,
+   "median_ape": 11.42,
+   "mean_ape": 22.37,
+   "within_10pct": 0.46
+  },
+  "R2": {
+   "state_years": 576,
+   "acre_weighted_mape": 14.032,
+   "median_ape": 10.8,
+   "mean_ape": 22.82,
+   "within_10pct": 0.462
+  },
+  "R3": {
+   "state_years": 576,
+   "acre_weighted_mape": 14.265,
+   "median_ape": 11.06,
+   "mean_ape": 23.31,
+   "within_10pct": 0.469
+  }
+ },
+ "first_print_check_2023_2024": {
+  "S1": {
+   "state_years": 96,
+   "acre_weighted_mape": 10.652,
+   "median_ape": 10.58,
+   "mean_ape": 16.37,
+   "within_10pct": 0.469
+  },
+  "S5": {
+   "state_years": 96,
+   "acre_weighted_mape": 10.731,
+   "median_ape": 10.33,
+   "mean_ape": 14.81,
+   "within_10pct": 0.49
+  },
+  "R1": {
+   "state_years": 96,
+   "acre_weighted_mape": 10.926,
+   "median_ape": 10.58,
+   "mean_ape": 15.11,
+   "within_10pct": 0.469
+  },
+  "R2": {
+   "state_years": 96,
+   "acre_weighted_mape": 10.463,
+   "median_ape": 10.21,
+   "mean_ape": 14.61,
+   "within_10pct": 0.49
+  },
+  "R3": {
+   "state_years": 96,
+   "acre_weighted_mape": 10.926,
+   "median_ape": 10.58,
+   "mean_ape": 15.11,
+   "within_10pct": 0.469
+  }
+ },
+ "round2_winner": "R2",
+ "gain_vs_s5_pp": 0.624,
+ "median_change_vs_s5_pp": -0.32,
+ "rule": {
+  "min_gain_pp": 0.5,
+  "median_slack_pp": 0.5,
+  "tie_pp": 0.2,
+  "simplicity": [
+   "R2",
+   "R1",
+   "R3"
+  ]
+ },
+ "qualifies": true,
+ "final_silage_method": "R2",
+ "interval": {
+  "in_sample": 0.952,
+  "leave_one_year_out": 0.946,
+  "z": 2.219,
+  "rel_rms_by_size_class": {
+   "0": 0.27408,
+   "1": 0.22037,
+   "2": 0.20176
+  },
+  "size_class_cuts": [
+   20000,
+   100000
+  ]
+ },
+ "per_release": {
+  "JUN": {
+   "silage": {
+    "score": {
+     "state_years": 336,
+     "acre_weighted_mape": 12.728,
+     "median_ape": 10.98,
+     "mean_ape": 16.16,
+     "within_10pct": 0.461
+    },
+    "interval": {
+     "in_sample": 0.952,
+     "leave_one_year_out": 0.943,
+     "z": 2.097,
+     "rel_rms_by_size_class": {
+      "0": 0.29333,
+      "1": 0.22093,
+      "2": 0.19187
+     },
+     "size_class_cuts": [
+      20000,
+      100000
+     ]
+    },
+    "us": {
+     "years": 7,
+     "rel_rms": 0.03558,
+     "t": 2.447,
+     "half_width_pct": 8.71,
+     "inside_in_sample": 7,
+     "inside_leave_one_year_out": 7,
+     "rel_error_by_year": {
+      "2018": -3.49,
+      "2019": 3.8,
+      "2020": -0.34,
+      "2021": -2.7,
+      "2022": 5.48,
+      "2023": -3.11,
+      "2024": -3.86
+     }
+    },
+    "planted_periods": {
+     "YEAR - JUN ACREAGE": 336
+    }
+   },
+   "grain": {
+    "score": {
+     "state_years": 451,
+     "acre_weighted_mape": 3.576,
+     "median_ape": 5.56,
+     "mean_ape": 9.8,
+     "within_10pct": 0.687
+    },
+    "interval": {
+     "in_sample": 0.951,
+     "leave_one_year_out": 0.942,
+     "z": 2.129,
+     "rel_rms_by_size_class": {
+      "0": 0.18224,
+      "1": 0.09393,
+      "2": 0.04975
+     },
+     "size_class_cuts": [
+      500000,
+      2000000
+     ]
+    },
+    "us": {
+     "years": 11,
+     "rel_rms": 0.01734,
+     "t": 2.228,
+     "half_width_pct": 3.86,
+     "inside_in_sample": 10,
+     "inside_leave_one_year_out": 10,
+     "rel_error_by_year": {
+      "2014": -0.83,
+      "2015": -0.43,
+      "2016": 0.23,
+      "2017": -0.91,
+      "2018": -0.73,
+      "2019": -3.12,
+      "2020": -2.21,
+      "2021": 0.58,
+      "2022": -3.95,
+      "2023": 0.21,
+      "2024": -0.47
+     }
+    },
+    "periods": {
+     "YEAR - JUN ACREAGE": 451
+    }
+   }
+  },
+  "AUG": {
+   "silage": {
+    "score": {
+     "state_years": 336,
+     "acre_weighted_mape": 12.639,
+     "median_ape": 10.87,
+     "mean_ape": 16.06,
+     "within_10pct": 0.47
+    },
+    "interval": {
+     "in_sample": 0.952,
+     "leave_one_year_out": 0.943,
+     "z": 2.114,
+     "rel_rms_by_size_class": {
+      "0": 0.29115,
+      "1": 0.2141,
+      "2": 0.20025
+     },
+     "size_class_cuts": [
+      20000,
+      100000
+     ]
+    },
+    "us": {
+     "years": 7,
+     "rel_rms": 0.03764,
+     "t": 2.447,
+     "half_width_pct": 9.21,
+     "inside_in_sample": 7,
+     "inside_leave_one_year_out": 7,
+     "rel_error_by_year": {
+      "2018": -3.49,
+      "2019": 5.33,
+      "2020": -0.34,
+      "2021": -2.7,
+      "2022": 5.14,
+      "2023": -3.11,
+      "2024": -3.88
+     }
+    },
+    "planted_periods": {
+     "YEAR - AUG ACREAGE": 48,
+     "YEAR - AUG FORECAST": 48,
+     "YEAR - JUN ACREAGE": 240
+    }
+   },
+   "grain": {
+    "score": {
+     "state_years": 483,
+     "acre_weighted_mape": 3.089,
+     "median_ape": 4.62,
+     "mean_ape": 8.53,
+     "within_10pct": 0.743
+    },
+    "interval": {
+     "in_sample": 0.95,
+     "leave_one_year_out": 0.946,
+     "z": 2.19,
+     "rel_rms_by_size_class": {
+      "0": 0.16963,
+      "1": 0.08095,
+      "2": 0.04511
+     },
+     "size_class_cuts": [
+      500000,
+      2000000
+     ]
+    },
+    "us": {
+     "years": 12,
+     "rel_rms": 0.01513,
+     "t": 2.201,
+     "half_width_pct": 3.33,
+     "inside_in_sample": 11,
+     "inside_leave_one_year_out": 11,
+     "rel_error_by_year": {
+      "2013": -1.88,
+      "2014": -0.83,
+      "2015": -0.43,
+      "2016": 0.23,
+      "2017": -0.91,
+      "2018": -0.73,
+      "2019": -1.25,
+      "2020": -2.21,
+      "2021": 0.58,
+      "2022": -3.83,
+      "2023": 0.21,
+      "2024": 0.41
+     }
+    },
+    "periods": {
+     "YEAR - AUG FORECAST": 396,
+     "YEAR - JUN ACREAGE": 87
+    }
+   }
+  },
+  "SEP": {
+   "silage": {
+    "score": {
+     "state_years": 336,
+     "acre_weighted_mape": 12.773,
+     "median_ape": 10.4,
+     "mean_ape": 15.91,
+     "within_10pct": 0.485
+    },
+    "interval": {
+     "in_sample": 0.952,
+     "leave_one_year_out": 0.946,
+     "z": 2.211,
+     "rel_rms_by_size_class": {
+      "0": 0.27815,
+      "1": 0.21593,
+      "2": 0.20106
+     },
+     "size_class_cuts": [
+      20000,
+      100000
+     ]
+    },
+    "us": {
+     "years": 7,
+     "rel_rms": 0.04233,
+     "t": 2.447,
+     "half_width_pct": 10.36,
+     "inside_in_sample": 7,
+     "inside_leave_one_year_out": 7,
+     "rel_error_by_year": {
+      "2018": -3.49,
+      "2019": 5.33,
+      "2020": -1.97,
+      "2021": -2.71,
+      "2022": 7.09,
+      "2023": -2.87,
+      "2024": -3.88
+     }
+    },
+    "planted_periods": {
+     "YEAR - AUG ACREAGE": 48,
+     "YEAR - JUN ACREAGE": 96,
+     "YEAR - SEP FORECAST": 192
+    }
+   },
+   "grain": {
+    "score": {
+     "state_years": 483,
+     "acre_weighted_mape": 2.595,
+     "median_ape": 3.96,
+     "mean_ape": 7.82,
+     "within_10pct": 0.764
+    },
+    "interval": {
+     "in_sample": 0.95,
+     "leave_one_year_out": 0.948,
+     "z": 2.222,
+     "rel_rms_by_size_class": {
+      "0": 0.16549,
+      "1": 0.06749,
+      "2": 0.04204
+     },
+     "size_class_cuts": [
+      500000,
+      2000000
+     ]
+    },
+    "us": {
+     "years": 12,
+     "rel_rms": 0.01207,
+     "t": 2.201,
+     "half_width_pct": 2.66,
+     "inside_in_sample": 12,
+     "inside_leave_one_year_out": 11,
+     "rel_error_by_year": {
+      "2013": -1.88,
+      "2014": -0.83,
+      "2015": -0.43,
+      "2016": 0.23,
+      "2017": -0.91,
+      "2018": -0.73,
+      "2019": -1.25,
+      "2020": -1.56,
+      "2021": -0.11,
+      "2022": -2.65,
+      "2023": -0.68,
+      "2024": 0.41
+     }
+    },
+    "periods": {
+     "YEAR - AUG FORECAST": 3,
+     "YEAR - JUN ACREAGE": 69,
+     "YEAR - SEP FORECAST": 411
+    }
+   }
+  },
+  "NOV": {
+   "silage": {
+    "score": {
+     "state_years": 336,
+     "acre_weighted_mape": 12.679,
+     "median_ape": 10.26,
+     "mean_ape": 15.78,
+     "within_10pct": 0.491
+    },
+    "interval": {
+     "in_sample": 0.952,
+     "leave_one_year_out": 0.946,
+     "z": 2.219,
+     "rel_rms_by_size_class": {
+      "0": 0.27408,
+      "1": 0.22037,
+      "2": 0.20176
+     },
+     "size_class_cuts": [
+      20000,
+      100000
+     ]
+    },
+    "us": {
+     "years": 7,
+     "rel_rms": 0.04027,
+     "t": 2.447,
+     "half_width_pct": 9.85,
+     "inside_in_sample": 7,
+     "inside_leave_one_year_out": 7,
+     "rel_error_by_year": {
+      "2018": -3.46,
+      "2019": 4.27,
+      "2020": -1.53,
+      "2021": -2.71,
+      "2022": 7.09,
+      "2023": -2.87,
+      "2024": -3.88
+     }
+    },
+    "planted_periods": {
+     "YEAR - OCT ACREAGE": 96,
+     "YEAR - OCT FORECAST": 135,
+     "YEAR - SEP FORECAST": 105
+    }
+   },
+   "grain": {
+    "score": {
+     "state_years": 483,
+     "acre_weighted_mape": 1.601,
+     "median_ape": 2.31,
+     "mean_ape": 6.14,
+     "within_10pct": 0.822
+    },
+    "interval": {
+     "in_sample": 0.95,
+     "leave_one_year_out": 0.944,
+     "z": 2.268,
+     "rel_rms_by_size_class": {
+      "0": 0.14361,
+      "1": 0.05081,
+      "2": 0.0245
+     },
+     "size_class_cuts": [
+      500000,
+      2000000
+     ]
+    },
+    "us": {
+     "years": 12,
+     "rel_rms": 0.00898,
+     "t": 2.201,
+     "half_width_pct": 1.98,
+     "inside_in_sample": 11,
+     "inside_leave_one_year_out": 11,
+     "rel_error_by_year": {
+      "2013": 0.26,
+      "2014": 0.06,
+      "2015": 0.11,
+      "2016": -0.1,
+      "2017": -0.46,
+      "2018": -0.73,
+      "2019": -1.01,
+      "2020": -0.44,
+      "2021": -0.11,
+      "2022": -2.65,
+      "2023": -0.68,
+      "2024": 0.41
+     }
+    },
+    "periods": {
+     "YEAR - JUN ACREAGE": 27,
+     "YEAR - NOV FORECAST": 383,
+     "YEAR - OCT FORECAST": 45,
+     "YEAR - SEP FORECAST": 28
+    }
+   }
+  }
+ }
+}
