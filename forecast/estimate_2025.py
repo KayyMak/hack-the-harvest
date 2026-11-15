@@ -261,7 +261,7 @@ def main():
     # scale intervals so 95% of backtest truths fall inside (z-scores of backtest errors)
     def zscale(kind):
         zs = sorted(abs(b['truth'] - b['est']) / b['se'] for b in backtest if b['kind'] == kind and b['se'])
-        return max(1.96, zs[min(len(zs) - 1, math.ceil(0.95 * len(zs)) - 1)]) if zs else 1.96
+        return max(1.96, zs[min(len(zs) - 1, math.ceil(0.95 * len(zs)) - 1)] * (1 + 1e-9)) if zs else 1.96  # tiny pad: float rounding
     z_sil, z_gr = zscale('silage'), zscale('grain')
 
     def bt_summary(kind):
