@@ -71,10 +71,23 @@ def load_quickstats():
     return finals, inseason
 
 
-def latest(inseason, st, t, item):
-    """(value, period) of the latest pre-January estimate of `item` for state st, year t."""
+# What was known as of each 2025 release date (PREREGISTRATION.md, amendment 1); NOV = everything pre-January.
+RELEASES = ['JUN', 'AUG', 'SEP', 'NOV']
+ASOF_PERIODS = {
+    'grain': {'JUN': GRAIN_PERIODS[4:], 'AUG': GRAIN_PERIODS[3:], 'SEP': GRAIN_PERIODS[2:], 'NOV': GRAIN_PERIODS},
+    'planted': {'JUN': ['YEAR - JUN ACREAGE', 'YEAR - MAR ACREAGE'],
+                'AUG': ['YEAR - AUG FORECAST', 'YEAR - AUG ACREAGE', 'YEAR - JUN ACREAGE', 'YEAR - MAR ACREAGE'],
+                'SEP': ['YEAR - SEP FORECAST', 'YEAR - AUG FORECAST', 'YEAR - AUG ACREAGE', 'YEAR - JUN ACREAGE',
+                        'YEAR - MAR ACREAGE'],
+                'NOV': PLANTED_PERIODS},
+}
+
+
+def latest(inseason, st, t, item, release='NOV'):
+    """(value, period) of the latest estimate of `item` for state st, year t known as of `release`
+    (NOV = the latest pre-January estimate)."""
     d = inseason.get((st, t), {}).get(item, {})
-    for p in (GRAIN_PERIODS if item == 'grain' else PLANTED_PERIODS):
+    for p in ASOF_PERIODS[item][release]:
         if d.get(p) is not None:
             return d[p], p
     return None, None
@@ -124,9 +137,9 @@ def silage_candidates(st, t, hist, planted_t, grain_t):
 
 
 # ---------------------------------------------------------------- grain candidates
-def grain_candidates(st, t, hist, inseason):
+def grain_candidates(st, t, hist, inseason, release='NOV'):
     """{'G1', 'G2', 'period'} for state st, year t (or None without an in-season forecast)."""
-    g, period = latest(inseason, st, t, 'grain')
+    g, period = latest(inseason, st, t, 'grain', release)
     if g is None:
         return None
     ratios = []

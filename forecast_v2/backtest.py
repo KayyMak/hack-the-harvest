@@ -13,8 +13,8 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from common import (FC1, GRAIN_METHODS, HERE, SILAGE_METHODS, SIMPLICITY, US, grain_candidates,  # noqa: E402
-                    latest, load_quickstats, prior, silage_candidates)
+from common import (FC1, GRAIN_METHODS, HERE, RELEASES, SILAGE_METHODS, SIMPLICITY, US,  # noqa: E402
+                    grain_candidates, latest, load_quickstats, prior, silage_candidates)
 
 SILAGE_YEARS = list(range(2018, 2025))        # primary window (selection)
 SILAGE_ROBUST_YEARS = list(range(2013, 2025))  # reported only
@@ -26,7 +26,7 @@ GRAIN_CLASSES = (500_000, 2_000_000)
 
 
 # ---------------------------------------------------------------- rows
-def silage_rows(finals, inseason, years, hist_for=None, truth_for=None):
+def silage_rows(finals, inseason, years, hist_for=None, truth_for=None, release='NOV'):
     rows = []
     for t in years:
         hist = hist_for(t) if hist_for else prior(finals, t)
@@ -35,8 +35,8 @@ def silage_rows(finals, inseason, years, hist_for=None, truth_for=None):
             truth = truth_for(t)[st] if truth_for else finals[(st, t)]['silage']
             if not truth:
                 continue
-            planted_t, pp = latest(inseason, st, t, 'planted')
-            grain_t, gp = latest(inseason, st, t, 'grain')
+            planted_t, pp = latest(inseason, st, t, 'planted', release)
+            grain_t, gp = latest(inseason, st, t, 'grain', release)
             c = silage_candidates(st, t, hist, planted_t, grain_t)
             if c is None:
                 continue
@@ -44,13 +44,13 @@ def silage_rows(finals, inseason, years, hist_for=None, truth_for=None):
     return rows
 
 
-def grain_rows(finals, inseason, years):
+def grain_rows(finals, inseason, years, release='NOV'):
     rows, us_rows = [], []
     for t in years:
         hist = prior(finals, t)
         for st in sorted({st for (st, y) in finals if y == t}):
             truth = finals[(st, t)]['grain']
-            c = grain_candidates(st, t, hist, inseason)
+            c = grain_candidates(st, t, hist, inseason, release)
             if not truth or c is None:
                 continue
             (us_rows if st == US else rows).append(dict(year=t, state=st, truth=truth, **c))
@@ -115,6 +115,52 @@ def coverage(rows, m, cuts):
         loyo_hits += sum(inside(r, m, c, cuts) for r in rows if r['year'] == t)
     return dict(in_sample=round(in_sample, 3), leave_one_year_out=round(loyo_hits / len(rows), 3),
                 z=round(cal['z'], 3), rel_rms_by_size_class=cal['rel_rms'], size_class_cuts=list(cuts))
+
+
+# ---------------------------------------------------------------- per-release ranges (amendment 1)
+T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+        11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145}
+
+
+def us_band(rel):
+    """US range rule: se = est x RMS(rel); 95% range = est +/- t(0.975, n-1) se."""
+    rms = math.sqrt(statistics.mean(x * x for x in rel))
+    return rms, T975[len(rel) - 1]
+
+
+def us_check(rel_by_year):
+    """In-sample and leave-one-year-out count of backtest years whose US truth falls inside the US range.
+    rel = (truth - est) / est per year."""
+    rms, t = us_band(list(rel_by_year.values()))
+    in_s = sum(abs(x) <= t * rms for x in rel_by_year.values())
+    loyo = 0
+    for y, x in rel_by_year.items():
+        r2, t2 = us_band([v for k, v in rel_by_year.items() if k != y])
+        loyo += abs(x) <= t2 * r2
+    return dict(years=len(rel_by_year), rel_rms=round(rms, 5), t=t, half_width_pct=round(100 * t * rms, 2),
+                inside_in_sample=in_s, inside_leave_one_year_out=loyo,
+                rel_error_by_year={str(k): round(100 * v, 2) for k, v in rel_by_year.items()})
+
+
+def per_release(finals, inseason, s_method, g_method):
+    out, cals = {}, {}
+    for rel_name in RELEASES:
+        sil = silage_rows(finals, inseason, SILAGE_YEARS, release=rel_name)
+        gr, gr_us = grain_rows(finals, inseason, GRAIN_YEARS, release=rel_name)
+        us_s = {}
+        for t in SILAGE_YEARS:
+            ry = [r for r in sil if r['year'] == t]
+            e, tr = sum(r[s_method] for r in ry), sum(r['truth'] for r in ry)
+            us_s[t] = (tr - e) / e
+        us_g = {r['year']: (r['truth'] - r[g_method]) / r[g_method] for r in gr_us}
+        out[rel_name] = dict(
+            silage=dict(score=score(sil, s_method), interval=coverage(sil, s_method, SILAGE_CLASSES), us=us_check(us_s),
+                        planted_periods={p: sum(r['planted_period'] == p for r in sil) for p in sorted({str(r['planted_period']) for r in sil})}),
+            grain=dict(score=score(gr, g_method), interval=coverage(gr, g_method, GRAIN_CLASSES), us=us_check(us_g),
+                       periods={p: sum(r['period'] == p for r in gr) for p in sorted({r['period'] for r in gr})}))
+        cals[rel_name] = dict(silage=calibrate(sil, s_method, SILAGE_CLASSES), grain=calibrate(gr, g_method, GRAIN_CLASSES),
+                              us_silage=us_band(list(us_s.values())), us_grain=us_band(list(us_g.values())))
+    return out, cals
 
 
 # ---------------------------------------------------------------- first-print check
@@ -182,7 +228,10 @@ def run():
             rows_by_period={p: sum(r['period'] == p for r in gr) for p in sorted({r['period'] for r in gr})},
         ),
     )
-    return out, dict(sil=sil, gr=gr, gr_us=gr_us)
+    out['per_release'], cals = per_release(finals, inseason, winner, g_winner)
+    out['per_release_note'] = ('PREREGISTRATION.md amendment 1: each release uses only what was known at that date; '
+                               'silage 2018-2024, grain 2013-2024; US range = est +/- t(0.975, n-1) x est x RMS.')
+    return out, dict(sil=sil, gr=gr, gr_us=gr_us, cals=cals)
 
 
 def main():
@@ -201,6 +250,12 @@ def main():
     for m, v in g['pooled'].items():
         print(f"  {m} awMAPE {v['acre_weighted_mape']:6.3f}  med {v['median_ape']:5.2f}  mean {v['mean_ape']:5.2f}  w10 {v['within_10pct']:.3f}")
     print('  interval', g['interval'])
+    for rel_name, v in out['per_release'].items():
+        for kind in ('silage', 'grain'):
+            x = v[kind]
+            print(f"{rel_name} {kind:6s} awMAPE {x['score']['acre_weighted_mape']:6.2f}  state cov LOYO {x['interval']['leave_one_year_out']:.3f} "
+                  f"z {x['interval']['z']:.2f}  US +/-{x['us']['half_width_pct']:5.2f}%  US inside {x['us']['inside_leave_one_year_out']}/{x['us']['years']} "
+                  f"(in-sample {x['us']['inside_in_sample']})")
 
 
 if __name__ == '__main__':
