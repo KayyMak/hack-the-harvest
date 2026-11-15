@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -43,6 +43,14 @@ def read_predictions() -> list[Prediction]:
             valid_dates=row['valid_dates']) for row in rows]
     except (OSError, ValueError, KeyError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved baseline predictions are missing or invalid.') from exc
+
+
+def read_asof() -> AsOfResults:
+    """Saved mid-season calls, written once by `python -m harvest.export_asof` (never fitted here)."""
+    try:
+        return AsOfResults.model_validate_json((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise ArtifactUnavailable('Saved as-of results are missing or invalid; run python -m harvest.export_asof.') from exc
 
 
 def _num(value: str | None) -> float | None:

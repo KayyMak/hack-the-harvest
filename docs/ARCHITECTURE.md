@@ -45,6 +45,7 @@ are separate fields.
 | `GET /api/health` | `{"status": "ok"}` |
 | `GET /api/baseline/summary` | Evaluation counts, quality counts, logistic and always-Grain metrics |
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
+| `GET /api/baseline/asof?year=` | Saved mid-season calls for Aug 12, Sep 12, Oct 12, Nov 12 and Nov 30 of each year, with scores pooled over 2021-2023; written by `python -m harvest.export_asof`; 503 if missing |
 | `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using acre-weighted rates from the other years (labeled field-years only) |
 | `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
 | `GET /api/fields.geojson` | All 83 field polygons (EPSG:4326, GeoJSON) with `field_id`, farm, field, acres and `reference_<year>` labels (null = unlabeled); from `baseline/outputs/fields.geojson`; 503 if missing |

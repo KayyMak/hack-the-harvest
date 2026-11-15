@@ -8,7 +8,6 @@ import { LogoMark } from './components/Logo'
 import { MapView } from './components/MapView'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
-import { BarcAcres } from './components/BarcAcres'
 import { Pending } from './components/Pending'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
@@ -81,9 +80,8 @@ export default function App() {
   const seasonEnd = meta.data?.season_end_only === true || asOfDates.length === 1
   const fields = useAsync(() => api.fields(year), [year])
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
-  const evaluation = useAsync(() => api.evaluate('strict'), [])
+  const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
-  const barc = useAsync(() => api.barcRollup(year), [year])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
@@ -264,19 +262,9 @@ export default function App() {
                     </Pending>
                   </>
                 )}
-                <h2 className="sheet__h2">Silage acres on BARC, {year}</h2>
-                {barc.data ? (
-                  <BarcAcres data={barc.data} />
-                ) : barc.loading ? (
-                  <div className="skeleton skeleton--chart" />
-                ) : (
-                  <Pending title="BARC acre roll-up">
-                    {barc.error ? `Unavailable: ${barc.error.message}` : `No scored BARC field-years for ${year}.`}
-                  </Pending>
-                )}
-                <h2 className="sheet__h2">Maryland roll-up</h2>
+                <h2 className="sheet__h2">Acreage roll-up</h2>
                 {rollup.error ? (
-                  <Pending title="Maryland silage acres vs the Census">
+                  <Pending title="Silage acres roll-up">
                     {rollup.error.message}
                   </Pending>
                 ) : (
