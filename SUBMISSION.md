@@ -54,8 +54,10 @@ offline from versioned caches with `python baseline/run_baseline.py evaluate`.
 
 ## Validation
 
-All splits keep every year of a field together, fit imputation and scaling on training rows only, and compare against
-always-Grain (balanced accuracy 0.5) on the same rows.
+Every classifier split fits imputation and scaling on training rows only and is compared against always-Grain (balanced
+accuracy 0.5) on the same rows. The field, spatial-block and farm splits, and the strict year split, keep every year of a
+field on one side; the plain year split does not (a test-year field's other seasons can be in training). The last row is
+the forecast's backtest, not a classifier split.
 
 | Held out by | Result | Source |
 | --- | --- | --- |
