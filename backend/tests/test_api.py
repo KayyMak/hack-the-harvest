@@ -280,6 +280,15 @@ class ApiChecks(unittest.TestCase):
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/baseline/contributions').status_code, 503)
 
+    def test_chips_served_and_validated(self):
+        ok = self.client.get('/chips/231_2022_pre.png')
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(ok.headers['content-type'], 'image/png')
+        self.assertTrue(ok.content.startswith(b'\x89PNG'))
+        self.assertEqual(self.client.get('/chips/231_2099_pre.png').status_code, 404)
+        for bad in ('..%2Fmetrics.json', '231_2022_side.png', 'x.png'):
+            self.assertIn(self.client.get(f'/chips/{bad}').status_code, (400, 404))
+
 
 if __name__ == '__main__':
     unittest.main()

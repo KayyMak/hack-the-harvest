@@ -77,7 +77,7 @@ export const api = {
     STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()) : Promise.resolve({
       stub: false, note: 'Saved BARC baseline results; held out by field.',
       years: LIVE_YEARS, as_of_dates: LIVE_YEARS.flatMap((y) => LIVE_MONTH_DAYS.map((md) => `${y}-${md}`)),
-      season_end_only: false, has_chips: false, has_rollup: true, has_contributions: true,
+      season_end_only: false, has_chips: true, has_rollup: true, has_contributions: true,
     }),
 
   fields: (year: number) =>
