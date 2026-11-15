@@ -2329,3 +2329,5 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 /* before/after images: trimmed PNGs shown whole on a dark backing (no white bands, no cropping of the title) */
 .shell .chip img { object-fit: contain !important; background: #0d1715; image-rendering: auto; }
 :root[data-mode='light'] .shell .chip img { background: #e9eeec; }
+/* track record chart in the 2025 rail */
+.track { height: 150px; }

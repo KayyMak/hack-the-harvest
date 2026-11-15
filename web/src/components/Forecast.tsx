@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { Area, Bar, CartesianGrid, Cell as BarCell, ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../theme'
 import { xTitle, yTitle } from './charts'
 import type { Cell, Crop, Forecast, Reliability, StateRow } from './forecastTypes'
@@ -59,14 +59,15 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
       {!showTable && (
         <aside className="glass rail" aria-label="How the estimate was built">
           <section>
-            <h2 className="rail__title" title={NASS_RELEASE_TIP}>US silage estimate by NASS release</h2>
-            <div title={NASS_RELEASE_TIP}><ConvergenceChart data={data} /></div>
+            <h2 className="rail__title" title={NASS_RELEASE_TIP}>US {crop} estimate by NASS release</h2>
+            <div title={NASS_RELEASE_TIP}><ConvergenceChart data={data} crop={crop} /></div>
             <div className="linekey">
               <span><i style={{ background: t.share }} />Our estimate</span>
               <span><i style={{ background: t.share, opacity: 0.35, height: 8 }} />95% range</span>
               <span><i className="linekey__dash" style={{ borderColor: t.accuracy }} />NASS final</span>
             </div>
           </section>
+          <TrackRecord data={data} crop={crop} />
           <section>
             <div className="rail__head">
               <h2 className="rail__title">How close we came, 2025</h2>
@@ -178,16 +179,17 @@ function ErrTag({ err }: { err: number | null }) {
   return <span className={`errtag ${good ? 'is-good' : 'is-off'}`}>{fmtPct(err)}</span>
 }
 
-function ConvergenceChart({ data }: { data: Forecast }) {
+function ConvergenceChart({ data, crop }: { data: Forecast; crop: Crop }) {
   const t = useTheme().chart
-  const nass = data.us.silage.nass
-  const rows = data.convergence.map((c) => ({
-    label: releaseDate(c.as_of),
-    est: c.us_silage,
-    low: c.us_silage_low,
-    high: c.us_silage_high,
-    band: [c.us_silage_low, c.us_silage_high] as [number, number],
-  }))
+  const nass = data.us[crop].nass
+  const rows = data.convergence
+    .map((c) => {
+      const est = crop === 'silage' ? c.us_silage : c.us_grain
+      const low = crop === 'silage' ? c.us_silage_low : c.us_grain_low
+      const high = crop === 'silage' ? c.us_silage_high : c.us_grain_high
+      return low == null || high == null ? null : { label: releaseDate(c.as_of), est, low, high, band: [low, high] as [number, number] }
+    })
+    .filter((r): r is NonNullable<typeof r> => r != null)
   const lo = Math.min(...rows.map((r) => r.low), nass ?? Infinity)
   const hi = Math.max(...rows.map((r) => r.high), nass ?? 0)
   return (
@@ -196,7 +198,7 @@ function ConvergenceChart({ data }: { data: Forecast }) {
         <ComposedChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={t.grid} vertical={false} />
           <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 10, right: 10 }} height={34} label={xTitle('NASS release, 2025', t.muted)} />
-          <YAxis domain={[Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Acres', t.muted)} />
+          <YAxis domain={crop === 'silage' ? [Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5] : [Math.floor(lo * 0.99 / 1e6) * 1e6, Math.ceil(hi * 1.01 / 1e6) * 1e6]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Acres', t.muted)} />
           <Area dataKey="band" stroke="none" fill={t.share} fillOpacity={0.14} isAnimationActive={false} />
           <Line dataKey="high" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line dataKey="low" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -382,4 +384,67 @@ function backtestPair(data: { silage_method?: unknown }): string | null {
   const first = err ? err['S1'] : undefined
   if (chosen == null) return null
   return first != null ? `${chosen.toFixed(1)}% vs ${first.toFixed(1)}% for the first forecast's method` : `${chosen.toFixed(1)}%`
+}
+
+/** Our US error in every backtest year (each forecast with only what was known then) and in 2025, against the
+ *  NASS-style 90% margin: shows 2025 is a typical year for the method, not a lucky or unlucky one. */
+function TrackRecord({ data, crop }: { data: Forecast; crop: Crop }) {
+  const t = useTheme().chart
+  const rel = data.reliability?.[crop] ?? null
+  const now = data.us[crop].err
+  const rows = [
+    ...Object.entries(data.backtest[crop].us_total)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([year, v]) => ({ year, err: v.pct_error, is2025: false })),
+    ...(now == null ? [] : [{ year: '2025', err: Math.round(now * 1000) / 10, is2025: true }]),
+  ]
+  if (!rows.length) return null
+  const m = rel?.margin90_pct ?? null
+  const top = Math.ceil(Math.max(m ?? 0, ...rows.map((r) => Math.abs(r.err))) + 1)
+  const inside = m == null ? null : rows.filter((r) => !r.is2025 && Math.abs(r.err) <= m).length
+  const past = rows.filter((r) => !r.is2025).length
+  return (
+    <section>
+      <h2 className="rail__title">Track record: our US {crop} error by year</h2>
+      <div className="track">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={rows} margin={{ top: 8, right: 12, bottom: 0, left: 0 }}>
+            <CartesianGrid stroke={t.grid} vertical={false} />
+            {m != null && <ReferenceArea y1={-m} y2={m} fill={t.share} fillOpacity={0.12} stroke="none" />}
+            <ReferenceLine y={0} stroke={t.axis} />
+            <XAxis dataKey="year" stroke={t.axis} tick={{ fill: t.muted, fontSize: 11 }} tickLine={false} interval={0} height={30}
+              tickFormatter={(y: string) => (rows.length > 9 && y !== '2025' && Number(y) % 2 ? '' : `'${y.slice(2)}`)} label={xTitle('Year (2025 = submitted)', t.muted)} />
+            <YAxis domain={[-top, top]} ticks={trackTicks(top)} tickFormatter={(v: number) => `${v > 0 ? '+' : ''}${v}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 11 }} width={46} label={yTitle('vs NASS final', t.muted)} />
+            <Bar dataKey="err" isAnimationActive={false} radius={[2, 2, 2, 2]}>
+              {rows.map((r) => <BarCell key={r.year} fill={r.is2025 ? t.accuracy : t.share} fillOpacity={r.is2025 ? 1 : 0.75} />)}
+            </Bar>
+            <Tooltip cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+              content={({ active, payload }) => {
+                const p = (payload?.[0] as { payload?: (typeof rows)[number] } | undefined)?.payload
+                if (!active || !p) return null
+                return (
+                  <div className="chart-tip">
+                    <div className="chart-tip__title">{p.year}{p.is2025 ? ' (submitted)' : ' (backtest)'}</div>
+                    <div className="chart-tip__row">Our US {crop} vs NASS final <span className="chart-tip__value">{p.err > 0 ? '+' : ''}{p.err.toFixed(1)}%</span></div>
+                  </div>
+                )
+              }}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+      <p className="rail__note rail__note--keep">
+        {m != null && <>Shaded band = our ±{m}% margin of error (90%). </>}
+        {inside != null && <>{inside} of {past} backtest years fell inside it{now != null ? `; 2025 came in at ${now > 0 ? '+' : ''}${(now * 100).toFixed(1)}%` : ''}. </>}
+        Each year was forecast with only what was known before January.
+      </p>
+    </section>
+  )
+}
+
+/** Symmetric round ticks for the track-record axis: steps of 2% up to 6%, else 4%. */
+function trackTicks(top: number): number[] {
+  const step = top > 6 ? 4 : 2
+  const n = Math.floor(top / step)
+  return Array.from({ length: 2 * n + 1 }, (_, i) => (i - n) * step)
 }

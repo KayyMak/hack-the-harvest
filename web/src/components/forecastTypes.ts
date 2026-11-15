@@ -28,6 +28,8 @@ export interface ConvergencePoint {
   us_silage_high: number
   us_grain: number
   us_grain_se: number
+  us_grain_low?: number
+  us_grain_high?: number
 }
 
 export interface CropScore {
