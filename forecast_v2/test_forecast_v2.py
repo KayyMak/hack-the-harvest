@@ -119,6 +119,29 @@ class Outputs(unittest.TestCase):
         self.assertLessEqual(set(old['convergence'][0]), set(new['convergence'][0]))
         self.assertEqual([c['as_of'] for c in new['convergence']], [c['as_of'] for c in old['convergence']])
 
+    def test_round2_share_code_reproduces_method_d(self):
+        from common import d_prime, latest, prior
+        for t in (2018, 2021, 2024):
+            hist = prior(FINALS, t)
+            for st in ('MARYLAND', 'WISCONSIN', 'NORTH DAKOTA', 'TEXAS', 'VERMONT'):
+                p, _ = latest(INSEASON, st, t, 'planted')
+                g, _ = latest(INSEASON, st, t, 'grain')
+                c = silage_candidates(st, t, hist, p, g)
+                self.assertAlmostEqual(d_prime(st, t, hist, p, g, 3, 'mean', False), c['S1'], places=6)
+
+    def test_round2_follows_its_preregistered_rule(self):
+        r = json.loads((HERE / 'outputs/backtest_round2.json').read_text(encoding='utf-8'))
+        p = r['pooled']
+        floor = min(p[m]['acre_weighted_mape'] for m in ('R1', 'R2', 'R3'))
+        w = next(m for m in ('R2', 'R1', 'R3') if p[m]['acre_weighted_mape'] <= floor + 0.20)
+        ok = (p['S5']['acre_weighted_mape'] - p[w]['acre_weighted_mape'] >= 0.50
+              and p[w]['median_ape'] - p['S5']['median_ape'] <= 0.50)
+        self.assertEqual((r['round2_winner'], r['final_silage_method']), (w, w if ok else 'S5'))
+        if ok:
+            rows = list(csv.DictReader((HERE / 'outputs/round2/state_estimates_2025.csv').open(encoding='utf-8')))
+            old = list(csv.DictReader((HERE / 'outputs/state_estimates_2025.csv').open(encoding='utf-8')))
+            self.assertEqual([(x['State'], x['Data Item']) for x in rows], [(x['State'], x['Data Item']) for x in old])
+
     def test_every_date_has_its_own_range(self):
         new = json.loads((HERE / 'outputs/summary.json').read_text(encoding='utf-8'))
         for c in new['convergence']:
