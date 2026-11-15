@@ -34,3 +34,10 @@ test('big numbers are shown to three significant figures with k, M or B', async 
   assert.equal(compactText('+1,234,567 bu kept'), '+1.23M bu kept')
   assert.equal(compactText('2,500 acres at $4.10/bu'), '2,500 acres at $4.10/bu')
 })
+
+test('Cropland Data Layer cover reads as land cover, not as a label', async () => {
+  const { cdlText } = await server.ssrLoadModule('/src/format.ts')
+  assert.equal(cdlText({ field_id: 4, year: 2022, crop: 'Soybeans', crop_share: 0.8, corn_share: 0, category: 'not_corn' }), 'Soybeans, not corn (CDL 2022)')
+  assert.equal(cdlText({ field_id: 5, year: 2022, crop: 'Corn', crop_share: 0.35, corn_share: 0.35, category: 'mixed' }), 'Mixed: 35% corn (CDL 2022)')
+  assert.equal(cdlText({ field_id: 6, year: 2022, crop: 'Corn', crop_share: 0.72, corn_share: 0.72, category: 'likely_corn' }), 'Corn, 72% of field (CDL 2022)')
+})

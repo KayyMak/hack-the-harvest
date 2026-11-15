@@ -374,6 +374,18 @@ export interface MarketReport {
 }
 
 /** One model call on a field-year with no BARC label (CDL says it was corn). Not a reference label. */
+/** GET /api/fields/landcover?year=: USDA Cropland Data Layer cover inside each BARC field-year.
+ *  Satellite land cover only: never a BARC reference label and never a model call. */
+export interface FieldLandcover {
+  field_id: number
+  year: number
+  /** most common CDL class inside the field */
+  crop: string
+  crop_share: number
+  corn_share: number
+  category: 'likely_corn' | 'mixed' | 'not_corn'
+}
+
 export interface UnlabeledCallView {
   OBJECTID: number
   label: Label

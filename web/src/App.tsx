@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
 import { unlabeledCallsAt } from './adapter'
-import type { Pred, UnlabeledCallView } from './api'
+import type { FieldLandcover, Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { Estimate2025Panel } from './components/Estimate2025'
 import { Forecast2025Panel } from './components/Forecast2025'
@@ -108,6 +108,8 @@ export default function App() {
   const estimate = useAsync(() => api.estimate2025(), [])
   const forecast = useAsync(() => api.forecast2025(), [])
   const unlabeled = useAsync(() => api.unlabeled(year), [year])
+  const landcover = useAsync(() => api.landcover(year), [year])
+  const coverMap = useMemo(() => new Map<number, FieldLandcover>((landcover.data ?? []).map((c) => [c.field_id, c])), [landcover.data])
   // Season-end calls: shown only when Nov 30 is selected, never on a mid-season date.
   const atSeasonEnd = asOf === `${year}-11-30`
   const unlabeledMap = useMemo(() => new Map<number, UnlabeledCallView>(unlabeledCallsAt(unlabeled.data, year, asOf).map((c) => [c.OBJECTID, c])), [unlabeled.data, year, asOf])
@@ -116,7 +118,9 @@ export default function App() {
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
 
   const counts = useMemo(() => {
-    const c = { Grain: 0, Silage: 0, Pending: 0, Insufficient: 0, total: fields.data?.features.length ?? 0 }
+    const total = fields.data?.features.length ?? 0
+    const labeled = fields.data?.features.filter((f) => f.properties.label).length ?? 0
+    const c = { Grain: 0, Silage: 0, Pending: 0, Insufficient: 0, total, labeled }
     for (const p of predMap.values()) c[p.class] += 1
     return c
   }, [predMap, fields.data])
@@ -158,7 +162,7 @@ export default function App() {
   }, [panelsOpen])
 
   const downloadCsv = () => {
-    const csv = rowsToCsv(buildRows(fields.data, predMap, unlabeledMap), year, asOf)
+    const csv = rowsToCsv(buildRows(fields.data, predMap, unlabeledMap, coverMap), year, asOf)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     const a = document.createElement('a')
     a.href = url
@@ -194,7 +198,7 @@ export default function App() {
         {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
         {view === 'states' ? (
           <USMap shapes={usShapes.data} rows={byStateRows} crop={crop} selected={usState} onSelect={setUsState} dark={mode === 'dark'} layoutKey={`${usState ?? ''}-${stateTable}-${!!byState.data}`} />
-        ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
+        ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
         {view === 'states' && byState.data && (
           <>
             <div className="glass statecrop seg" role="group" aria-label="Crop">
@@ -262,12 +266,12 @@ export default function App() {
               </select>
             </label>
           )}
-          <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
+          {BARC_VIEWS.has(view) && <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
             </svg>
-            Download CSV
-          </button>
+            Download BARC fields CSV
+          </button>}
           {theme.id === 'glass' && <ModeToggle mode={mode} onToggle={() => setMode((m) => (m === 'dark' ? 'light' : 'dark'))} />}
         </header>
 
@@ -294,8 +298,12 @@ export default function App() {
             {view === 'fields' && (
               <>
                 <h1 className="sheet__title">Fields</h1>
-                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.{unlabeledMap.size > 0 ? ` Rows marked "no label" are season-end model calls on fields BARC did not label but the Cropland Data Layer shows as corn; there is nothing to check them against.` : ''}</p>
-                <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} onSelect={select} selectedId={selectedId} />
+                <p className="sheet__lede">BARC-labeled fields for {year}, called as of {shortDate(asOf)}; tick "Show unlabeled" for the rest. Click a row for its evidence.</p>
+                <details className="more">
+                  <summary>What the columns mean</summary>
+                  <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. Land cover (CDL) is the USDA Cropland Data Layer's satellite crop map for that year: context only, never a BARC label or a model call.</p>
+                </details>
+                <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} coverError={landcover.error} onSelect={select} selectedId={selectedId} />
               </>
             )}
             {view === 'quality' && (
@@ -348,17 +356,17 @@ export default function App() {
                 <path d="M2 2l10 10M12 2L2 12" />
               </svg>
             </button>
-            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={meta.data ? meta.data.has_chips !== false : true} unlabeledCall={unlabeledMap.get(selected.properties.OBJECTID)} />
+            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={meta.data ? meta.data.has_chips !== false : true} unlabeledCall={unlabeledMap.get(selected.properties.OBJECTID)} cover={coverMap.get(selected.properties.OBJECTID)} />
           </aside>
         )}
 
         {view !== 'states' && <div className="glass mapkey">
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
-          <span><i className="k k--pending" />{seasonEnd ? 'No BARC label, not scored' : 'Not yet decided'}</span>
+          <span><i className="k k--pending" />{seasonEnd || atSeasonEnd ? 'No label, no call' : 'Not yet decided'}</span>
           {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label (season end)</span>}
           {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
-          <span className="mapkey__note">Fill is the model's call, outline is the BARC label</span>
+          <span className="mapkey__note">Fill is the model's call, outline is the BARC label{coverMap.size > 0 ? '; hover a field for its USDA Cropland Data Layer crop' : ''}</span>
           <span className="mapkey__fine">
             Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Prototype, not a USDA or NASS release.
           </span>

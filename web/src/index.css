@@ -2060,3 +2060,12 @@ details.more[open] > summary { margin-bottom: 4px; }
 .banner { margin: 0; padding: 8px 10px 8px 14px; border-radius: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; line-height: 1.4; }
 .banner > span { flex: 1 1 260px; min-width: 0; }
 .banner__dl { flex: none; font-size: 13px; }
+.toggle { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #c7d2ce; cursor: pointer; white-space: nowrap; }
+.toggle input { accent-color: #8fcdf2; }
+.ftable__cover { font-size: 13px; color: #a9b8b2; }
+.tag--cdl { background: rgba(143, 205, 242, 0.14); color: #8fcdf2; text-transform: none; letter-spacing: 0; }
+.cdl-note { margin: 8px 0 0; }
+.field-tip__cdl { color: #a9b8b2; }
+:root[data-theme='glass'][data-mode='light'] .toggle { color: #33453e; }
+:root[data-theme='glass'][data-mode='light'] .ftable__cover, :root[data-theme='glass'][data-mode='light'] .field-tip__cdl { color: #44564f; }
+:root[data-theme='glass'][data-mode='light'] .tag--cdl { background: rgba(28, 93, 134, 0.1); color: #1c5d86; }

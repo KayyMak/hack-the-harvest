@@ -12,8 +12,8 @@ import {
   YAxis,
 } from 'recharts'
 import { api, parseTopFeatures } from '../api'
-import type { FieldFeature, Pred, UnlabeledCallView } from '../api'
-import { classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
+import type { FieldFeature, FieldLandcover, Pred, UnlabeledCallView } from '../api'
+import { cdlText, classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps } from './charts'
@@ -36,9 +36,11 @@ interface Props {
   showChips?: boolean
   /** season-end model call on a field with no BARC label (CDL corn); shown apart from the prediction */
   unlabeledCall?: UnlabeledCallView
+  /** USDA Cropland Data Layer cover for this field-year: land cover, never a BARC label */
+  cover?: FieldLandcover
 }
 
-export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect, unlabeledCall }: Props) {
+export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect, unlabeledCall, cover }: Props) {
   if (!field) {
     return (
       <div className="empty">
@@ -65,10 +67,10 @@ export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, sh
       </div>
     )
   }
-  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} unlabeledCall={unlabeledCall} />
+  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} unlabeledCall={unlabeledCall} cover={cover} />
 }
 
-function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }: Props & { field: FieldFeature }) {
+function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, cover }: Props & { field: FieldFeature }) {
   // Chips are picked from the full season; before Nov 30 they could show the future.
   const seasonEnd = asOf === `${year}-11-30`
   const id = field.properties.OBJECTID
@@ -94,6 +96,12 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
         </div>
       </header>
 
+      {cover && (
+        <p className="block__note cdl-note">
+          <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">USDA Cropland Data Layer</span> {cdlText(cover)}
+          {!label && !pred && !unlabeledCall && <>; no BARC label and no model call</>}
+        </p>
+      )}
       {/* An unlabeled call replaces the "no model call" bar: it is a call, just not a scored one. */}
       {!(unlabeledCall && !label && !pred) && <ProbabilityBar pred={pred} />}
       {unlabeledCall && !label && !pred && (

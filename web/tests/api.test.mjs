@@ -302,3 +302,15 @@ test('an agent run that ends with an error before its report is shown as an erro
   assert.equal((await api.agentTrace('r-live')).status, 'running')
   assert.equal(traceStatus([]), 'running')
 })
+
+test('Cropland Data Layer cover comes from /api/fields/landcover for the asked year only', async (t) => {
+  const rows = [
+    { field_id: 4, year: 2022, crop: 'Soybeans', crop_share: 0.8, corn_share: 0, category: 'not_corn' },
+    { field_id: 4, year: 2023, crop: 'Corn', crop_share: 0.9, corn_share: 0.9, category: 'likely_corn' },
+  ]
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, '/api/fields/landcover?year=2022')
+    return Response.json(rows)
+  })
+  assert.deepEqual(await api.landcover(2022), [rows[0]])
+})

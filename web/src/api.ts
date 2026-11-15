@@ -14,6 +14,7 @@ import type {
   Estimate2025,
   Forecast2025,
   EvaluateResponse,
+  FieldLandcover,
   FieldsResponse,
   MarketOutlook,
   MarketReport,
@@ -185,6 +186,11 @@ export const api = {
     STATIC
       ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
       : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
+
+  /** USDA Cropland Data Layer cover per BARC field-year (land cover, not a label or a call); same shape live and static. */
+  landcover: (year: number): Promise<FieldLandcover[]> =>
+    (STATIC ? fromSnapshot<FieldLandcover[]>('landcover') : getJson<FieldLandcover[]>(`${API_URL}/api/fields/landcover?year=${year}`))
+      .then((rows) => rows.filter((r) => r.year === year)),
 
   /** Model calls on blank-label field-years CDL marks as corn: same saved shape live and static. */
   unlabeled: (year: number): Promise<UnlabeledYearView> =>

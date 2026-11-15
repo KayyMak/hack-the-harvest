@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react'
-import type { FieldsResponse, Pred, UnlabeledCallView } from '../api'
-import { classColor, num } from '../format'
+import type { FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
+import { cdlText, classColor, num } from '../format'
 
-type SortKey = 'id' | 'acres' | 'label' | 'call' | 'p' | 'result'
+type SortKey = 'id' | 'acres' | 'label' | 'call' | 'p' | 'result' | 'cover'
 
 interface Row {
   id: number
@@ -13,25 +13,33 @@ interface Row {
   result: string
   /** the call is a model call on a field with no BARC label */
   unlabeledCall: boolean
+  /** USDA Cropland Data Layer cover in words ('' when not available): land cover, not a label */
+  cover: string
+  landcover?: FieldLandcover
 }
 
-export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView> = new Map()): Row[] {
+export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView> = new Map(), cover: Map<number, FieldLandcover> = new Map()): Row[] {
   return (fields?.features ?? []).map((f) => {
     const p = preds.get(f.properties.OBJECTID)
     const label = f.properties.label ?? 'Unlabeled'
+    const lc = cover.get(f.properties.OBJECTID)
+    const land = { cover: lc ? cdlText(lc) : '', landcover: lc }
     const u = !f.properties.label && !p ? unlabeled.get(f.properties.OBJECTID) : undefined
-    if (u) return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call: u.label, p: u.p_silage, result: '', unlabeledCall: true }
-    const call = p?.class === 'Pending' ? 'Not yet decided' : p?.class === 'Insufficient' ? 'Abstained' : (p?.class ?? '—')
+    if (u) return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call: u.label, p: u.p_silage, result: '', unlabeledCall: true, ...land }
+    const call = p?.class === 'Pending' ? 'Not yet decided' : p?.class === 'Insufficient' ? 'Abstained' : (p?.class ?? 'No call')
     const decided = p?.class === 'Grain' || p?.class === 'Silage'
     const result = !f.properties.label || !decided ? '' : p?.class === f.properties.label ? 'Agrees' : 'Disagrees'
-    return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call, p: p?.p_silage ?? null, result, unlabeledCall: false }
+    return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call, p: p?.p_silage ?? null, result, unlabeledCall: false, ...land }
   })
 }
 
+const csvCell = (v: string) => (/[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v)
+
 export function rowsToCsv(rows: Row[], year: number, asOf: string) {
-  const head = 'field_id,year,as_of,acres,barc_label,model_call,p_silage,result,call_type'
+  const head = 'field_id,year,as_of,acres,barc_label,model_call,p_silage,result,call_type,cdl_top_class,cdl_corn_share,cdl_category'
   const body = rows.map((r) => [r.id, year, r.unlabeledCall ? `${year}-11-30` : asOf, r.acres ?? '', r.label, r.call, r.p ?? '', r.result,
-    r.unlabeledCall ? 'model call on unlabeled corn field (no reference)' : r.p != null ? 'held-out call on labeled field' : ''].join(','))
+    r.unlabeledCall ? 'model call on unlabeled corn field (no reference)' : r.p != null ? 'held-out call on labeled field' : '',
+    csvCell(r.landcover?.crop ?? ''), r.landcover?.corn_share ?? '', r.landcover?.category ?? ''].join(','))
   return [head, ...body].join('\n')
 }
 
@@ -42,19 +50,23 @@ const COLS: { key: SortKey; label: string; num?: boolean }[] = [
   { key: 'call', label: 'Model call' },
   { key: 'p', label: 'P(silage)', num: true },
   { key: 'result', label: 'Result' },
+  { key: 'cover', label: 'Land cover (CDL)' },
 ]
 
-export function FieldsTable({ fields, preds, unlabeled, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; onSelect: (id: number) => void; selectedId: number | null }) {
+export function FieldsTable({ fields, preds, unlabeled, cover, coverError, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; cover: Map<number, FieldLandcover>; coverError?: Error | null; onSelect: (id: number) => void; selectedId: number | null }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'result', dir: -1 })
   const [filter, setFilter] = useState('')
+  const [showUnlabeled, setShowUnlabeled] = useState(false)
+  const all = useMemo(() => buildRows(fields, preds, unlabeled, cover), [fields, preds, unlabeled, cover])
+  const labeledCount = all.filter((r) => r.label !== 'Unlabeled').length
   const rows = useMemo(() => {
-    const all = buildRows(fields, preds, unlabeled).filter((r) => !filter || `${r.id} ${r.label} ${r.call} ${r.result}`.toLowerCase().includes(filter.toLowerCase()))
-    return all.sort((a, b) => {
+    const shown = all.filter((r) => (showUnlabeled || r.label !== 'Unlabeled') && (!filter || `${r.id} ${r.label} ${r.call} ${r.result} ${r.cover}`.toLowerCase().includes(filter.toLowerCase())))
+    return shown.sort((a, b) => {
       const va = a[sort.key] ?? ''
       const vb = b[sort.key] ?? ''
       return (va < vb ? -1 : va > vb ? 1 : 0) * sort.dir
     })
-  }, [fields, preds, unlabeled, sort, filter])
+  }, [all, showUnlabeled, sort, filter])
 
   return (
     <div className="ftable">
@@ -63,8 +75,13 @@ export function FieldsTable({ fields, preds, unlabeled, onSelect, selectedId }: 
           <span className="sr-only">Filter fields</span>
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="Filter by field, label or call" />
         </label>
-        <span className="muted small">{rows.length} fields</span>
+        <label className="toggle">
+          <input type="checkbox" checked={showUnlabeled} onChange={(e) => setShowUnlabeled(e.target.checked)} />
+          Show unlabeled ({all.length - labeledCount})
+        </label>
+        <span className="muted small">{rows.length} {showUnlabeled ? 'fields' : `of ${all.length} fields (labeled)`}</span>
       </div>
+      {coverError && <p className="inline-error" role="alert">USDA Cropland Data Layer cover unavailable: {coverError.message}</p>}
       <div className="ftable__scroll">
         <table>
           <thead>
@@ -100,6 +117,7 @@ export function FieldsTable({ fields, preds, unlabeled, onSelect, selectedId }: 
                 </td>
                 <td className="is-num">{num(r.p)}</td>
                 <td className={r.result === 'Disagrees' ? 'is-bad' : r.result === 'Agrees' ? 'is-ok' : undefined}>{r.result || '—'}</td>
+                <td className="ftable__cover" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">{r.cover || '—'}</td>
               </tr>
             ))}
           </tbody>

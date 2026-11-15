@@ -1,5 +1,5 @@
 import { DATA } from './theme'
-import type { Label, PredClass } from './types'
+import type { FieldLandcover, Label, PredClass } from './types'
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -34,6 +34,13 @@ export const compactText = (text: string) =>
 /** Signed differences, e.g. "+1,234" acres and "+3.1%"; a true minus sign for negatives. */
 export const signedAcres = (x: number) => `${x < 0 ? '−' : '+'}${acres(Math.abs(x))}`
 export const signedPct = (x: number, digits = 1) => `${x < 0 ? '−' : '+'}${(Math.abs(x) * 100).toFixed(digits)}%`
+
+/** USDA Cropland Data Layer cover in words: "Soybeans, not corn (CDL 2022)", "Mixed: 35% corn (CDL 2022)". Never a BARC label. */
+export function cdlText(c: FieldLandcover): string {
+  if (c.category === 'mixed') return `Mixed: ${pct(c.corn_share)} corn (CDL ${c.year})`
+  if (c.category === 'likely_corn') return `Corn, ${pct(c.corn_share)} of field (CDL ${c.year})`
+  return `${c.crop}, not corn (CDL ${c.year})`
+}
 
 export const classColor = (c: PredClass | Label | null | undefined) =>
   c === 'Silage' ? DATA.silage : c === 'Grain' ? DATA.grain : DATA.undecided

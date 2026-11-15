@@ -15,7 +15,8 @@ export interface ReviewItem {
 interface Props {
   year: number
   asOf: string
-  counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number }
+  /** total = every BARC field; labeled = fields with a BARC Grain/Silage label this year (the only ones scored) */
+  counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number; labeled: number }
   rollup: RollupResponse | null
   /** season-end model calls on blank-label fields that CDL marks as corn */
   unlabeled?: UnlabeledYearView | null
@@ -43,7 +44,7 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
   const split = evaluation?.split_label ?? 'whole years held out'
   const base = evaluation?.baseline
   const balanced = evaluation?.convergence.some((c) => c.bal_acc != null) ?? false
-  const w = (n: number) => `${counts.total ? (n / counts.total) * 100 : 0}%`
+  const w = (n: number) => `${counts.labeled ? (n / counts.labeled) * 100 : 0}%`
 
   return (
     <>
@@ -67,7 +68,7 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
         <article className="glass kpi">
           <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Fields decided by ${shortDate(asOf)}`}</h2>
           <div className="kpi__value">
-            {decided} <span className="kpi__of">of {counts.total}</span>
+            {decided} <span className="kpi__of">of {counts.labeled} labeled {year} fields</span>
           </div>
           <div className="kpi__bar" aria-hidden="true">
             <span style={{ width: w(counts.Silage), background: DATA.silage }} />
@@ -75,7 +76,7 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
             <span style={{ width: w(counts.Insufficient), background: '#c9d3cf' }} />
           </div>
           <div className="kpi__foot">
-            {counts.Silage} silage, {counts.Grain} grain{seasonEnd ? `, ${counts.total - decided} not labeled` : `, ${counts.Insufficient} abstained`}
+            {counts.Silage} silage, {counts.Grain} grain{seasonEnd ? `; ${counts.total - counts.labeled} of ${counts.total} fields not labeled` : `, ${counts.Insufficient} abstained`}
           </div>
         </article>
         <article className="glass kpi">
