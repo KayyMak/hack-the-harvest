@@ -2169,7 +2169,7 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .shell .chip__missing { font-size: 12.5px; line-height: 1.4; padding: 10px; color: #a9b8b2; }
 .shell .nocall .pbar__value { font-size: 20px; }
 .shell .nocall p { font-size: 13.5px; line-height: 1.45; }
-.ftable td.ftable__cover { white-space: nowrap; }
+.ftable td.ftable__cover { white-space: normal; min-width: 7.5em; }
 .ftable td:nth-child(4) { white-space: nowrap; }
 :root[data-theme='glass'][data-mode='light'] .shell .chip__missing { color: #44564f; }
 @media (max-width: 900px) {
@@ -2177,3 +2177,6 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
   .shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: auto; }
   .shell .statecrop { order: 1; align-self: center; }
 }
+.shell .ftable table { font-size: 13.5px; }
+.shell .ftable td { padding: 7px 8px; }
+.shell .ftable th button { padding: 8px 8px; }
