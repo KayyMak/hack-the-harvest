@@ -1,8 +1,8 @@
 # Hack the Harvest: teammate setup
 
 Start here for the application scaffold. The original README, source notebooks,
-and data files are preserved. Read [AGENTS.md](AGENTS.md) before using an AI
-coding tool in this repository.
+and data files are preserved. Read [ENGINEERING.md](ENGINEERING.md) for the
+repository rules.
 
 ## What works now
 
@@ -29,7 +29,7 @@ baseline/                Satellite extraction, modeling, caches, results
 docs/                    Architecture and model review
 scripts/                 Local frontend/API integration smoke check
 .github/workflows/       Frontend build and backend test checks
-AGENTS.md                Instructions for AI coding assistants
+ENGINEERING.md           Engineering rules
 CONTRIBUTING.md          Team workflow and commit conventions
 ```
 
