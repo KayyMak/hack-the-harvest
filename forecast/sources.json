@@ -39,7 +39,7 @@
   },
   "cropan23": {
    "title": "Crop Production Annual Summary (history)",
-   "released": null,
+   "released": "January 12, 2023",
    "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/9306v916d/69700b71k/cropan23.txt",
    "sha256": "efebc1ec18581b9464afa6f8ca90b21d9786a1ec4b1b85c2522f69fcfcc6c9da",
    "years": [
@@ -50,7 +50,7 @@
   },
   "cropan24": {
    "title": "Crop Production Annual Summary (history)",
-   "released": null,
+   "released": "January 12, 2024",
    "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/ns065v292/wd377h97d/cropan24.txt",
    "sha256": "2b9ec957ea496e7b363b531af43d8fbbb7b8167f252dad405590c74cd377ab11",
    "years": [
@@ -61,7 +61,7 @@
   },
   "cropan25": {
    "title": "Crop Production Annual Summary (history)",
-   "released": null,
+   "released": "January 10, 2025",
    "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/nk324887m/vx023905r/cropan25.txt",
    "sha256": "d0f902548f924e6c14b56ff0f485174dffe643a46d0c95c710395e46a39b6f41",
    "years": [
