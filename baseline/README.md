@@ -172,6 +172,18 @@ training fold is filled with zero by that fold's imputer and explicitly listed.
 Field-years with no usable dates are excluded and reported as abstentions;
 individual missing features are imputed using training data only.
 
+**Model versions.** The paragraph above describes v1, the original baseline,
+which is kept unchanged as a backup. The saved outputs now come from model v2
+(`baseline/model_version.py`, `MODEL_VERSION = 'v2'`): the nine predictors plus
+four harvest-timing features from the same NDVI series (`decline_doy`,
+`drop_doy`, `drop_size`, `regrowth`), L1 logistic regression with `C` chosen by
+field-grouped inner cross-validation inside each training fold, threshold 0.5.
+It is candidate H of a pre-registered comparison (`model_v2/results.md`), so
+its seed-42 scores are optimistic; the selection-corrected estimate and the
+bootstrap interval for its gain are in `outputs/results.md`. Mid-season (as-of)
+calls still refit v1 on the months available. `HTH_MODEL_VERSION=v1` rebuilds
+every v1 output; see `outputs/v1_backup/README.md`.
+
 The always-Grain model is evaluated on exactly the same held-out rows.
 Silage is positive. False positive rate is Grain predicted as Silage divided
 by all true Grain examples. Confusion matrices use true rows and predicted
