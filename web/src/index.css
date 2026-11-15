@@ -2057,3 +2057,6 @@ details.more[open] > summary { margin-bottom: 4px; }
 :root[data-theme='glass'][data-mode='light'] details.more > summary { color: #44564f; }
 :root[data-theme='glass'][data-mode='light'] details.more > summary:hover { color: #13221d; }
 .recharts-default-legend .recharts-legend-item { margin-right: 18px !important; }
+.banner { margin: 0; padding: 8px 10px 8px 14px; border-radius: 14px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; font-size: 13px; line-height: 1.4; }
+.banner > span { flex: 1 1 260px; min-width: 0; }
+.banner__dl { flex: none; font-size: 13px; }

@@ -19,9 +19,14 @@ interface Props {
 export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTable }: Props) {
   const md = data.states.find((s) => s.state === 'MARYLAND')
   const sel = data.states.find((s) => s.state === selected) ?? null
+  const fsa = fsaBacktest(data)
   return (
     <>
       <div className="lead">
+        <p className="glass banner" role="note">
+          <span>This is our submitted 2025 answer: <code>forecast/outputs/state_estimates_2025.csv</code> (QuickStats format)</span>
+          <a className="ghost-btn banner__dl" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">Download 2025 CSV</a>
+        </p>
         <section className="kpis" aria-label="2025 headline numbers">
           <UsCard crop="silage" cell={data.us.silage} />
           <UsCard crop="grain" cell={data.us.grain} />
@@ -72,6 +77,11 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               on 2023–2024 (US silage {fmtPct(data.backtest.silage.us_total['2023'].pct_error / 100)} and {fmtPct(data.backtest.silage.us_total['2024'].pct_error / 100)}).
               No January 2026 data used.
             </p>
+            {fsa && (
+              <p className="rail__note rail__note--keep">
+                FSA December intended-use acres were tested as a silage predictor and lost the backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% acre-weighted error), so they are not used. RMA crop-insurance data is not used.
+              </p>
+            )}
           </section>
         </aside>
       )}
@@ -90,6 +100,16 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
       {sel && <StateDrawer row={sel} data={data} onClose={() => onSelect(null)} />}
     </>
   )
+}
+
+/** Backtest error of the FSA-based silage candidate next to the chosen method, from forecast_2025.json. */
+function fsaBacktest(data: Forecast): { fsa: number; chosen: number } | null {
+  const m = data.silage_method
+  const err = m?.backtest_acre_weighted_abs_pct_error ?? {}
+  const key = Object.entries(m?.candidates ?? {}).find(([, text]) => text.startsWith('FSA'))?.[0]
+  const fsa = key ? err[key] : undefined
+  const chosen = m ? err[m.chosen] : undefined
+  return fsa != null && chosen != null ? { fsa, chosen } : null
 }
 
 function UsCard({ crop, cell }: { crop: Crop; cell: Cell }) {
