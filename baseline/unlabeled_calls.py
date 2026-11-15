@@ -8,6 +8,11 @@ A blank label is unknown: the field may not have been corn that year. Stages:
            (gitignored).
   pilot    Sentinel-2 extraction for one blank field-year (--field, --year).
   extract  Same extraction for every blank field-year the corn stage marks likely corn.
+  extract-all
+           Same extraction for EVERY blank field-year (not corn and mixed too), so each one
+           has a saved greenness series and chips (export_unlabeled_imagery.py). Scenes that
+           fail to read are retried with backoff; any still failing stay read_error records.
+           Evidence only: predict still calls only the likely-corn blanks.
   predict  Fit the current model (baseline/model_version.py: v2 by default, v1 =
            run_baseline.build_model()) on the labeled field-years and call the
            likely-corn blank field-years. Offline. v2's timing features come from the
@@ -246,14 +251,74 @@ def likely_corn_blanks():
     return list(zip(take.field_id, take.year))
 
 
-def extract_stage(selection):
+def all_blanks():
+    """Every blank field-year, whatever CDL says (evidence only: series and chips, never calls)."""
+    table = pd.read_csv(OUT / 'corn_check.csv')
+    take = table[table.label == 'blank']
+    return list(zip(take.field_id, take.year))
+
+
+def catalog_items(year):
+    """Scene records saved by run_baseline.extract for this year, by item id."""
+    import pystac
+    items = {}
+    for path in sorted((CACHE / 'catalog').glob(f'{year}_*.json')):
+        for d in json.loads(path.read_text(encoding='utf-8'))['items']:
+            items.setdefault(d['id'], d)
+    return {k: pystac.Item.from_dict(d) for k, d in items.items()}
+
+
+RETRY_WAITS = (10, 30, 60, 120)
+
+
+def retry_read_errors(jobs, waits=RETRY_WAITS):
+    """Re-read only the scenes that failed with read_error, with the same extract_scene recipe.
+
+    A scene that reads on retry replaces its read_error records; one that still fails stays a
+    read_error record (never filled). Returns {field-year: [item ids still failing]}."""
+    import time
+    for attempt, wait in enumerate((0, *waits)):
+        failing = {}
+        for row in jobs.itertuples():
+            cached = rb.load_cache(row)
+            for o in cached['observations']:
+                if o['status'] == 'read_error':
+                    failing.setdefault((int(row.year), o['item_id']), []).append(row.Index)
+        if not failing or attempt == len(waits):
+            break
+        time.sleep(wait)
+        print(f'Retry {attempt + 1}: {len(failing)} scene reads failed earlier.', flush=True)
+        for year in sorted({y for y, _ in failing}):
+            items = catalog_items(year)
+            for (y, item_id), idx in sorted(failing.items()):
+                if y != year:
+                    continue
+                records = rb.extract_scene(items[item_id], jobs.loc[sorted(set(idx))])
+                for row in jobs.loc[sorted(set(idx))].itertuples():
+                    new = [r for r in records if r['OBJECTID'] == int(row.OBJECTID)]
+                    if not new or any(r['status'] == 'read_error' for r in new):
+                        continue
+                    cached = rb.load_cache(row)
+                    obs = [o for o in cached['observations']
+                           if not (o['item_id'] == item_id and o['status'] == 'read_error')] + new
+                    cached['observations'] = sorted(obs, key=lambda r: (r['date'], r['item_id']))
+                    rb.write_json(rb.cache_path(row), cached)
+    return {f'{jobs.loc[i].OBJECTID}_{y}': sorted(item for (yy, item), ids in failing.items() if i in ids)
+            for (y, _), ids in failing.items() for i in ids}
+
+
+def extract_stage(selection, retry=False):
     use_unlabeled_cache()
     jobs = blank_jobs(selection)
     rb.extract(jobs)
+    still_failing = retry_read_errors(jobs) if retry else {}
     for row in jobs.itertuples():
         s = rb.summarize(row, rb.load_cache(row))
         print(json.dumps({k: (None if isinstance(v, float) and not np.isfinite(v) else v)
                           for k, v in s.items()}), flush=True)
+    if retry:
+        print(json.dumps(dict(field_years=len(jobs), still_failing_reads=still_failing), indent=2), flush=True)
+    return still_failing
 
 
 def labeled_features():
@@ -403,7 +468,7 @@ def predict_stage():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('stage', choices=['corn', 'pilot', 'extract', 'predict'])
+    parser.add_argument('stage', choices=['corn', 'pilot', 'extract', 'extract-all', 'predict'])
     parser.add_argument('--field', type=int)
     parser.add_argument('--year', type=int)
     args = parser.parse_args()
@@ -416,6 +481,8 @@ def main():
         extract_stage([(args.field, args.year)])
     elif args.stage == 'extract':
         extract_stage(likely_corn_blanks())
+    elif args.stage == 'extract-all':
+        extract_stage(all_blanks(), retry=True)
     else:
         predict_stage()
     rb.verify_originals()
