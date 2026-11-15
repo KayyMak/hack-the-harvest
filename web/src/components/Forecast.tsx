@@ -90,6 +90,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
           </section>
           {crop === 'silage' && <WhyMisses data={data} onSelect={onSelect} />}
+          {crop === 'grain' && <WhyGrainClose data={data} onSelect={onSelect} />}
           <ScoreUpload data={data} crop={crop} />
           <section>
             <h2 className="rail__title">How it works</h2>
@@ -222,7 +223,23 @@ function ConvergenceChart({ data, crop }: { data: Forecast; crop: Crop }) {
           <Line dataKey="high" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line dataKey="low" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line dataKey="est" stroke={t.share} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.share }} isAnimationActive={false} />
-          {nass != null && <ReferenceLine y={nass} stroke={t.accuracy} strokeDasharray="6 4" label={{ value: `NASS ${fmtAcres(nass)}`, position: 'insideBottomRight', fill: t.muted, fontSize: 11 }} />}
+          {nass != null && (
+            <ReferenceLine y={nass} stroke={t.accuracy} strokeDasharray="6 4" strokeWidth={1.5}
+              label={(props: { viewBox?: { x: number; y: number; width: number } }) => {
+                const vb = props.viewBox
+                if (!vb) return <g />
+                const text = `NASS final ${fmtAcres(nass)}`
+                const w = text.length * 6.4 + 14
+                const x = vb.x + vb.width - w - 2
+                const y = vb.y - 21
+                return (
+                  <g>
+                    <rect x={x} y={y} width={w} height={18} rx={9} fill={t.surface} stroke={t.accuracy} strokeOpacity={0.7} />
+                    <text x={x + w / 2} y={y + 13} textAnchor="middle" fill={t.ink} fontSize={11.5} fontWeight={700}>{text}</text>
+                  </g>
+                )
+              }} />
+          )}
           <Tooltip
             content={({ active, payload, label }) => {
               const p = (payload?.[0] as { payload?: (typeof rows)[number] } | undefined)?.payload
@@ -526,6 +543,46 @@ function WhyMisses({ data, onSelect }: { data: Forecast; onSelect: (s: string) =
               <td className="num">{fmtAcres(r.silage!.est)}</td>
               <td className="num">{fmtAcres(r.silage!.hist5!)}</td>
               <td className="num">{fmtAcres(r.silage!.nass)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
+}
+
+/** Grain view: why grain is close (NASS's own Nov 14 forecast) and where its big percentages come from (small states). */
+function WhyGrainClose({ data, onSelect }: { data: Forecast; onSelect: (s: string) => void }) {
+  const rows = useMemo(
+    () => data.states
+      .filter((r) => r.grain?.nass != null && r.grain.err != null)
+      .sort((a, b) => Math.abs(b.grain!.err!) - Math.abs(a.grain!.err!))
+      .slice(0, 3),
+    [data],
+  )
+  const top5 = useMemo(
+    () => data.states.filter((r) => r.grain?.nass != null && r.grain.err != null).sort((a, b) => b.grain!.nass! - a.grain!.nass!).slice(0, 5),
+    [data],
+  )
+  if (!rows.length) return null
+  const worstBig = Math.max(...top5.map((r) => Math.abs(r.grain!.err!)))
+  return (
+    <section>
+      <h2 className="rail__title">Why grain is close</h2>
+      <p className="rail__note rail__note--keep">
+        Grain is NASS's own Nov 14 forecast, built from its farmer surveys, so the five largest grain states are all within
+        {' '}{(worstBig * 100).toFixed(1)}% of the final. The big percentages are small states, where a few thousand acres move the
+        percentage a lot:
+      </p>
+      <table className="mini-table whymiss">
+        <thead><tr><th>State</th><th className="num">Ours</th><th className="num">NASS 2025</th><th className="num">Error</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.state} onClick={() => onSelect(r.state)}>
+              <td>{titleCase(r.state)}</td>
+              <td className="num">{fmtAcres(r.grain!.est)}</td>
+              <td className="num">{fmtAcres(r.grain!.nass)}</td>
+              <td className="num">{fmtPct(r.grain!.err)}</td>
             </tr>
           ))}
         </tbody>
