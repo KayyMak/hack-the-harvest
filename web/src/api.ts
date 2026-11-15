@@ -71,6 +71,9 @@ const post = <T>(path: string, body: unknown) =>
 const LIVE_YEARS = [2021, 2022, 2023]
 const LIVE_MONTH_DAYS = ['08-12', '09-12', '10-12', '11-12', '11-30']
 const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
+// The signal breakdown is optional: without it the field panel shows its pending state.
+const contributions = () =>
+  getJson<SavedContribution[]>(`${API_URL}/api/baseline/contributions`).catch((): SavedContribution[] => [])
 const savedAsOf = () => getJson<SavedAsOf>(`${API_URL}/api/baseline/asof`)
 
 export const api = {
@@ -93,10 +96,10 @@ export const api = {
       : isSeasonEnd(year, asOf)
         ? Promise.all([
             getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`),
-            // The breakdown is optional: without it the field panel shows its pending state.
-            getJson<SavedContribution[]>(`${API_URL}/api/baseline/contributions`).catch(() => []),
+            contributions(),
           ]).then(([data, contributions]) => adaptPredictions(data, year, asOf, contributions))
-        : savedAsOf().then((data) => adaptAsOfPredictions(data, year, asOf)),
+        : Promise.all([savedAsOf(), contributions()])
+            .then(([data, rows]) => adaptAsOfPredictions(data, year, asOf, rows)),
 
   /** `year` only dates the season chart; the scores themselves are pooled over all saved years. */
   evaluate: (split = 'strict', year = LIVE_YEARS[1]) =>
