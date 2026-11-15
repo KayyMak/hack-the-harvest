@@ -3,7 +3,9 @@
 After installing dependencies, the API, dashboard, one command, notebook and static fallback
 work offline from the versioned outputs in `baseline/outputs/`. Only the
 satellite extraction (`baseline/run_baseline.py extract`) and the Nemotron agent need network
-access. Setup details for Windows are in [START_HERE.md](../START_HERE.md).
+access. Cross-platform setup is in the [root README](../README.md#run-locally).
+See the [submission summary](../SUBMISSION.md) for final deliverables and the
+[documentation index](README.md) for research and operating guides.
 
 ## 1. API (FastAPI, port 8000)
 
@@ -28,20 +30,24 @@ export QUICKSTATS_CSV=/workspace/02_QuickStats/corn_grain_silage_acres_2012_2025
 ## 2. Dashboard (React, port 5173)
 
 ```sh
-cd frontend && npm ci && npm run dev
+cd web
+npm ci
+npm run dev
 ```
 
-The Vite dev server proxies `/api` to port 8000.
+The Vite dev server proxies `/api` to port 8000. To use the earlier results
+screen, run the same commands in `frontend/` instead.
 
 ## 3. One command
 
 ```sh
-.venv/bin/python -m pip install scikit-learn   # only for as-of dates before Nov 30
 .venv/bin/python -m harvest.run --year 2022 --as-of 2022-10-12 --out runs/2022-10-12
 ```
 
 Writes `predictions.csv`, `metrics.json`, `rollup.json`, `quickstats_export.csv` and
-`run.json`. The as-of date uses only the monthly NDVI medians complete by then.
+`run.json`. Before November 30, the explicitly labeled v1 refit uses only monthly
+NDVI features complete by the as-of date. From November 30 the CLI uses saved
+full-season model v2 predictions. Backend requirements include scikit-learn.
 
 ## 3b. Sample market outlook (optional, Nemotron)
 
@@ -56,10 +62,13 @@ Data and rebuild commands: `market/README.md`.
 
 ## 4. Agent (Nemotron)
 
-The agent implementation is not included yet. `POST /api/agent/run` returns 501 until
-`agent.run.run_agent` is installed. Follow `agent/README.md` when that component lands
-for its dependencies, NVIDIA credentials and launch commands. The saved logistic
-predictions and the dashboard do not require Nemotron.
+The agent is implemented in `agent/run.py`. Backend requirements include its
+LangGraph and LangChain dependencies. Set `NVIDIA_API_KEY` in the server
+environment or repo-root `.env`, then use Cutline's Agent view or
+`POST /api/agent/run` with a JSON `query`. Poll
+`GET /api/agent/trace/{run_id}` for steps and the report. The graph runs an
+analyst, tools, verifier, and writer over saved evidence. The saved predictions
+and dashboard do not require Nemotron. Static mode cannot run the agent.
 
 **Sample trace for the trace view.** `docs/samples/agent_trace_sample.jsonl` is a 39-step
 trace from a scripted run on BARC 2021 as of 2021-10-12 (real tool results, a scripted
@@ -105,6 +114,7 @@ after outputs change; a failed re-export removes the old response for that route
 
 ```sh
 (cd backend && ../.venv/bin/python -m unittest discover -s tests -v)
+(cd web && npm ci && npm test && npm run build)
 (cd frontend && npm run build)
 .venv/bin/python scripts/smoke_test.py
 ```

@@ -31,11 +31,12 @@ accepting it; this configuration selects the free plan.
 - This publishes the current versioned baseline dashboard, not the exploratory
   ML experiments as a new model. Its API also serves fields, observations,
   polygons, and acreage rollups.
-- `/api/agent/run` returns 501 because `agent.run.run_agent` is not in the repo.
-  Adding an NVIDIA key alone does not implement it. The image deliberately
-  omits the offline `harvest` CLI and scientific training dependencies.
-- `/api/quickstats` returns 503 until an appropriate CSV is supplied through
-  `QUICKSTATS_CSV`. The optional benchmark integration is not configured here.
+- The image includes `agent/`, `harvest/`, and their runtime dependencies.
+  Agent and generated market reports require `NVIDIA_API_KEY` on the server;
+  saved dashboard views do not. Traces and reports use `/tmp/agent_runs`.
+- The image sets `QUICKSTATS_CSV` to the versioned 2025 judge-reference CSV.
+  For broader historical context, supply a suitable CSV and override that path.
+  Filters still apply to the rows actually available.
 - Health checks only show that the API is alive. The deployment smoke check
   also verifies the frontend and saved artifacts.
 - Free services sleep after inactivity; the first visit can take time to wake.

@@ -6,6 +6,11 @@ It combines satellite evidence for field-level Grain/Silage predictions with
 Nemotron analyst. Reference labels, model predictions, and official statistics
 remain visibly distinct.
 
+**Submitted project:** see [the submission summary](SUBMISSION.md),
+[executed notebook](Submission/harvest_submission.ipynb), and
+[final acreage CSV](forecast_v2/outputs/state_estimates_2025.csv).
+Use the [documentation index](docs/README.md) to find operating guides and research history.
+
 ## What is included
 
 - **Cutline dashboard (`web/`):** state forecasts, BARC validation, field maps,
@@ -125,9 +130,11 @@ BARC rollups summarize the evaluated fields, including probability-weighted
 silage acres, intervals, and misclassification adjustments. They are field
 subtotals and do not represent state or national acreage.
 
-The separate 2025 forecast uses public NASS reports released before January
-2026. Its [saved summary](forecast/outputs/summary.json) records methods, source
+The submitted 2025 forecast lives in `forecast_v2/` and uses public NASS reports
+released before January 2026. Its [method and backtest](forecast_v2/results.md)
+and [saved summary](forecast_v2/outputs/summary.json) record methods, source
 release dates, uncertainty, and exclusion of the January 2026 answer key.
+The first forecast in `forecast/` remains available for comparison.
 The dashboard also exposes a separate Maryland satellite-sample estimate and
 benchmark comparisons. Official reference totals are shown separately.
 
@@ -184,8 +191,8 @@ remain null. API health alone does not verify that all artifacts exist.
 For hosted reports, copy `.env.example` to `.env` and supply the NVIDIA key,
 or set it in the server environment. Keys stay on the server. The agent lives
 in `agent/run.py`; its LangGraph and LangChain dependencies are included in
-backend requirements. Some older setup guides still describe the agent hook
-as unimplemented; current source and API documentation take precedence.
+backend requirements. See [the run guide](docs/HOW_TO_RUN.md#4-agent-nemotron)
+for the request and trace workflow.
 
 ## Repository layout
 
@@ -196,8 +203,8 @@ backend/                  FastAPI routes, schemas, artifact readers, tests
 harvest/                  Reporting CLI, as-of evaluation, shared agent tools
 agent/                    Nemotron analyst graph
 baseline/                 Satellite extraction, evaluation, caches, saved results
-forecast/                 Public-report-based 2025 forecasts and provenance
-forecast_v2/              Additional forecast work
+forecast/                 First 2025 forecast, retained for comparison
+forecast_v2/              Submitted 2025 forecast, backtests, and provenance
 analysis/                 Forecast backtests and supporting analysis
 market/                   NASS context and market timeline generation
 data/                     Reference snapshots, extra labels, source metadata

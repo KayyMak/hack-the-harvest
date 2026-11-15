@@ -1,157 +1,26 @@
-# Hack the Harvest: teammate setup
+﻿# Start here
 
-Start here for the application scaffold. The original README, source notebooks,
-and data files are preserved. Read [ENGINEERING.md](ENGINEERING.md) for the
-repository rules.
+The project has been submitted. Read the [project README](README.md) for the
+current overview and cross-platform setup, and the [submission summary](SUBMISSION.md)
+for the final CSV, executed notebook, results, and live dashboard.
 
-## What works now
+## Choose your task
 
-- A React + TypeScript frontend displays real, saved BARC model metrics,
-  observation quality, a confusion matrix, and held-out field-year predictions.
-- A FastAPI backend reads the saved outputs without downloading satellite data
-  or importing the geospatial/modeling packages.
-- `baseline/` contains the working satellite extraction and logistic regression
-  experiment, numerical caches, reference labels, and reproducible results.
-- No API keys or environment variables are needed for local development.
+| Task | Guide |
+| --- | --- |
+| Run Cutline and the API | [README setup](README.md#run-locally) |
+| Run the CLI, agent, notebook, or static fallback | [Run guide](docs/HOW_TO_RUN.md) |
+| Find documentation and research history | [Documentation index](docs/README.md) |
+| Understand components and API routes | [Architecture](docs/ARCHITECTURE.md) |
+| Work on the main dashboard | [Cutline frontend](web/README.md) |
+| Deploy or check hosting | [Render guide](docs/DEPLOY_RENDER.md) |
+| Reproduce satellite analysis | [Baseline methods](baseline/README.md) |
+| Review submitted forecast methods | [Forecast v2 results](forecast_v2/results.md) |
 
-## Repository layout
+Use Python 3.12 and Node.js 24. Cutline lives in `web/`; `frontend/` is the
+maintained earlier results screen. Saved results require no NVIDIA key.
+Hosted agent and market reports use a server-side `NVIDIA_API_KEY`.
 
-```text
-frontend/                React/TypeScript app (Vite)
-  src/api.ts             HTTP client and matching TypeScript response types
-  src/App.tsx            Initial results screen
-backend/                 Python API
-  app/main.py            HTTP routes
-  app/schemas.py         Public response models / OpenAPI contract
-  app/artifacts.py       Read-only access to baseline output files
-  tests/                 API contract and failure-path checks
-baseline/                Satellite extraction, modeling, caches, results
-docs/                    Architecture and model review
-scripts/                 Local frontend/API integration smoke check
-.github/workflows/       Frontend build and backend test checks
-ENGINEERING.md           Engineering rules
-CONTRIBUTING.md          Team workflow and commit conventions
-```
-
-Source notebooks, `BARC_Corn.2021-2023.gpkg`, `field_aoi.geojson`, and
-`data_sources.md` remain at the project root. Numerical caches and small result
-artifacts are versioned so a fresh clone works offline after package setup.
-Local runtimes, virtual environments, node_modules, credentials, and frontend
-build products are ignored by Git.
-
-## Prerequisites
-
-Use **Python 3.12** and **Node.js 22.12+** (Node 24 is also supported).
-The app requires no database, Docker, cloud account, or geospatial installation.
-The analysis pipeline has its own heavier requirements in `baseline/`.
-Frontend versions are locked in `frontend/package-lock.json`; tested backend
-and test dependency versions are pinned in `backend/constraints.txt`.
-
-## Windows / PowerShell
-
-From the project root, create the backend environment:
-
-```powershell
-py -3.12 -m venv .venv
-.venv\Scripts\python.exe -m pip install -r backend\requirements-dev.txt
-.venv\Scripts\python.exe -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
-```
-
-In a second terminal:
-
-```powershell
-cd frontend
-npm.cmd ci
-npm.cmd run dev
-```
-
-These commands do not require PowerShell activation scripts or changes to
-execution policy. On this machine, `baseline\.runtime\python.exe` is an
-existing local Python 3.12 alternative; that runtime is not uploaded to GitHub.
-
-## macOS / Linux
-
-From the project root:
-
-```sh
-python3.12 -m venv .venv
-.venv/bin/python -m pip install -r backend/requirements-dev.txt
-.venv/bin/python -m uvicorn app.main:app --app-dir backend --reload --host 127.0.0.1 --port 8000
-```
-
-In a second terminal:
-
-```sh
-cd frontend
-npm ci
-npm run dev
-```
-
-Open **http://127.0.0.1:5173**. API documentation is at
-**http://127.0.0.1:8000/docs**. Vite forwards `/api` requests to the backend, so
-no browser CORS configuration is required for this local setup. Both processes
-must run. Stop either with Ctrl+C.
-
-## Checks before a pull request
-
-Frontend, from `frontend/`:
-
-```sh
-npm ci
-npm run build
-```
-
-Backend, from `backend/` (Windows):
-
-```powershell
-..\.venv\Scripts\python.exe -m unittest discover -s tests -v
-```
-
-On macOS/Linux use `../.venv/bin/python` instead. CI runs these same checks.
-The production frontend build is output to `frontend/dist/`. The API serves
-the Cutline build in `web/dist/` when present, otherwise that build. See [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) for
-single-service hosting and deployment checks.
-
-With ports 8000 and 5173 free and frontend dependencies installed, run
-`python scripts/smoke_test.py` using the backend environment to start both
-services, check the frontend-to-API proxy, and stop the services automatically.
-This checks HTTP integration; browser rendering is a separate manual check.
-
-## Analysis work
-
-Read [baseline/README.md](baseline/README.md) for the separate analysis setup,
-pilot-first extraction, label/CRS checks, and offline evaluation commands.
-The API reads `baseline/outputs/metrics.json` and
-`baseline/outputs/heldout_predictions.csv` on each request. Regenerating valid
-outputs and refreshing the page is sufficient to display updated results.
-Never start extraction or training inside an HTTP request.
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for component boundaries and
-[baseline/outputs/results.md](baseline/outputs/results.md) for measured results.
-Read [docs/MODEL_REVIEW.md](docs/MODEL_REVIEW.md) for the six error cases and
-an interpretation of what the current evaluation supports.
-
-## Optional Nemotron API connection check
-
-Set `$env:NVIDIA_API_KEY` in PowerShell, then run from the project root:
-
-```powershell
-python scripts/check_nemotron.py
-```
-
-This uses Python's standard library to make one small request to NVIDIA's
-hosted `nvidia/nemotron-3.5-super-vl-120b-a12b` endpoint. It requires account
-access to that model and does not start a Brev instance. A successful response
-confirms connectivity only; it does not train a model or evaluate field data.
-The application and existing logistic regression baseline do not require a key.
-
-After connectivity succeeds, follow
-[baseline/NEMOTRON_COMPARISON.md](baseline/NEMOTRON_COMPARISON.md) to run a
-one-field pilot and the cached numerical-feature comparison on the saved folds.
-
-## Shared ML results and parallel work
-
-Read [docs/ML_EXPERIMENTS.md](docs/ML_EXPERIMENTS.md) for the published cached
-experiments, source provenance, judge-reference snapshot, and offline checks.
-See [docs/WORK_BREAKDOWN.md](docs/WORK_BREAKDOWN.md) for how the experiment work was split up
-and run on the same evidence.
+Read [ENGINEERING.md](ENGINEERING.md) and [CONTRIBUTING.md](CONTRIBUTING.md)
+before editing. Preserve the submitted artifact paths, source data, and unknown
+labels. Local environments and dependencies are not committed.

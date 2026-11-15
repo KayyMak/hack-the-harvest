@@ -6,7 +6,9 @@ working research baseline. Make the narrowest complete change for the request.
 
 ## Component boundaries
 
-- Frontend UI: `frontend/src/`; HTTP calls go through `frontend/src/api.ts`.
+- Main frontend UI: `web/src/`; HTTP calls go through `web/src/api.ts` and
+  response adaptation through `web/src/adapter.ts`. The earlier results screen
+  remains in `frontend/src/`, with its own `frontend/src/api.ts`.
 - Backend routes: `backend/app/main.py`; public types: `backend/app/schemas.py`;
   saved-artifact access: `backend/app/artifacts.py`.
 - Satellite extraction and model evaluation: `baseline/`. The API must not
@@ -17,7 +19,8 @@ working research baseline. Make the narrowest complete change for the request.
 ## Data and model invariants
 
 - Preserve source notebooks, the GeoPackage, `field_aoi.geojson`,
-  `data_sources.md`, and the original root README. Put new work separately.
+  `data_sources.md`, and the original README archived in
+  `docs/original/README.md`. Put new work separately.
 - `baseline/original_sha256.json` verifies originals. Do not rewrite hashes to
   conceal source changes. The later-added GeoJSON is also treated as source.
   `.gitattributes` preserves source bytes across Windows/Linux checkouts.
@@ -35,7 +38,8 @@ working research baseline. Make the narrowest complete change for the request.
 
 ## Verification and collaboration
 
-- Frontend: `cd frontend`, then `npm ci` and `npm run build`.
+- Cutline: `cd web`, then `npm ci`, `npm test`, and `npm run build`.
+- Earlier frontend: `cd frontend`, then `npm ci` and `npm run build`.
 - Backend: `cd backend`, then `python -m unittest discover -s tests -v` in the
   configured environment. Tests use versioned baseline outputs.
 - Analysis changes: run `baseline/test_baseline.py` with its analysis environment

@@ -7,7 +7,7 @@ aggregate, whose reference value is 0.
 
 - Live dashboard: https://hack-the-harvest.onrender.com
 - Notebook with every chart and table, already run: [`Submission/harvest_submission.ipynb`](Submission/harvest_submission.ipynb)
-- The root `README.md` is the organizers' original and is kept byte-for-byte (checked against `baseline/original_sha256.json`).
+- The organizers' original README is archived byte for byte at [docs/original/README.md](docs/original/README.md), checked against `baseline/original_sha256.json`. The root [README.md](README.md) is the current project overview.
 
 The submission has two parts:
 

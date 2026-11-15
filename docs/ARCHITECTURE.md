@@ -16,8 +16,14 @@ Source BARC polygons + labels     Public Sentinel-2 L2A COGs
                      |
            /api via Vite development proxy
                      |
-      frontend/src/api.ts -> App.tsx (localhost:5173)
+      web/src/api.ts -> adapter.ts -> App.tsx (localhost:5173)
 ```
+
+Cutline in `web/` is the main dashboard. The earlier `frontend/` results screen
+remains available. Submitted forecast outputs live in `forecast_v2/`; the first
+forecast in `forecast/` is retained for comparison. See
+[SUBMISSION.md](../SUBMISSION.md) for deliverables and
+[the documentation index](README.md) for current and historical guides.
 
 ## Ownership
 
@@ -63,7 +69,7 @@ are separate fields.
 | `GET /api/market/status` | `{configured, model, how_to_configure}`; whether the server has an NVIDIA key (never the key) |
 | `GET /api/market/outlook?season=&as_of=` | Month-by-month outlook known on `as_of`: 2025 US/Maryland (NASS forecasts + team silage estimates, supply change, price pressure) or 2021-2023 BARC model calls; no LLM |
 | `POST /api/market/report` `{year, as_of?}` | Nemotron writes a sample outlook as of a date from tool results and project-document passages (no later data); every sentence is cited and checked, unsupported ones are removed and listed in `grounding`; 503 with instructions when no key |
-| `POST /api/agent/run` `{query}` | `{run_id}`; starts `agent.run.run_agent(query, run_id)` in the background; 501 until the agent exists |
+| `POST /api/agent/run` `{query}` | `{run_id}`; starts the implemented `agent.run.run_agent(query, run_id)` workflow in the background; hosted calls require a server-side NVIDIA key |
 | `GET /api/agent/trace/{run_id}` | Trace lines logged so far from `<traces>/<run_id>.jsonl` (the folder `agent/trace.py` writes; `/workspace/data/handoff/traces` on Keeboh, `agent_runs/traces` locally, or `AGENT_TRACES_DIR`); `[]` before the first step |
 | `GET /docs` | Interactive generated API documentation |
 | `GET /openapi.json` | Machine-readable response schemas |
@@ -75,6 +81,12 @@ Silage is the positive class. Matrices are true rows / predicted columns,
 ordered Grain then Silage.
 
 ## Agent tools
+
+`agent/run.py` implements the LangGraph analyst, tools, verifier, and writer
+workflow. It uses the server environment or repo-root `.env` for NVIDIA
+configuration. Backend requirements include its runtime dependencies. Trace
+records and reports describe retrieved evidence and failures; keys never reach
+the browser. Static snapshots cannot execute this workflow.
 
 `backend/app/tools.py` exposes eight read-only tools over saved outputs
 (`get_fields`, `get_timeseries`, `classify`, `evaluate`, `aggregate`,
@@ -103,7 +115,8 @@ Writes `predictions.csv`, `metrics.json`, `rollup.json`, `quickstats_export.csv`
 (the lab QuickStats file's columns) and `run.json`. An as-of date uses only the
 monthly NDVI medians complete by then: before Nov 30 the baseline's logistic
 pipeline is refit on the saved field folds with those features (needs
-scikit-learn); from Nov 30 the saved predictions are used; before Jul 31 every
+scikit-learn, included in backend requirements); this is the labeled v1 month-cut
+refit. From Nov 30 saved full-season model v2 predictions are used; before Jul 31 every
 field is Pending. This is a command-line step, not an API route.
 
 ## Deliberate limits
@@ -116,5 +129,6 @@ The Vite proxy is for local development. In production the API mounts
 a dashboard build after its API routes, so the dashboard and API share one origin.
 It serves the Cutline build in `web/dist/` when present and falls back to `frontend/dist/`.
 The Dockerfile and `render.yaml` host the saved-results app; see
-[DEPLOY_RENDER.md](DEPLOY_RENDER.md). Offline training and the `harvest` CLI
-are not part of that image.
+[DEPLOY_RENDER.md](DEPLOY_RENDER.md). The image includes `agent/` and `harvest/`
+for runtime tools and as-of refits, but does not extract new satellite imagery
+or regenerate research outputs during startup.

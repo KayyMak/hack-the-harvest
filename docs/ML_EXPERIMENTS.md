@@ -1,5 +1,10 @@
 # Published ML experiment snapshot
 
+Historical snapshot of the early experiments. The project later adopted model v2
+and submitted the `forecast_v2/` acreage forecast. See the
+[submission summary](../SUBMISSION.md) for final deliverables and the
+[documentation index](README.md) for current guides.
+
 This branch shares the cached numerical experiments and input diagnostics so
 teammates can review them without API keys, GPU instances, or satellite downloads.
 It does not replace the app's saved baseline outputs or promote an experimental
