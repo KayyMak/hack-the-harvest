@@ -17,6 +17,8 @@ class SignalBreakdown(unittest.TestCase):
         logodds = defaultdict(float)
         intercept = {}
         for r in rows:
+            if r['as_of']:
+                continue  # mid-season rows are checked against asof.json by the exporter itself
             key = (r['OBJECTID'], r['year'])
             logodds[key] += float(r['contribution'])
             intercept[key] = float(r['intercept'])
@@ -27,9 +29,9 @@ class SignalBreakdown(unittest.TestCase):
             self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[key] + logodds[key]))), p, places=4, msg=key)
 
     def test_committed_file_matches_a_fresh_export(self):
-        fresh = {(r['OBJECTID'], r['year'], r['feature']): r['contribution'] for r in compute()}
+        fresh = {(r['OBJECTID'], r['year'], r['as_of'], r['feature']): r['contribution'] for r in compute()}
         with (OUT_DIR / 'feature_contributions.csv').open(encoding='utf-8', newline='') as f:
-            committed = {(int(r['OBJECTID']), int(r['year']), r['feature']): float(r['contribution'])
+            committed = {(int(r['OBJECTID']), int(r['year']), r['as_of'], r['feature']): float(r['contribution'])
                          for r in csv.DictReader(f)}
         self.assertEqual(fresh, committed)
 
