@@ -247,7 +247,7 @@ def main() -> None:
         'balanced_accuracy': round(m['logistic']['balanced_accuracy'], 4),
         'baseline': {'name': 'Always grain', **summary(m['always_grain'])},
         'by_year': {y: {'model': summary(v['logistic']), 'baseline': summary(v['always_grain'])} for y, v in m['by_year'].items()},
-        'model_version': m.get('model_version', 'v1'),
+        **({'model_version': m['model_version']} if 'model_version' in m else {}),
         **({'selection': {k: m['selection'][k] for k in ('note', 'nested_selection_mean_balanced_accuracy',
                                                          'v1_mean_balanced_accuracy_same_seeds',
                                                          'gain_vs_v1_field_bootstrap_95ci', 'details')}}
