@@ -1,7 +1,7 @@
 {
   "year": 2025,
   "state": "MARYLAND",
-  "generated_utc": "2026-11-15T08:54:10+00:00",
+  "generated_utc": "2026-11-15T09:18:09+00:00",
   "headline": "calibrated",
   "population": {
     "source": "USDA Crop Sequence Boundaries (2016-2023 polygons), Maryland, checked against the 2025 Cropland Data Layer",
@@ -33,7 +33,7 @@
     "batches_drawn": 6
   },
   "model": {
-    "name": "Logistic regression on NDVI (the BARC baseline pipeline)",
+    "name": "Logistic regression on NDVI and harvest-timing features (L1), model v2",
     "training_field_years": 44,
     "training_silage_field_years": 12,
     "features": [
@@ -45,39 +45,46 @@
       "peak_ndvi",
       "peak_doy",
       "late_ndvi",
-      "early_minus_late"
+      "early_minus_late",
+      "decline_doy",
+      "drop_doy",
+      "drop_size",
+      "regrowth"
     ],
     "threshold": 0.5,
-    "sample_fields_called_silage": 116
+    "sample_fields_called_silage": 172,
+    "model_version": "v2",
+    "C": 1.0,
+    "description": "model v2 (pre-registered candidate H, baseline/model_v2): median imputation, standard scaling, L1 logistic regression (liblinear) with C chosen by field-grouped inner CV, threshold 0.5"
   },
   "raw": {
-    "silage_acres": 70500.9,
+    "silage_acres": 90433.1,
     "silage_acres_95ci": [
-      63635.2,
-      77562.6
+      82228.5,
+      99168.0
     ],
-    "grain_acres": 371667.7,
+    "grain_acres": 351735.5,
     "grain_acres_95ci": [
-      364606.0,
-      378533.4
+      343000.6,
+      359940.1
     ],
-    "silage_share": 0.1594
+    "silage_share": 0.2045
   },
   "calibrated": {
-    "silage_acres": 47704.6,
+    "silage_acres": 55743.3,
     "silage_acres_95ci": [
-      0.0,
-      127703.7
+      3837.2,
+      94641.2
     ],
-    "grain_acres": 394464.0,
+    "grain_acres": 386425.3,
     "grain_acres_95ci": [
-      314464.9,
-      442168.6
+      347527.4,
+      438331.4
     ],
-    "silage_share": 0.1079,
-    "tpr": 0.5605,
-    "fpr": 0.0298,
-    "predicted_silage_acre_share": 0.087,
+    "silage_share": 0.1261,
+    "tpr": 0.8457,
+    "fpr": 0.0372,
+    "predicted_silage_acre_share": 0.1391,
     "undefined_bootstrap_draws": 0,
     "method": "share = (q - FPR) / (TPR - FPR), clipped to [0, 1]; q is the acre share of scored sample fields called Silage at 0.5; TPR and FPR are acre-weighted rates from the 44 saved held-out BARC field-years"
   },
@@ -89,34 +96,50 @@
   "benchmark": {
     "calibrated": {
       "silage": {
-        "error": 7705.0,
-        "relative_error": 0.192625
+        "error": 15743.0,
+        "relative_error": 0.393575
       },
       "grain": {
-        "error": -15536.0,
-        "relative_error": -0.03789268292682927
+        "error": -23575.0,
+        "relative_error": -0.0575
       }
     },
     "raw": {
       "silage": {
-        "error": 30501.0,
-        "relative_error": 0.762525
+        "error": 50433.0,
+        "relative_error": 1.260825
       },
       "grain": {
-        "error": -38332.0,
-        "relative_error": -0.09349268292682927
+        "error": -58264.0,
+        "relative_error": -0.14210731707317073
       }
     }
   },
-  "method": "Maryland 2025 corn fields are Crop Sequence Boundaries polygons with at least half of their 2025 Cropland Data Layer pixels in corn: 18,684 fields, 442,169 acres. A seeded random sample of 1,500 fields, allocated by county, was read from Sentinel-2 L2A (July-November 2025) with the baseline's cloud mask, reflectance offset and nine NDVI features. The baseline logistic regression, fitted on all 44 labeled BARC field-years, gives each field a silage probability. Raw: probability-weighted silage acres in the sample, scaled to all Maryland corn acres. Calibrated: the acre share called silage, corrected with the miss and false-alarm rates measured on held-out BARC fields. Grain is corn acres minus silage. The 2025 NASS values were not used to fit, choose or adjust anything.",
+  "method": "Maryland 2025 corn fields are Crop Sequence Boundaries polygons with at least half of their 2025 Cropland Data Layer pixels in corn: 18,684 fields, 442,169 acres. A seeded random sample of 1,500 fields, allocated by county, was read from Sentinel-2 L2A (July-November 2025) with the baseline's cloud mask and reflectance offset, giving nine NDVI features and four harvest-timing features per field. Model v2 (L1 logistic regression), fitted on all 44 labeled BARC field-years, gives each field a silage probability. Raw: probability-weighted silage acres in the sample, scaled to all Maryland corn acres. Calibrated: the acre share called silage, corrected with the miss and false-alarm rates measured on held-out BARC fields. Grain is corn acres minus silage. The 2025 NASS values were not used to fit, choose or adjust anything.",
   "limitations": [
     "The model was trained on 44 field-years from one research farm (BARC, 2021-2023); how well it transfers to other Maryland farms and to 2025 is untested.",
     "The calibration rates come from 12 silage and 32 grain BARC field-years, so the calibrated range is wide.",
     "The raw range reflects only which fields were sampled, not model error, so it is too narrow.",
     "Field polygons date from 2023; corn in 2025 is taken from the Cropland Data Layer, which has its own classification error.",
     "Corn acres here are mapped field acres, not NASS acres harvested; abandoned or failed corn is not removed.",
-    "Fields with fewer than 3 clear Sentinel-2 dates are skipped and listed, not filled in."
+    "Fields with fewer than 3 clear Sentinel-2 dates are skipped and listed, not filled in.",
+    "The timing feature drop_size is the largest NDVI fall between consecutive clear looks, so it grows with the gap between looks. BARC fields share scenes and cloud gaps; the statewide sample does not. Days between clear looks: 2025 sample median 5, 90th percentile 15, median longest gap per field 23; BARC training median 5, 90th percentile 15, median longest gap 29.",
+    "Model v2 was chosen on BARC held-out data (selection-corrected balanced accuracy about 0.87 vs 0.80 for v1; the bootstrap interval for the gain touches zero); its timing features are untested outside BARC."
   ],
+  "look_gaps_days": {
+    "sample_2025": {
+      "field_years": 1500,
+      "median_gap_days": 5.0,
+      "p90_gap_days": 15.0,
+      "median_longest_gap_days": 23.0
+    },
+    "barc_training": {
+      "field_years": 44,
+      "median_gap_days": 5.0,
+      "p90_gap_days": 15.0,
+      "median_longest_gap_days": 29.0
+    }
+  },
   "sources": [
     {
       "name": "USDA NASS Crop Sequence Boundaries (fiboa copy on Source Cooperative)",
