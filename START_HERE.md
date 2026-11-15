@@ -153,5 +153,5 @@ one-field pilot and the cached numerical-feature comparison on the saved folds.
 
 Read [docs/ML_EXPERIMENTS.md](docs/ML_EXPERIMENTS.md) for the published cached
 experiments, source provenance, judge-reference snapshot, and offline checks.
-Use [docs/CLAUDE_TEAM_PROMPT.md](docs/CLAUDE_TEAM_PROMPT.md) to start a bounded
-Claude Code lead/subagent workflow on the same evidence.
+See [docs/WORK_BREAKDOWN.md](docs/WORK_BREAKDOWN.md) for how the experiment work was split up
+and run on the same evidence.

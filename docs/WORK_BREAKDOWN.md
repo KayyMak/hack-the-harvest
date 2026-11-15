@@ -1,4 +1,4 @@
-# Claude Code lead-agent prompt
+# Work breakdown
 
 > **Note:** the submitted model is now model v2 (see `baseline/model_v2/results.md`); v1 references below are historical.
 
