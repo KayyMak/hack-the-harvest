@@ -156,7 +156,28 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   const series = (tl.series as Dict[]) ?? []
   const grid = <CartesianGrid stroke={t.grid} vertical={false} />
   const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} padding={{ left: 18, right: 18 }} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
-  const tip = <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
+  // compact value-only tooltip: short names, one decimal, same style as the other charts
+  const SHORT: Record<string, string> = { supply: 'US grain supply vs 2024', md: 'MD silage share', est: 'BARC silage acres' }
+  const tip = (
+    <Tooltip
+      cursor={{ stroke: t.axis, strokeDasharray: '3 3' }}
+      content={({ active, payload, label }) => {
+        const items = (payload ?? []).filter((p) => p.value != null && SHORT[String(p.dataKey)])
+        if (!active || !items.length) return null
+        return (
+          <div className="chart-tip">
+            <div className="chart-tip__title">{label}</div>
+            {items.map((p) => {
+              const v = Number(p.value)
+              const pct = p.dataKey === 'supply' || p.dataKey === 'md'
+              const text = pct ? `${p.dataKey === 'supply' && v > 0 ? '+' : ''}${v.toFixed(1)}%` : Math.round(v).toLocaleString('en-US')
+              return <div className="chart-tip__row" key={String(p.dataKey)}>{SHORT[String(p.dataKey)]} <span className="chart-tip__value">{text}</span></div>
+            })}
+          </div>
+        )
+      }}
+    />
+  )
   const legend = <Legend verticalAlign="top" align="left" height={58} iconType="plainline" wrapperStyle={{ fontSize: 12, lineHeight: '18px', color: t.ink, paddingBottom: 14 }} />
   if (tl.kind === 'statewide_and_us_outlook') {
     const rows = series.map((r) => ({ label: shortDate(String(r.as_of)), supply: r.us_production_change_pct, md: r.md_silage_share_pct }))
