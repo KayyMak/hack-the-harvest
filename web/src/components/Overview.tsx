@@ -117,8 +117,8 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
               <span><i style={{ background: chart.accuracy }} />{balanced ? 'Balanced accuracy' : 'Accuracy on decided'}</span>
             </div>
             <p className="rail__note rail__note--keep">
-              Why early dates miss more: each date uses only whole months of satellite greenness, and BARC cuts silage from
-              mid-August (median Sept 6). Before October the cut is mostly unseen; from Oct 12, September's images show it.
+              Why early dates miss more: each date uses only whole months of satellite greenness, and BARC's farm records show silage cut from
+              mid-August (median Sept 6, 2015–2023). Before October the cut is mostly unseen; from Oct 12, September's images show it.
             </p>
           </section>
         )}
