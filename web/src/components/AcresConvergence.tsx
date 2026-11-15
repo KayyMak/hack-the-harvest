@@ -19,8 +19,8 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
   useEffect(() => setPicked(year), [year])
   if (error) return <p className="inline-error">Acre estimates by date unavailable: {error.message}</p>
   if (!data) return <div className="skeleton skeleton--chart" />
-  const current = data.years.find((y) => y.year === picked) ?? data.years[0]
-  if (!current) return <p className="muted small">No saved acre estimates yet.</p>
+  const current = data.years.find((y) => y.year === picked)
+  if (!current?.points.length) return <p className="muted small">No saved acre estimates for {picked}.</p>
   const rows = current.points.map((p) => ({
     label: shortDate(p.as_of),
     est: p.expected_silage_acres,
@@ -29,7 +29,8 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
     band: p.expected_silage_acres_95ci[1] - p.expected_silage_acres_95ci[0],
     cv: p.cv_percent,
   }))
-  const reference = current.points[0]?.reference_silage_acres ?? 0
+  const reference = current.points[0].reference_silage_acres
+  const missingAcres = Math.max(...current.points.map((p) => p.missing_acres_field_years))
   const top = Math.max(reference, ...rows.map((r) => r.hi)) * 1.1
   const first = rows[0]
   const last = rows[rows.length - 1]
@@ -71,6 +72,7 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
         {data.scope}. The interval comes from the model's own probabilities and does not include error in those probabilities, so it is narrower than the true uncertainty. 
         Each date refits the model using only months of satellite data complete by then.
       </p>
+      {missingAcres > 0 && <p className="inline-error" role="alert">Some estimates omit fields without acreage (up to {missingAcres} field-years per date). Compare dates with care.</p>}
     </div>
   )
 }
