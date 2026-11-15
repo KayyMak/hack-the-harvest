@@ -69,7 +69,7 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
         </ResponsiveContainer>
       </div>
       <p className="muted small">
-        {data.scope}. The interval comes from the model's own probabilities and does not include error in those probabilities, so it is narrower than the true uncertainty. 
+        {data.scope}. The interval comes from the model's own probabilities and does not include error in those probabilities, so it is narrower than the true uncertainty.{' '}
         {current.points.some((p) => p.mode === 'v1 month-cut refit')
           ? 'Before Nov 30 each date refits the v1 model (nine NDVI features) using only months of satellite data complete by then; model v2 needs the full season, so it is used from Nov 30.'
           : 'Each date refits the model using only months of satellite data complete by then.'}
