@@ -2358,3 +2358,5 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 :root[data-mode='light'] .drawer__pos { color: #4a5a55; }
 /* clickable tiles (buttons) line up with the others: content from the top, left-aligned */
 .kpis .kpi--button { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; text-align: left; }
+/* side panels sit above the map controls, so zoom/home never cover a panel on narrower screens */
+@media (min-width: 901px) { .shell .sheet, .shell .drawer, .shell .rail { z-index: 1001; } }
