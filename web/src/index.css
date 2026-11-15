@@ -2201,3 +2201,6 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 @media (min-width: 901px) {
   .shell--overview .rail { bottom: auto; max-height: calc(100vh - 112px); }
 }
+.backtest { margin-top: 8px; font-size: 12px; }
+.backtest caption { text-align: left; font-size: 12px; color: #a9b8b2; padding-bottom: 4px; }
+.backtest th, .backtest td { padding: 4px 6px; }

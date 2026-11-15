@@ -83,7 +83,7 @@ export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seaso
         </label>
         <span className="muted small">{rows.length} {showUnlabeled ? 'fields' : `of ${all.length} fields (labeled)`}</span>
       </div>
-      {coverError && <p className="inline-error" role="alert">USDA Cropland Data Layer cover unavailable: {coverError.message}</p>}
+      {coverError && <p className="inline-error" role="alert">USDA Cropland Data Layer cover could not be loaded, so the CDL crop column is empty.</p>}
       <div className="ftable__scroll">
         <table>
           <thead>

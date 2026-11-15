@@ -26,7 +26,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
     <>
       <div className="lead">
         <p className="glass banner" role="note">
-          <span>This is our submitted 2025 answer: <code>forecast/outputs/state_estimates_2025.csv</code> (QuickStats format)</span>
+          <span>This is our submitted 2025 answer — <code>forecast/outputs/state_estimates_2025.csv</code> (QuickStats format)</span>
           <a className="ghost-btn banner__dl" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">Download 2025 CSV</a>
         </p>
         <section className="kpis" aria-label="2025 headline numbers">
@@ -90,8 +90,23 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               <summary>Details</summary>
               <p className="rail__note rail__note--keep">
                 Silage method chosen by acre-weighted backtest on 2023–2024 (US silage {fmtPct(data.backtest.silage.us_total['2023'].pct_error / 100)} and {fmtPct(data.backtest.silage.us_total['2024'].pct_error / 100)}).
-                No January 2026 data used. Click a state on the map for its numbers, or open All states for the table.
+                No January 2026 data used (data cutoff {data.data_cutoff}). Click a state on the map for its numbers, or open All states for the table.
               </p>
+              <table className="mini-table backtest">
+                <caption>Backtest on earlier state-years, forecast the same way</caption>
+                <thead><tr><th>Crop</th><th className="num">State-years</th><th className="num">Median error</th><th className="num">Mean error</th><th className="num">In 95% range</th></tr></thead>
+                <tbody>
+                  {(['silage', 'grain'] as const).map((c) => {
+                    const b = data.backtest[c]
+                    return (
+                      <tr key={c}>
+                        <td>{c === 'silage' ? 'Silage' : 'Grain'}</td><td className="num">{b.state_years}</td><td className="num">{b.median_abs_pct_error.toFixed(1)}%</td>
+                        <td className="num">{b.mean_abs_pct_error.toFixed(1)}%</td><td className="num">{Math.round(b.covered_by_95_interval * 100)}%</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
             </details>
           </section>
         </aside>

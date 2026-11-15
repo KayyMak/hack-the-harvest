@@ -5,7 +5,7 @@ import { Pending } from './Pending'
 
 /** Held-out results by year (the saved model on each year's labeled rows); always grain scores 0.50 every year. */
 export function PerYearPanel({ state }: { state: AsyncState<DeclineRuleBaseline> }) {
-  if (state.error) return <Pending title="Per-year results">The saved per-year results are not available. {state.error.message}</Pending>
+  if (state.error) return <Pending title="Per-year results">The saved per-year results are not available on this server.</Pending>
   if (!state.data) return <div className="skeleton skeleton--panel" />
   return (
     <>
@@ -22,14 +22,14 @@ export function PerYearPanel({ state }: { state: AsyncState<DeclineRuleBaseline>
           </tbody>
         </table>
       </div>
-      <p className="muted small">Always grain scores 0.50 balanced accuracy every year by construction. Few silage field-years per year, so single years swing widely.</p>
+      <p className="muted small">Always grain is a coin flip on balanced accuracy every year by construction. Few silage field-years per year, so single years swing widely.</p>
     </>
   )
 }
 
 /** Saved comparison: a simple "NDVI drops early = silage" rule vs the model and always-grain, on the same rows. */
 export function DeclineRulePanel({ state }: { state: AsyncState<DeclineRuleBaseline> }) {
-  if (state.error) return <Pending title="Decline-rule baseline">The saved comparison is not available. {state.error.message}</Pending>
+  if (state.error) return <Pending title="Decline-rule baseline">The saved comparison is not available on this server.</Pending>
   if (!state.data) return <div className="skeleton skeleton--panel" />
   const d = state.data
   const rows: [string, RuleMetrics][] = [
