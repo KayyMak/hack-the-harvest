@@ -2,19 +2,19 @@
 """
 Dashboard export for the submitted forecast_v2 estimate (R2). Adapted from forecast/export_dashboard.py, which
 is left unchanged. It joins forecast_v2/outputs/summary.json (built only from reports released before January
-2026) with the judges' NASS 2025 reference (data/reference/quickstats_2025_judges.csv) for display. The
-estimator never reads the reference; this script only compares after the fact.
+2026) with the judges' NASS 2025 values for display, taken from the scoring report that `python -m
+harvest.benchmark` wrote (forecast_v2/outputs/benchmark.json), so no forecast_v2 file opens the answer key itself.
+The estimator never reads the reference; this script only compares after the fact.
 
     python forecast_v2/export_dashboard.py   ->  web/public/forecast_2025.json, web/public/forecast_state_estimates_2025.csv
 """
-import csv
 import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 ESTIMATES = ROOT / 'forecast_v2' / 'outputs' / 'state_estimates_2025.csv'
-JUDGES = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
+BENCHMARK = ROOT / 'forecast_v2' / 'outputs' / 'benchmark.json'
 OUT = ROOT / 'web' / 'public' / 'forecast_2025.json'
 # Student t, 0.95 quantile (two-sided 90%), by degrees of freedom; 30 stands in for anything larger.
 T90 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812,
@@ -23,17 +23,12 @@ T90 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 
        29: 1.699, 30: 1.697}
 
 
-def acres(v: str):
-    v = (v or '').replace(',', '').strip()
-    return float(v) if v.replace('.', '', 1).isdigit() else None
-
-
 def main():
     s = json.loads(SUMMARY.read_text(encoding='utf-8'))
-    nass = {}
-    for r in csv.DictReader(JUDGES.open(encoding='utf-8')):
-        crop = 'silage' if 'SILAGE' in r['Data Item'] else 'grain'
-        nass[(r['State'], crop)] = acres(r['Value'])
+    bench = json.loads(BENCHMARK.read_text(encoding='utf-8'))
+    ref_path = bench['reference']['path']
+    # NASS value per (geography, crop) as harvest.benchmark read it; withheld codes are None
+    nass = {(c['geography'], c['crop_use'].lower()): c['reference_value'] for c in bench['comparisons']}
 
     def cell(est, se, lo, hi, truth):
         if est is None:
@@ -85,7 +80,7 @@ def main():
         data_cutoff='2025-11-14',
         estimate_note=('Built only from USDA NASS reports and Quick Stats in-season values released before January 2026 '
                        '(forecast_v2, pre-registered backtest pick R2); the January 2026 Annual Summary is never read.'),
-        reference_note='Reference: judges\' NASS QuickStats 2025 export (data/reference/quickstats_2025_judges.csv), used only for scoring.',
+        reference_note=f"Reference: judges' NASS QuickStats 2025 export ({ref_path}), used only for scoring.",
         method=s['method'], silage_method=s['silage_method'], backtest=s['backtest'], interval_z=z,
         us=us_out, scores=dict(grain=score('grain'), silage=score('silage')),
         reliability=dict(grain=reliability('grain'), silage=reliability('silage')),
