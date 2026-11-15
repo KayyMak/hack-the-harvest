@@ -142,7 +142,7 @@ def scene_path(batch, item_id):
     return SCENE_CACHE / f'batch_{batch}' / f'{item_id}.json'
 
 
-def run_scene(item, fields, batch, attempts=3):
+def run_scene(item, fields, batch, attempts=5):
     path = scene_path(batch, item.id)
     error = None
     for attempt in range(attempts):
@@ -153,7 +153,7 @@ def run_scene(item, fields, batch, attempts=3):
         except Exception as exc:
             # No signed URLs/tokens in stored errors.
             error = f'{type(exc).__name__}: {str(exc).split("?")[0][:300]}'
-            time.sleep(3 * (attempt + 1))
+            time.sleep(10 * (attempt + 1))  # name-resolution outages come in bursts
     interested = fields[fields.geometry.intersects(shape(item.geometry))]
     write_json(path, dict(item_id=item.id, status='read_error', error=error,
         records=[dict(id=i, item_id=item.id, date=item.datetime.date().isoformat(), ndvi=None,
