@@ -17,8 +17,8 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
-import { adaptFields, adaptPredictions, adaptSeries, adaptSummary } from './adapter.ts'
-import type { SavedFields, SavedPrediction, SavedSummary } from './adapter'
+import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
+import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
 
 export * from './types.ts'
 
@@ -62,13 +62,18 @@ const post = <T>(path: string, body: unknown) =>
     body: JSON.stringify(body),
   })
 
+const LIVE_YEARS = [2021, 2022, 2023]
+const LIVE_MONTH_DAYS = ['08-12', '09-12', '10-12', '11-12', '11-30']
+const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
+const savedAsOf = () => getJson<SavedAsOf>(`${API_URL}/api/baseline/asof`)
+
 export const api = {
   /** Static mode only: describes the snapshot (stub or real, which years / dates exist). */
   meta: (): Promise<SnapshotMeta | null> =>
     STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()) : Promise.resolve({
       stub: false, note: 'Saved BARC baseline results; held out by field.',
-      years: [2021, 2022, 2023], as_of_dates: [2021, 2022, 2023].map((y) => `${y}-11-30`),
-      season_end_only: true, has_chips: false, has_rollup: false, has_contributions: false,
+      years: LIVE_YEARS, as_of_dates: LIVE_YEARS.flatMap((y) => LIVE_MONTH_DAYS.map((md) => `${y}-${md}`)),
+      season_end_only: false, has_chips: false, has_rollup: true, has_contributions: false,
     }),
 
   fields: (year: number) =>
@@ -79,17 +84,25 @@ export const api = {
   predict: (year: number, asOf: string) =>
     STATIC
       ? fromSnapshot<Pred[]>(snap.predict(year, asOf))
-      : getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`).then((data) => adaptPredictions(data, year, asOf)),
+      : isSeasonEnd(year, asOf)
+        ? getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`).then((data) => adaptPredictions(data, year, asOf))
+        : savedAsOf().then((data) => adaptAsOfPredictions(data, year, asOf)),
 
-  evaluate: (split = 'strict') =>
+  /** `year` only dates the season chart; the scores themselves are pooled over all saved years. */
+  evaluate: (split = 'strict', year = LIVE_YEARS[1]) =>
     STATIC
       ? fromSnapshot<EvaluateResponse>(snap.evaluate(split))
-      : getJson<SavedSummary>(`${API_URL}/api/baseline/summary`).then(adaptSummary),
+      : Promise.all([
+          getJson<SavedSummary>(`${API_URL}/api/baseline/summary`),
+          // The season chart is optional: without saved as-of results the scores still show.
+          savedAsOf().then((data) => ({ points: adaptConvergence(data, year), error: undefined }))
+            .catch((error: unknown) => ({ points: [], error: error instanceof Error ? error.message : String(error) })),
+        ]).then(([summary, season]) => ({ ...adaptSummary(summary, season.points), convergence_error: season.error })),
 
   rollup: (year: number) =>
     STATIC
       ? fromSnapshot<RollupResponse>(snap.rollup(year))
-      : Promise.reject<RollupResponse>(new ApiError('Statewide estimates are unavailable. The saved rollup covers labeled BARC fields only; it cannot be compared with statewide Census acres.', 503)),
+      : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`).then((data) => adaptRollup(data, year)),
 
   series: (id: number, year: number) =>
     STATIC

@@ -6,12 +6,12 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_fields_geojson,
+from .artifacts import (ArtifactUnavailable, compute_rollup, read_asof, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -37,6 +37,19 @@ def summary() -> BaselineSummary:
 @app.get('/api/baseline/predictions', response_model=list[Prediction])
 def predictions() -> list[Prediction]:
     return _serve(read_predictions)
+
+
+@app.get('/api/baseline/asof', response_model=AsOfResults)
+def asof(year: int | None = None) -> AsOfResults:
+    """Saved mid-season calls per year and release date, plus scores pooled over the years.
+    Read from baseline/outputs/asof.json; nothing is fitted in this request."""
+    data = _serve(read_asof)
+    if year is None:
+        return data
+    entries = [entry for entry in data.dates if entry.year == year]
+    if not entries:
+        raise HTTPException(status_code=404, detail=f'No saved as-of results for year {year}.')
+    return data.model_copy(update={'dates': entries})
 
 
 @app.get('/api/baseline/rollup', response_model=Rollup)

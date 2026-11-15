@@ -210,6 +210,59 @@ class ApiChecks(unittest.TestCase):
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/fields.geojson').status_code, 503)
 
+    def test_saved_asof_calls(self):
+        data = self.client.get('/api/baseline/asof').json()
+        self.assertEqual(len(data['dates']), 15)  # three years x five dates
+        final = {(p['field_id'], y['year']): p for y in data['dates'] if y['as_of'].endswith('-11-30')
+                 for p in y['predictions']}
+        saved = self.client.get('/api/baseline/predictions').json()
+        self.assertEqual(len(final), len(saved))
+        for p in saved:  # the season-end entry is the saved full-season model, unchanged
+            self.assertEqual(final[(p['field_id'], p['year'])]['predicted_label'], p['predicted_label'])
+            self.assertEqual(final[(p['field_id'], p['year'])]['reference_label'], p['reference_label'])
+        pooled = {row['month_day']: row for row in data['pooled']}
+        self.assertEqual(pooled['08-12']['balanced_accuracy'], 0.5)  # July alone: no better than always-Grain
+        summary = self.client.get('/api/baseline/summary').json()
+        self.assertAlmostEqual(pooled['11-30']['balanced_accuracy'], summary['logistic']['balanced_accuracy'])
+        self.assertEqual(pooled['11-30']['confusion_matrix'], summary['logistic']['confusion_matrix'])
+        only = self.client.get('/api/baseline/asof?year=2022').json()
+        self.assertEqual({entry['year'] for entry in only['dates']}, {2022})
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/baseline/asof').status_code, 503)
+
+    def test_malformed_asof_artifacts_are_503_with_and_without_year_filter(self):
+        import copy
+        import json
+        original = self.client.get('/api/baseline/asof').json()
+        variants = []
+        missing_year = copy.deepcopy(original)
+        del missing_year['dates'][0]['year']
+        variants.append(missing_year)
+        bad_pooled = copy.deepcopy(original)
+        bad_pooled['pooled'] = 'invalid'
+        variants.append(bad_pooled)
+        wrong_year = copy.deepcopy(original)
+        wrong_year['dates'][0]['year'] = 2022
+        variants.append(wrong_year)
+        bad_probability = copy.deepcopy(original)
+        bad_probability['dates'][0]['predictions'][0]['silage_probability'] = 2
+        variants.append(bad_probability)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'asof.json'
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                for data in variants:
+                    path.write_text(json.dumps(data), encoding='utf-8')
+                    for url in ['/api/baseline/asof', '/api/baseline/asof?year=2022']:
+                        self.assertEqual(self.client.get(url).status_code, 503, url)
+
+    def test_asof_contract_and_unavailable_year(self):
+        contract = self.client.get('/openapi.json').json()
+        response = contract['paths']['/api/baseline/asof']['get']['responses']['200']
+        self.assertEqual(response['content']['application/json']['schema']['$ref'],
+                         '#/components/schemas/AsOfResults')
+        self.assertEqual(self.client.get('/api/baseline/asof?year=2019').status_code, 404)
+
 
 if __name__ == '__main__':
     unittest.main()

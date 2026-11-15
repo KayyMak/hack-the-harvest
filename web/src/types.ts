@@ -54,6 +54,8 @@ export interface ConvergencePoint {
   as_of: string
   share_decided: number
   acc_decided: number
+  /** balanced accuracy on decided fields, when the source reports it */
+  bal_acc?: number | null
 }
 export interface EvaluateResponse {
   split: string
@@ -63,6 +65,7 @@ export interface EvaluateResponse {
   confusion: number[][]
   per_class: Record<Label, ClassMetrics>
   convergence: ConvergencePoint[]
+  convergence_error?: string
   abstained: number
   n_evaluated?: number
   /** plain-language validation design, e.g. "held out by field" */
@@ -91,9 +94,13 @@ export interface RollupResponse {
   region: string
   acres: number
   ci: [number, number]
-  cv_pct: number
+  cv_pct: number | null
   census_acres: number
   csv_url: string
+  /** what `census_acres` is, when it is not the Census (e.g. BARC reference labels) */
+  reference_name?: string
+  /** scope caveat shown with the roll-up */
+  note?: string
 }
 
 /** GET /fields/{id}/series?year= */
