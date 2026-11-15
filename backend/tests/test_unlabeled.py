@@ -73,3 +73,19 @@ class UnlabeledRoute(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class UnlabeledObservations(unittest.TestCase):
+    """Unlabeled field-years with model calls get their saved greenness series too."""
+
+    def test_series_for_an_unlabeled_called_field_year(self):
+        from fastapi.testclient import TestClient
+        from app.main import app
+        client = TestClient(app)
+        calls = client.get('/api/unlabeled').json()['calls']
+        call = next(c for c in calls if c['status'] == 'called')
+        obs = client.get(f"/api/fields/{call['field_id']}/observations", params={'year': call['year']})
+        self.assertEqual(obs.status_code, 200)
+        dates = [o['date'] for o in obs.json()]
+        self.assertEqual(dates, sorted(dates))
+        self.assertGreaterEqual(sum(o['status'] == 'ok' for o in obs.json()), call['valid_dates'])

@@ -246,11 +246,15 @@ def main() -> None:
 
     # ---- per-date NDVI series for scored field-years ----
     series = defaultdict(list)
-    with (BASE / 'observations.csv').open(encoding='utf-8', newline='') as f:
-        for r in csv.DictReader(f):
-            if r['status'] != 'ok' or not r['ndvi']:
-                continue
-            series[(int(r['OBJECTID']), int(r['year']))].append({'date': r['date'], 'ndvi': round(float(r['ndvi']), 4), 'ndti': None})
+    sources = [BASE / 'observations.csv']
+    if (BASE / 'unlabeled' / 'observations.csv').exists():  # unlabeled field-years with model calls
+        sources.append(BASE / 'unlabeled' / 'observations.csv')
+    for source in sources:
+        with source.open(encoding='utf-8', newline='') as f:
+            for r in csv.DictReader(f):
+                if r['status'] != 'ok' or not r['ndvi']:
+                    continue
+                series[(int(r['OBJECTID']), int(r['year']))].append({'date': r['date'], 'ndvi': round(float(r['ndvi']), 4), 'ndti': None})
     for (oid, year), pts in series.items():
         pts.sort(key=lambda p: p['date'])
         write(f'series_{oid}_{year}', {'OBJECTID': oid, 'year': year, 'points': pts, 'decline_date': None})
