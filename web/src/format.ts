@@ -15,6 +15,9 @@ export const toTime = (iso: string) => Date.parse(`${iso.slice(0, 10)}T00:00:00Z
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '—' : `${(x * 100).toFixed(digits)}%`)
 export const num = (x: number | null | undefined, digits = 2) => (x == null ? '—' : x.toFixed(digits))
 export const acres = (x: number) => x.toLocaleString('en-US', { maximumFractionDigits: 0 })
+/** Signed differences, e.g. "+1,234" acres and "+3.1%"; a true minus sign for negatives. */
+export const signedAcres = (x: number) => `${x < 0 ? '−' : '+'}${acres(Math.abs(x))}`
+export const signedPct = (x: number, digits = 1) => `${x < 0 ? '−' : '+'}${(Math.abs(x) * 100).toFixed(digits)}%`
 
 export const classColor = (c: PredClass | Label | null | undefined) =>
   c === 'Silage' ? DATA.silage : c === 'Grain' ? DATA.grain : DATA.undecided

@@ -1,0 +1,147 @@
+{
+  "year": 2025,
+  "state": "MARYLAND",
+  "generated_utc": "2026-11-15T08:54:10+00:00",
+  "headline": "calibrated",
+  "population": {
+    "source": "USDA Crop Sequence Boundaries (2016-2023 polygons), Maryland, checked against the 2025 Cropland Data Layer",
+    "corn_rule": "CSB field with at least 50% of its 30 m CDL 2025 pixel centres in class 1 (Corn)",
+    "csb_fields_maryland": 88113,
+    "corn_fields_2025": 18684,
+    "corn_acres_2025": 442168.6,
+    "cdl_corn_acres_2025": 434627.1
+  },
+  "sample": {
+    "seed": 42,
+    "stratified_by": "county",
+    "requested_fields": 1500,
+    "sampled_fields": 1500,
+    "sampled_acres": 34134.6,
+    "scored_fields": 1500,
+    "scored_acres": 34134.6,
+    "skipped_fields": 0,
+    "skipped_reasons": {},
+    "min_valid_dates": 3,
+    "batches_used": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "batches_drawn": 6
+  },
+  "model": {
+    "name": "Logistic regression on NDVI (the BARC baseline pipeline)",
+    "training_field_years": 44,
+    "training_silage_field_years": 12,
+    "features": [
+      "ndvi_07",
+      "ndvi_08",
+      "ndvi_09",
+      "ndvi_10",
+      "ndvi_11",
+      "peak_ndvi",
+      "peak_doy",
+      "late_ndvi",
+      "early_minus_late"
+    ],
+    "threshold": 0.5,
+    "sample_fields_called_silage": 116
+  },
+  "raw": {
+    "silage_acres": 70500.9,
+    "silage_acres_95ci": [
+      63635.2,
+      77562.6
+    ],
+    "grain_acres": 371667.7,
+    "grain_acres_95ci": [
+      364606.0,
+      378533.4
+    ],
+    "silage_share": 0.1594
+  },
+  "calibrated": {
+    "silage_acres": 47704.6,
+    "silage_acres_95ci": [
+      0.0,
+      127703.7
+    ],
+    "grain_acres": 394464.0,
+    "grain_acres_95ci": [
+      314464.9,
+      442168.6
+    ],
+    "silage_share": 0.1079,
+    "tpr": 0.5605,
+    "fpr": 0.0298,
+    "predicted_silage_acre_share": 0.087,
+    "undefined_bootstrap_draws": 0,
+    "method": "share = (q - FPR) / (TPR - FPR), clipped to [0, 1]; q is the acre share of scored sample fields called Silage at 0.5; TPR and FPR are acre-weighted rates from the 44 saved held-out BARC field-years"
+  },
+  "nass_2025": {
+    "silage_acres": 40000,
+    "grain_acres": 410000,
+    "source": "USDA NASS Quick Stats, 2025 survey, acres harvested (data/reference/quickstats_2025_judges.csv)"
+  },
+  "benchmark": {
+    "calibrated": {
+      "silage": {
+        "error": 7705.0,
+        "relative_error": 0.192625
+      },
+      "grain": {
+        "error": -15536.0,
+        "relative_error": -0.03789268292682927
+      }
+    },
+    "raw": {
+      "silage": {
+        "error": 30501.0,
+        "relative_error": 0.762525
+      },
+      "grain": {
+        "error": -38332.0,
+        "relative_error": -0.09349268292682927
+      }
+    }
+  },
+  "method": "Maryland 2025 corn fields are Crop Sequence Boundaries polygons with at least half of their 2025 Cropland Data Layer pixels in corn: 18,684 fields, 442,169 acres. A seeded random sample of 1,500 fields, allocated by county, was read from Sentinel-2 L2A (July-November 2025) with the baseline's cloud mask, reflectance offset and nine NDVI features. The baseline logistic regression, fitted on all 44 labeled BARC field-years, gives each field a silage probability. Raw: probability-weighted silage acres in the sample, scaled to all Maryland corn acres. Calibrated: the acre share called silage, corrected with the miss and false-alarm rates measured on held-out BARC fields. Grain is corn acres minus silage. The 2025 NASS values were not used to fit, choose or adjust anything.",
+  "limitations": [
+    "The model was trained on 44 field-years from one research farm (BARC, 2021-2023); how well it transfers to other Maryland farms and to 2025 is untested.",
+    "The calibration rates come from 12 silage and 32 grain BARC field-years, so the calibrated range is wide.",
+    "The raw range reflects only which fields were sampled, not model error, so it is too narrow.",
+    "Field polygons date from 2023; corn in 2025 is taken from the Cropland Data Layer, which has its own classification error.",
+    "Corn acres here are mapped field acres, not NASS acres harvested; abandoned or failed corn is not removed.",
+    "Fields with fewer than 3 clear Sentinel-2 dates are skipped and listed, not filled in."
+  ],
+  "sources": [
+    {
+      "name": "USDA NASS Crop Sequence Boundaries (fiboa copy on Source Cooperative)",
+      "url": "https://data.source.coop/fiboa/us-usda-cropland/us_usda_cropland.parquet",
+      "accessed": "2026-11-14"
+    },
+    {
+      "name": "USDA NASS Cropland Data Layer 2025, Maryland (CropScape)",
+      "url": "https://nassgeodata.gmu.edu/webservice/nass_data_cache/byfips/CDL_2025_24.tif",
+      "accessed": "2026-11-14"
+    },
+    {
+      "name": "Sentinel-2 L2A, Microsoft Planetary Computer STAC",
+      "url": "https://planetarycomputer.microsoft.com/api/stac/v1",
+      "accessed": "2026-11-14"
+    },
+    {
+      "name": "BARC silage and grain corn labels 2021-2023 (repository GeoPackage)",
+      "url": "BARC_Corn.2021-2023.gpkg",
+      "accessed": "2026-11-14"
+    },
+    {
+      "name": "USDA NASS Quick Stats 2025, corn acres harvested (judges' reference)",
+      "url": "https://quickstats.nass.usda.gov/",
+      "accessed": "2026-11-14"
+    }
+  ]
+}

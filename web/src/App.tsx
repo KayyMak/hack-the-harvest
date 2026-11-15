@@ -3,6 +3,8 @@ import { api } from './api'
 import { unlabeledCallsAt } from './adapter'
 import type { Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
+import { Estimate2025Panel } from './components/Estimate2025'
+import { Forecast2025Panel } from './components/Forecast2025'
 import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
@@ -82,6 +84,8 @@ export default function App() {
   const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
   const acresConv = useAsync(() => api.convergenceAcres(), [])
+  const estimate = useAsync(() => api.estimate2025(), [])
+  const forecast = useAsync(() => api.forecast2025(), [])
   const unlabeled = useAsync(() => api.unlabeled(year), [year])
   // Season-end calls: shown only when Nov 30 is selected, never on a mid-season date.
   const atSeasonEnd = asOf === `${year}-11-30`
@@ -231,6 +235,7 @@ export default function App() {
             asOf={asOf}
             counts={counts}
             rollup={rollup.data}
+            forecast={forecast}
             unlabeled={unlabeled.data}
             unlabeledError={unlabeled.error}
             unlabeledAtSeasonEnd={atSeasonEnd}
@@ -274,6 +279,10 @@ export default function App() {
                 ) : (
                   <RollupPanel data={rollup.data} error={rollup.error} />
                 )}
+                <h2 className="sheet__h2">2025 forecast (graded output)</h2>
+                <Forecast2025Panel state={forecast} />
+                <h2 className="sheet__h2">2025 Maryland estimate: satellite check</h2>
+                <Estimate2025Panel state={estimate} />
               </>
             )}
             {view === 'agent' && (

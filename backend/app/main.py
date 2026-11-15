@@ -9,11 +9,11 @@ from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_contributions, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
-    read_observations,
+    read_estimate_2025, read_forecast_2025, read_observations,
     read_predictions, read_quickstats, read_summary, read_unlabeled)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Observation, Prediction, QuickStatsRow, Rollup, SignalContribution, UnlabeledCalls
+from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Forecast2025, Observation, Prediction, QuickStatsRow, Rollup, SignalContribution, UnlabeledCalls
 
 CHIP_NAME = re.compile(r'\d{1,6}_20\d{2}_(pre|post)\.png')
 
@@ -95,6 +95,23 @@ def rollup_csv() -> PlainTextResponse:
     """Roll-up in QuickStats column shape, for download."""
     return PlainTextResponse(_serve(rollup_quickstats_csv), media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="quickstats_export.csv"'})
+
+
+# Optional keys the saved file does not carry are left out of the response, not sent as null.
+@app.get('/api/estimate_2025', response_model=Estimate2025, response_model_exclude_unset=True)
+def estimate_2025() -> Estimate2025:
+    """Saved 2025 Maryland silage/grain acre estimate from a sample of corn fields, next to
+    NASS survey acres harvested. A model estimate, not a USDA/NASS release. 503 until saved."""
+    return _serve(read_estimate_2025)
+
+
+# Optional keys the saved file does not carry are left out of the response, not sent as null.
+@app.get('/api/forecast_2025', response_model=Forecast2025, response_model_exclude_unset=True)
+def forecast_2025() -> Forecast2025:
+    """Saved 2025 harvested-acre forecast per state and for the US, from NASS reports published
+    before January 2026, with NASS 2025 Maryland/US acres for comparison (null if unreadable).
+    The graded output. 503 until forecast/outputs/summary.json is saved."""
+    return _serve(read_forecast_2025)
 
 
 @app.get('/api/unlabeled', response_model=UnlabeledCalls)

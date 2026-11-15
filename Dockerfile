@@ -18,6 +18,8 @@ COPY baseline/outputs/decline_rule/metrics.json ./baseline/outputs/decline_rule/
 COPY baseline/outputs/unlabeled/summary.json baseline/outputs/unlabeled/predictions.csv baseline/outputs/unlabeled/observations.csv ./baseline/outputs/unlabeled/
 COPY data/reference/quickstats_2025_judges.csv ./data/reference/quickstats_2025_judges.csv
 ENV QUICKSTATS_CSV=/app/data/reference/quickstats_2025_judges.csv
+COPY forecast/outputs/summary.json ./forecast/outputs/summary.json
+COPY baseline/outputs/estimate_2025/summary.json baseline/outputs/estimate_2025/benchmark.json ./baseline/outputs/estimate_2025/
 COPY BARC_Corn.2021-2023.gpkg ./
 COPY --from=frontend /build/dist/ ./web/dist/
 USER harvest

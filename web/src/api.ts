@@ -11,6 +11,8 @@ import type {
   AgentRunResponse,
   AgentTraceResponse,
   ConvergenceAcres,
+  Estimate2025,
+  Forecast2025,
   EvaluateResponse,
   FieldsResponse,
   Pred,
@@ -19,8 +21,8 @@ import type {
   SnapshotMeta,
   UnlabeledYearView,
 } from './types'
-import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, type SavedContribution, adaptRollup, adaptSeries, adaptSummary, adaptUnlabeled } from './adapter.ts'
-import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary, SavedUnlabeled } from './adapter'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptForecast2025, adaptPredictions, type SavedContribution, adaptRollup, adaptSeries, adaptSummary, adaptUnlabeled } from './adapter.ts'
+import type { SavedAsOf, SavedEstimate2025, SavedFields, SavedForecast2025, SavedPrediction, SavedRollup, SavedSummary, SavedUnlabeled } from './adapter'
 
 export * from './types.ts'
 
@@ -109,6 +111,22 @@ export const api = {
           savedAsOf().then((data) => ({ points: adaptConvergence(data, year), error: undefined }))
             .catch((error: unknown) => ({ points: [], error: error instanceof Error ? error.message : String(error) })),
         ]).then(([summary, season]) => ({ ...adaptSummary(summary, season.points), convergence_error: season.error })),
+
+  /**
+   * 2025 Maryland silage and grain acres: a model estimate from a sample of corn fields, next to
+   * NASS survey acres harvested. Live: /api/estimate_2025; snapshot: estimate_2025.json (same shape).
+   */
+  /**
+   * The graded 2025 forecast (from NASS reports published before January 2026), with NASS 2025
+   * acres for comparison. Live: /api/forecast_2025; snapshot: forecast_2025.json (same shape).
+   */
+  forecast2025: (): Promise<Forecast2025> =>
+    (STATIC ? fromSnapshot<SavedForecast2025>('forecast_2025') : getJson<SavedForecast2025>(`${API_URL}/api/forecast_2025`))
+      .then(adaptForecast2025),
+
+  estimate2025: (): Promise<Estimate2025> =>
+    (STATIC ? fromSnapshot<SavedEstimate2025>('estimate_2025') : getJson<SavedEstimate2025>(`${API_URL}/api/estimate_2025`))
+      .then(adaptEstimate2025),
 
   rollup: (year: number) =>
     STATIC

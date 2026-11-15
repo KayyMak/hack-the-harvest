@@ -1,0 +1,36 @@
+{
+  "year": 2025,
+  "generated_utc": "2026-11-15T06:30:52+00:00",
+  "csb_fields_maryland": 88113,
+  "csb_fields_without_cdl_pixels": 0,
+  "corn_rule": "CSB field with at least 50% of its 30 m CDL 2025 pixel centres in class 1 (Corn)",
+  "corn_fields_2025": 18684,
+  "corn_acres_2025": 442168.6,
+  "corn_fields_also_corn_in_2023": 12613,
+  "cdl_corn_acres_2025": 434627.1,
+  "cdl_corn_acres_inside_csb_fields": 405701.1,
+  "counties": 23,
+  "sample": {
+    "seed": 42,
+    "requested_fields": 1500,
+    "sampled_fields": 1500,
+    "sampled_acres": 34134.6,
+    "stratified_by": "county",
+    "allocation": "proportional to corn-field count, largest remainders",
+    "batch_size": 250,
+    "batches": 6
+  },
+  "inputs": {
+    "csb": {
+      "url": "https://data.source.coop/fiboa/us-usda-cropland/us_usda_cropland.parquet",
+      "slice": "Maryland rows only (id prefix 24)",
+      "sha256": "cd7ff7c05b20cb95c11dd4345a0258d62b0dc7b2e3c477b1539d209bb7c44646",
+      "vintage": "CSB 2016-2023; crop code is for 2023"
+    },
+    "cdl": {
+      "url": "https://nassgeodata.gmu.edu/webservice/nass_data_cache/byfips/CDL_2025_24.tif",
+      "sha256": "60895828b6b31d8da9007f676cdd1b165f60bf0368f5cc287d6e56d7043be88f",
+      "vintage": "Cropland Data Layer 2025, Maryland"
+    }
+  }
+}

@@ -69,6 +69,8 @@ export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, sh
 }
 
 function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }: Props & { field: FieldFeature }) {
+  // Chips are picked from the full season; before Nov 30 they could show the future.
+  const seasonEnd = asOf === `${year}-11-30`
   const id = field.properties.OBJECTID
   const label = field.properties.label
   const series = useAsync(() => api.series(id, year), [id, year])
@@ -120,15 +122,20 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
           <Pending title="Before and after images">Sentinel-2 true-color cutouts of this field from just before and just after its greenness drop.</Pending>
         </section>
       )}
-      {showChips && (
+      {showChips && !seasonEnd && (
+        <section className="block">
+          <Pending title="Before and after images">These cutouts are chosen from the whole season, so they can show imagery taken after {shortDate(asOf)}. They are shown on Nov 30.</Pending>
+        </section>
+      )}
+      {showChips && seasonEnd && (
       <section className="block">
         <div className="block__head">
           <h3>Before and after</h3>
           {stub && <span className="tag tag--warn">Stub imagery</span>}
         </div>
         <div className="chips">
-          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the drop" />
-          <Chip src={api.chipUrl(id, year, 'post')} caption="After the drop" />
+          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the season’s largest greenness drop" />
+          <Chip src={api.chipUrl(id, year, 'post')} caption="After that drop" />
         </div>
       </section>
       )}
