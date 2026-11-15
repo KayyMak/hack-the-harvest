@@ -65,7 +65,8 @@ export default function App() {
   const [mode, setMode] = useState<Mode>(initialMode)
   const shownTheme = useMemo(() => withMode(theme, mode), [theme, mode])
   const [year, setYear] = useState(2022)
-  const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
+  // -1 = the last date, Nov 30 (season end): v2 calls, unlabeled-field calls and before/after chips all show there.
+  const [asOfIdx, setAsOfIdx] = useState(-1)
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [view, setView] = useState<ViewId>('states')
   const [crop, setCrop] = useState<Crop>('silage')
@@ -95,7 +96,8 @@ export default function App() {
     const fromMeta = meta.data?.as_of_dates.filter((d) => d.startsWith(String(year)))
     return fromMeta?.length ? fromMeta : asOfDatesFor(year)
   }, [meta.data, year])
-  const asOf = meta.loading ? `${year}-11-30` : asOfDates[Math.min(asOfIdx, asOfDates.length - 1)]
+  const asOfAt = (i: number) => (i < 0 ? asOfDates.length - 1 : Math.min(i, asOfDates.length - 1))
+  const asOf = meta.loading ? `${year}-11-30` : asOfDates[asOfAt(asOfIdx)]
 
   const seasonEnd = meta.data?.season_end_only === true || asOfDates.length === 1
   const fields = useAsync(() => api.fields(year), [year])
@@ -172,8 +174,10 @@ export default function App() {
       if (el.closest('input, textarea, select')) return
       const n = Number(e.key)
       if (n >= 1 && n <= VIEWS.length) setView(VIEWS[n - 1].id)
-      if (e.key === 'ArrowRight') setAsOfIdx((i) => Math.min(i + 1, asOfDates.length - 1))
-      if (e.key === 'ArrowLeft') setAsOfIdx((i) => Math.max(i - 1, 0))
+      const last = asOfDates.length - 1
+      const at = (i: number) => (i < 0 ? last : Math.min(i, last))
+      if (e.key === 'ArrowRight') setAsOfIdx((i) => Math.min(at(i) + 1, last))
+      if (e.key === 'ArrowLeft') setAsOfIdx((i) => Math.max(at(i) - 1, 0))
       if (e.key === 'Escape') {
         setSelectedId(null)
         setUsState(null)
