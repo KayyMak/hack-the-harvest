@@ -30,7 +30,7 @@ S1 inside this harness reproduces all 48 of the current forecast's 2025 silage v
 is checked by `test_forecast_v2.py`.
 
 **Deviations, stated plainly**
-- **Window.** The selection window is 2018–2024, not the brief's example of 2013–2024. Before 2018, the planted file's only pre-January planted figure is the March intention. 2013–2024 is reported below and gives the same winner.
+- **Window.** The selection window is 2018–2024, not the brief's example of 2013–2024. Before 2018, the planted file's only pre-January planted figure is the March intention. **The window choice changed the winner.** S5 has the lowest error on both windows, but on 2013–2024 S6 (14.53) is within 0.20 pp of S5 (14.46). S6 ranks simpler in the pre-registered order, so the rule applied to 2013–2024 would have picked S6. S6 was not scored on 2025 (the score was computed once, for S5). It can be scored on request, labelled post hoc.
 - **Late amendment.** Amendment 1 came after the winner was fixed and after the November interval had been computed. It changes only the ranges, not the estimates. Its silage calibration also uses 2018–2024, not the 2013–2024 the user suggested.
 - **Disclosure.** The candidate list was drafted knowing the current forecast's 2025 headline errors (from the brief). Shrinkage toward regional shares and longer or median windows were not among the candidates, so they are untested.
 
@@ -137,6 +137,10 @@ The benchmark matched 91 rows. The one unmatched reference row is OTHER STATES g
 - **Planted inputs differ slightly.** For 2025 the latest planted value is September (there was no October 2025 report). In the backtest, the November release used October planted where it existed.
 - **The dashboard would show a slightly different US grain range.** `export_dashboard.py` builds it from `interval_z.grain × us.grain_se` (2.27 × SE). forecast_v2's own `us.grain_low/high` uses the t rule (2.20 × SE).
 - **Not a contest score.** The benchmark labels its output descriptive only.
+- **Housekeeping.**
+  - `outputs/backtest.json` from `5deadd5` was extended in `c3262cf` with `per_release`. Its `silage` and `grain` sections were checked to be unchanged.
+  - The top-level `silage.us_rel_rms` (4.19%) uses (est − truth)/truth. The ranges use the pre-registered (truth − est)/est, which gives 4.27%.
+  - Running `forecast/test_estimate.py` rewrites `forecast/outputs/summary.json`. It was restored after a test run here.
 
 ## Files
 
