@@ -137,7 +137,51 @@ def silage_candidates(st, t, hist, planted_t, grain_t):
     for m, (k, agg, shrink) in ROUND2.items():
         d = d_prime(st, t, hist, planted_t, grain_t, k, agg, shrink)
         out[m] = ((d if d is not None else s_prev) + s_prev) / 2
+    out.update(round3_silage(st, t, hist, planted_t, grain_t))   # PREREGISTRATION_ROUND3.md
     return out
+
+
+# ---------------------------------------------------------------- round 3 (PREREGISTRATION_ROUND3.md)
+ROUND3_METHODS = {
+    'T1': 'RESID5: (planted_t - grain_t) x 5-year median of min(1, silage / (planted - grain)); silage-only states: planted_t x 5-year median(silage / planted)',
+    'T2': 'DAMP50: silage_{t-1} x (1 + 0.5 x (planted_t / planted_{t-1} - 1))',
+    'T3': 'RATIO5: grain_t x 5-year median(silage / grain)',
+}
+ROUND3_SIMPLICITY = ['T2', 'T3', 'T1']
+ROUND3_GRAIN = {'GB5': 'NASS_BC5: G1 x 5-year median(final / same-period forecast), >= 3 years else G1'}
+
+
+def round3_silage(st, t, hist, planted_t, grain_t):
+    """T1-T3 for state st, year t from finals before t (5-year windows t-5..t-1); fallback silage_{t-1}."""
+    prev = hist.get((st, t - 1), {})
+    s_prev = prev['silage']
+    years = range(t - 5, t)
+    out = {'T1': s_prev, 'T2': s_prev, 'T3': s_prev}
+    a, _ = yearly_shares(hist, st, years)
+    if a and planted_t:
+        share = statistics.median(x[1] for x in a)
+        if 'planted' in {x[0] for x in a}:
+            out['T1'] = share * planted_t
+        elif grain_t is not None and planted_t - grain_t > 0:
+            out['T1'] = share * (planted_t - grain_t)
+    if planted_t and prev.get('planted'):
+        out['T2'] = s_prev * (1 + 0.5 * (planted_t / prev['planted'] - 1))
+    ratios = [hist[(st, y)]['silage'] / hist[(st, y)]['grain'] for y in years
+              if hist.get((st, y), {}).get('silage') is not None and hist.get((st, y), {}).get('grain')]
+    if ratios and grain_t:
+        out['T3'] = statistics.median(ratios) * grain_t
+    return out
+
+
+def grain_bc5(g, period, st, t, hist, inseason):
+    """GB5: g x median over y in t-5..t-1 of final_y / forecast_y (same period), >= 3 years else g."""
+    ratios = []
+    for y in range(t - 5, t):
+        f = inseason.get((st, y), {}).get('grain', {}).get(period)
+        fin = hist.get((st, y), {}).get('grain')
+        if f and fin:
+            ratios.append(fin / f)
+    return g * statistics.median(ratios) if len(ratios) >= 3 else g
 
 
 # ---------------------------------------------------------------- round 2: method D with other share estimates
@@ -258,4 +302,5 @@ def grain_candidates(st, t, hist, inseason, release='NOV'):
         if f and fin:
             ratios.append(fin / f)
     g2 = g * statistics.median(ratios) if len(ratios) >= 3 else g
-    return {'G1': g, 'G2': g2, 'period': period, 'n_ratios': len(ratios)}
+    return {'G1': g, 'G2': g2, 'GB5': grain_bc5(g, period, st, t, hist, inseason), 'period': period,
+            'n_ratios': len(ratios)}
