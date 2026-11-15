@@ -182,12 +182,16 @@ class MarketChecks(unittest.TestCase):
         ev = market._Evidence()
         for sc in ('one_point_of_maryland_silage_share', 'barc_model_error_applied_statewide'):
             ev.add_tool('price_effect', {'year': 2022, 'scenario': sc}, market.price_effect(2022, sc))
-        mixed = 'One point of share is 12,141,368 bushels [price_effect.one_point_of_maryland_silage_share].'
+        # A figure from the model-error scenario, cited as the one-point scenario. Read from the current
+        # model's output (not hard-coded) so the test holds whichever saved model version is in use.
+        other = market.price_effect(2022, 'barc_model_error_applied_statewide')['grain_bushels_shifted']
+        mixed = f'One point of share is {other} bushels [price_effect.one_point_of_maryland_silage_share].'
         self.assertEqual(market.check_grounding(mixed, ev.sources)[0]['kind'], 'miscited')
 
     def test_mixed_scenario_sentence_is_removed_when_verifier_rejects_it(self):
         self.configure()
-        line = ('One point of share is 12,141,368 bushels [price_effect.one_point_of_maryland_silage_share]. '
+        other = market.price_effect(2022, 'barc_model_error_applied_statewide')['grain_bushels_shifted']
+        line = (f'One point of share is {other} bushels [price_effect.one_point_of_maryland_silage_share]. '
                 'Maryland harvested 40,000 silage acres [maryland_supply].')
         reject = {'content': '{"results": [{"i": 0, "supported": false, "reason": "that figure is the model-error scenario"}]}'}
         script = ScriptedNvidia([
