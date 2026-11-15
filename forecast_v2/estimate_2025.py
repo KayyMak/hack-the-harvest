@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-"""2025 corn-for-grain and corn-for-silage acres harvested, every state + US, with the backtest winner fixed in
-forecast_v2/outputs/backtest.json (see PREREGISTRATION.md). Run from the repo root:
+"""2025 corn-for-grain and corn-for-silage acres harvested, every state + US, from the pre-registered backtest
+winners (see PREREGISTRATION.md). Run from the repo root:
 
-    python forecast_v2/backtest.py         # fixes the winner (no 2025 value read)
-    python forecast_v2/estimate_2025.py    # -> forecast_v2/outputs/state_estimates_2025.csv, summary.json
+    python forecast_v2/backtest.py                    # round 1 winner (no 2025 value read)
+    python forecast_v2/backtest_round2.py             # round 2 pick (no 2025 value read)
+    python forecast_v2/estimate_2025.py               # R2, submitted -> forecast_v2/outputs/
+    python forecast_v2/estimate_2025.py --round1      # S5, the round 1 record -> forecast_v2/outputs/round1/
 
 Inputs for 2025: NASS reports released before January 2026 (cached in forecast/cache/: June Acreage, Aug, Sep,
 Nov Crop Production) and the planted file's 2025 in-season periods. Finals for 2022-2024 come from the January
@@ -85,15 +87,15 @@ def estimate(hist, planted, grain, s_method, g_method, cal_s, cal_g):
     return res
 
 
-def main(round2=False):
-    """round2=False: round 1 winner -> outputs/. round2=True: the round-2 pick, only if it qualified under the
-    pre-registered round-2 rule -> outputs/round2/ (round 1 files untouched)."""
+def main(round2=True):
+    """round2=True (default): the round-2 pick (R2, submitted) -> outputs/. round2=False: the round-1 winner (S5),
+    kept for the record -> outputs/round1/."""
     committed = json.loads((OUT / 'backtest.json').read_text(encoding='utf-8'))
     back, rows = bt.run()
     s_method, g_method = back['silage']['winner'], back['grain']['winner']
     assert (s_method, g_method) == (committed['silage']['winner'], committed['grain']['winner']), 'winner differs from the committed backtest'
     assert g_method == 'G1', 'only the pre-registered winner G1 is wired for 2025 grain'
-    out_dir, methods_text, rule = OUT, dict(SILAGE_METHODS), (
+    out_dir, methods_text, rule = OUT / 'round1', dict(SILAGE_METHODS), (
         'lowest acre-weighted absolute % error over 2018-2024 state-years (simplest candidate within '
         '0.20 pp); pre-registered in forecast_v2/PREREGISTRATION.md; 2025 answers never used')
     if round2:
@@ -106,7 +108,7 @@ def main(round2=False):
         back['per_release'], rows['cals'] = bt.per_release(f_, i_, s_method, g_method)
         back['silage'] = dict(back['silage'], winner=s_method, pooled={**back['silage']['pooled'], **r2['pooled']},
                               per_year={**back['silage']['per_year'], **r2['per_year']}, interval=r2['interval'])
-        out_dir = OUT / 'round2'
+        out_dir = OUT
         methods_text.update(ROUND2_METHODS)
         rule = ('ROUND 2 (run after round 1\'s 2025 score was seen): lowest 2018-2024 acre-weighted absolute % error among '
                 'R1-R3, replacing S5 only if >= 0.50 pp better and median APE not > 0.50 pp worse; pre-registered in '
@@ -252,4 +254,4 @@ def main(round2=False):
 
 
 if __name__ == '__main__':
-    main(round2='--round2' in sys.argv)
+    main(round2='--round1' not in sys.argv)

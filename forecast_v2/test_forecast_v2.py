@@ -137,10 +137,20 @@ class Outputs(unittest.TestCase):
         ok = (p['S5']['acre_weighted_mape'] - p[w]['acre_weighted_mape'] >= 0.50
               and p[w]['median_ape'] - p['S5']['median_ape'] <= 0.50)
         self.assertEqual((r['round2_winner'], r['final_silage_method']), (w, w if ok else 'S5'))
-        if ok:
-            rows = list(csv.DictReader((HERE / 'outputs/round2/state_estimates_2025.csv').open(encoding='utf-8')))
-            old = list(csv.DictReader((HERE / 'outputs/state_estimates_2025.csv').open(encoding='utf-8')))
-            self.assertEqual([(x['State'], x['Data Item']) for x in rows], [(x['State'], x['Data Item']) for x in old])
+        rows = list(csv.DictReader((HERE / 'outputs/state_estimates_2025.csv').open(encoding='utf-8')))
+        old = list(csv.DictReader((HERE / 'outputs/round1/state_estimates_2025.csv').open(encoding='utf-8')))
+        self.assertEqual([(x['State'], x['Data Item']) for x in rows], [(x['State'], x['Data Item']) for x in old])
+
+    def test_outputs_hold_the_submitted_pick_and_round1_the_record(self):
+        r2 = json.loads((HERE / 'outputs/backtest_round2.json').read_text(encoding='utf-8'))
+        r1 = json.loads((HERE / 'outputs/backtest.json').read_text(encoding='utf-8'))
+        main = json.loads((HERE / 'outputs/summary.json').read_text(encoding='utf-8'))
+        rec = json.loads((HERE / 'outputs/round1/summary.json').read_text(encoding='utf-8'))
+        self.assertEqual(main['silage_method']['chosen'], r2['final_silage_method'])
+        self.assertEqual(rec['silage_method']['chosen'], r1['silage']['winner'])
+        for sub in ('', 'round1/'):
+            b = json.loads((HERE / f'outputs/{sub}benchmark.json').read_text(encoding='utf-8'))
+            self.assertEqual(b['predictions']['path'], f'forecast_v2/outputs/{sub}state_estimates_2025.csv')
 
     def test_every_date_has_its_own_range(self):
         new = json.loads((HERE / 'outputs/summary.json').read_text(encoding='utf-8'))

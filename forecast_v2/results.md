@@ -1,10 +1,17 @@
 # forecast_v2: results
 
-A pre-registered rerun of the 2025 state forecast, mainly for corn-for-silage acres harvested. It is not
-adopted anywhere. Kyle decides. `forecast/` is unchanged. There are two rounds.
+A pre-registered rerun of the 2025 state forecast, mainly for corn-for-silage acres harvested. `forecast/` is
+unchanged. There are two rounds.
 
-- **Round 1** (below): the clean, pre-registered result.
+- **Round 1** (below): the clean, pre-registered result. Its files are in `outputs/round1/`.
 - **Round 2** (at the end): run after round 1's 2025 score had been seen, so it carries extra selection risk.
+
+**Decision (Kyle, 2026-11-15):** submit **R2**, the round-2 pick under the pre-registered round-2 rule. Its
+files are the main `outputs/` files: `state_estimates_2025.csv`, `summary.json`, `benchmark.json` and
+`convergence_by_state_2025.csv`. The dashboard and API read `outputs/summary.json`.
+
+Each `benchmark.json` was re-run once after the files moved, so its `predictions.path` names the new location.
+The predictions are byte-identical, and the scores are unchanged (checked).
 
 **Why grain is so much more accurate than silage.**
 - **Grain:** the grain number is NASS's own in-season survey forecast of corn area to be harvested for grain (the
@@ -23,7 +30,7 @@ adopted anywhere. Kyle decides. `forecast/` is unchanged. There are two rounds.
 | `5deadd5` | backtest run and winner fixed: silage **S5**, grain **G1** |
 | `5fdd6da` | amendment 1, at the user's request: a separate range for each as-of release, plus a US rule |
 | `c3262cf` | 2025 estimates committed, not yet scored |
-| `6c25b5a` | 2025 scored once (`outputs/benchmark.json`), compared with the current forecast |
+| `6c25b5a` | 2025 scored once (now `outputs/round1/benchmark.json`), compared with the current forecast |
 
 Candidates. Every one uses only finals for years before t, plus NASS in-season values for t.
 
@@ -103,7 +110,7 @@ narrows as it should, from ±3.9% to ±2.0%. The 2025 US silage band at each dat
 | 2025-09-12 | 6,493,298 | 5,783,914 – 7,202,682 (±10.9%) | 6,886,596 | 5,585,674 – 8,187,519 (±18.9%) |
 | 2025-11-14 | 6,493,298 | 5,815,462 – 7,171,134 (±10.4%) | 6,886,596 | 5,585,674 – 8,187,519 (±18.9%) |
 
-Per-state ranges for each date are in `outputs/convergence_by_state_2025.csv`.
+Per-state ranges for each date are in `outputs/round1/convergence_by_state_2025.csv`; for R2 they are in `outputs/convergence_by_state_2025.csv`.
 
 ## 2025 score (computed once, after the commits above)
 
@@ -159,11 +166,12 @@ The benchmark matched 91 rows. The one unmatched reference row is OTHER STATES g
 | file | contents |
 |---|---|
 | `backtest.py` | writes `outputs/backtest.json` |
-| `estimate_2025.py` | writes `outputs/state_estimates_2025.csv`, `summary.json` and `convergence_by_state_2025.csv` |
 | `backtest_round2.py` | writes `outputs/backtest_round2.json` |
-| `estimate_2025.py --round2` | writes `outputs/round2/` (R2 estimates; its `benchmark.json` is the one round-2 score) |
+| `estimate_2025.py` | R2, submitted: writes `outputs/state_estimates_2025.csv`, `summary.json` and `convergence_by_state_2025.csv` |
+| `estimate_2025.py --round1` | S5, the round-1 record: writes the same files to `outputs/round1/` |
+| `export_dashboard.py` | writes `web/public/forecast_2025.json` and `web/public/forecast_state_estimates_2025.csv` from `outputs/` (R2) |
 | `compare_2025.py` | after the fact only; all three forecasts in `outputs/compare_2025.json` |
-| `test_forecast_v2.py` | 14 tests: no 2025/2026 final loaded; mutation test (scrambling finals for years >= t leaves forecasts for t unchanged); S1 reproduces the current forecast; the round-2 share code reproduces D; both selection rules are followed; CSV rows equal the current CSV's; summary schema |
+| `test_forecast_v2.py` | 15 tests (incl. outputs/ = R2, outputs/round1/ = S5): no 2025/2026 final loaded; mutation test (scrambling finals for years >= t leaves forecasts for t unchanged); S1 reproduces the current forecast; the round-2 share code reproduces D; both selection rules are followed; CSV rows equal the current CSV's; summary schema |
 
 ## Round 2: run AFTER round 1's 2025 score was seen
 
@@ -175,7 +183,7 @@ What stayed honest:
 - **Pre-registered:** the candidates and rule were committed before any round-2 score (`59bedaf`).
 - **Backtest-only selection:** the selection used the backtest only.
 - **Nothing tuned on 2025:** nothing was fit or tuned on 2025.
-- **Round 1 untouched:** round 1's files are unchanged. Round 2's are in `outputs/round2/`.
+- **Round 1 untouched:** round 1's files were not changed, only moved to `outputs/round1/` when R2 was adopted.
 
 **Candidates.** Each is S5 with method D's shares estimated differently:
 
