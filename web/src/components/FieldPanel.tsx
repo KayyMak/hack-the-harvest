@@ -92,7 +92,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
         </div>
       </header>
 
-      <ProbabilityBar pred={pred} />
+      {/* An unlabeled call replaces the "no model call" bar: it is a call, just not a scored one. */}
+      {!(unlabeledCall && !label && !pred) && <ProbabilityBar pred={pred} />}
       {unlabeledCall && !label && !pred && (
         <p className="block__note">
           <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, season end {year}.
