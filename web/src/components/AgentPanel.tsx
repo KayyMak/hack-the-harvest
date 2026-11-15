@@ -144,7 +144,7 @@ function RunView({ trace, running }: { trace: AgentTraceResponse; running: boole
       )}
       <details className="more section agent__steps">
         <summary>
-          Show the agent's steps ({trace.lines.length}){flags ? ` · ${flags} Verifier flag${flags === 1 ? '' : 's'}` : ''}
+          Show the agent's steps ({trace.lines.length}){flags ? ` · verifier caught ${flags} unsupported draft${flags === 1 ? '' : 's'}` : ''}
         </summary>
         <ol className="trace">
           {trace.lines.map((l, i) => (
@@ -165,7 +165,7 @@ function TraceItem({ line }: { line: TraceLine }) {
       <div className="trace__body">
         <div className="trace__meta">
           <span className={`node node--${String(line.node).toLowerCase()}`}>{line.node}</span>
-          <span className="trace__type">{isFlag ? '⚑ Verifier flag' : line.type.replace('_', ' ')}</span>
+          <span className="trace__type">{isFlag ? '✓ Verifier caught' : line.type.replace('_', ' ')}</span>
           {line.tool && <code className="trace__tool">{line.tool}</code>}
         </div>
         <p className="trace__summary">{line.type === 'report' ? reportTitle(String(line.summary ?? '')) : line.summary}</p>
