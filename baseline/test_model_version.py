@@ -18,6 +18,11 @@ import model_version as mv  # noqa: E402
 OUT = HERE / 'outputs'
 BACKUP = OUT / 'v1_backup'
 CANDIDATE = HERE / 'model_v2' / 'outputs' / 'heldout_predictions_candidate.csv'
+CRLF, LF = bytes([13, 10]), bytes([10])
+
+
+def unix_newlines(data: bytes) -> bytes:
+    return data.replace(CRLF, LF)
 
 
 class Switch(unittest.TestCase):
@@ -64,9 +69,7 @@ class Switch(unittest.TestCase):
                            stdout=subprocess.DEVNULL)
             for name in ['heldout_predictions.csv', 'metrics.json', 'features.csv', 'results.md',
                          'missing_features.csv', 'excluded_no_observations.csv']:
-                fresh, kept = ((p / name).read_bytes().replace(b'
-', b'
-') for p in (Path(directory), BACKUP))
+                fresh, kept = (unix_newlines((p / name).read_bytes()) for p in (Path(directory), BACKUP))
                 self.assertEqual(fresh, kept, name)  # line endings may differ by platform
 
 
