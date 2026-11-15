@@ -1,6 +1,7 @@
 # Host the saved-results dashboard on Render
 
-The root Dockerfile builds React and serves it from FastAPI on the same origin.
+The root Dockerfile builds the Cutline dashboard (`web/`) and serves it from FastAPI on
+the same origin. Without a `web/dist/` build the API falls back to `frontend/dist/`.
 The image contains only the application and the saved artifacts needed by its
 HTTP routes. It does not download satellite scenes, train models, or need an
 NVIDIA key. Existing local development commands still work.

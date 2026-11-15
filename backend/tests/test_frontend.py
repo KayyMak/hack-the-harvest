@@ -39,3 +39,19 @@ class FrontendChecks(unittest.TestCase):
             app = FastAPI()
             mount_frontend(app, Path(folder) / 'missing')
             self.assertEqual(TestClient(app).get('/').status_code, 404)
+
+    def test_first_existing_build_is_preferred(self):
+        from app.frontend import mount_first_build
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for name in ('web', 'frontend'):
+                (root / name).mkdir()
+                (root / name / 'index.html').write_text(f'<h1>{name}</h1>', encoding='utf-8')
+            app = FastAPI()
+            chosen = mount_first_build(app, [root / 'missing', root / 'web', root / 'frontend'])
+            self.assertEqual(chosen, root / 'web')
+            self.assertIn('web', TestClient(app).get('/').text)
+            fallback = FastAPI()
+            self.assertEqual(mount_first_build(fallback, [root / 'missing', root / 'frontend']), root / 'frontend')
+            self.assertIn('frontend', TestClient(fallback).get('/').text)
+            self.assertIsNone(mount_first_build(FastAPI(), [root / 'missing']))
