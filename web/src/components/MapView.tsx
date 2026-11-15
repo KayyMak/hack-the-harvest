@@ -1,9 +1,9 @@
 import type { Feature } from 'geojson'
 import type { GeoJSON as LeafletGeoJSON, Layer, PathOptions } from 'leaflet'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
-import { CloseTipsOnMove, oneTipAtATime } from './mapTips'
+import { CloseTipsOnMove, HomeControl, oneTipAtATime } from './mapTips'
 import type { FieldFeature, FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
 import { cdlText, classColor, noCallReason, num } from '../format'
 import { fieldLayerKey } from '../adapter'
@@ -59,6 +59,7 @@ function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<n
 }
 
 export function MapView({ fields, preds, unlabeled, cover, seasonEnd, selectedId, onSelect, error, layoutKey }: Props) {
+  const [home, setHome] = useState(0)  // bumped by the home button to re-fit the default view
   const geoRef = useRef<LeafletGeoJSON | null>(null)
   const predsRef = useRef(preds)
   const unlabeledRef = useRef(unlabeled)
@@ -96,7 +97,8 @@ export function MapView({ fields, preds, unlabeled, cover, seasonEnd, selectedId
         <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
         <ZoomControl position="bottomleft" />
         <CloseTipsOnMove />
-        <FitToFields fields={fields} layoutKey={layoutKey} />
+        <HomeControl title="Reset view: all BARC fields" onHome={() => setHome((h) => h + 1)} />
+        <FitToFields fields={fields} layoutKey={`${layoutKey}-${home}`} />
         <Pane name="halo" style={{ zIndex: 395 }}>
           {selected && (
             <GeoJSON
@@ -138,7 +140,7 @@ function FitToFields({ fields, layoutKey }: { fields: FieldsResponse | null; lay
     if (!fields || !n) return
     const b = leafletGeoJSON(fields).getBounds()
     if (!b.isValid()) return
-    const raf = requestAnimationFrame(() => {
+    const fit = () => {
       map.invalidateSize()
       const box = map.getContainer().getBoundingClientRect()
       if (window.innerWidth <= 900) {
@@ -158,8 +160,12 @@ function FitToFields({ fields, layoutKey }: { fields: FieldsResponse | null; lay
         paddingBottomRight: [box.right - freeRight + pad, box.bottom - freeBottom + pad],
         animate: true,
       })
-    })
-    return () => cancelAnimationFrame(raf)
+    }
+    const raf = requestAnimationFrame(fit)
+    let timer = 0
+    const onResize = () => { window.clearTimeout(timer); timer = window.setTimeout(fit, 200) }
+    window.addEventListener('resize', onResize)
+    return () => { cancelAnimationFrame(raf); window.clearTimeout(timer); window.removeEventListener('resize', onResize) }
   }, [map, n, layoutKey]) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }

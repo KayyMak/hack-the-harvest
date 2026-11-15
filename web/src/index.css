@@ -2321,3 +2321,8 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
     bottom: auto !important; max-height: calc(100vh - 132px) !important;
   }
 }
+/* home button: same size as the zoom buttons, stacked just above them */
+.shell .map-home { margin: 0 0 8px 0 !important; }
+.shell .map-home a { width: 36px !important; height: 36px !important; display: flex !important; align-items: center; justify-content: center; }
+/* the four headline tiles are the same size on the 2025 and BARC tabs */
+@media (min-width: 901px) { .lead .kpis .kpi { min-height: 136px; box-sizing: border-box; } }

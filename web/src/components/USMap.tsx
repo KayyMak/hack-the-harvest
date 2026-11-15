@@ -1,9 +1,9 @@
 import type { Feature, FeatureCollection, Geometry } from 'geojson'
 import type { Layer, PathOptions } from 'leaflet'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { GeoJSON, MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet'
-import { CloseTipsOnMove, oneTipAtATime } from './mapTips'
+import { CloseTipsOnMove, HomeControl, oneTipAtATime } from './mapTips'
 import type { Crop, StateRow } from './forecastTypes'
 import { errorColor, fmtAcres, fmtPct } from './forecastFormat'
 
@@ -29,6 +29,7 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
   const rowsRef = useRef(rows)
   const cropRef = useRef(crop)
   const selectRef = useRef(onSelect)
+  const [home, setHome] = useState(0)  // bumped by the home button to re-fit the default view
   rowsRef.current = rows
   cropRef.current = crop
   selectRef.current = onSelect
@@ -73,7 +74,8 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
         <TileLayer key={dark ? 'dark' : 'light'} url={dark ? BASE_DARK : BASE_LIGHT} attribution={ATTRIBUTION} maxZoom={10} />
         <ZoomControl position="bottomleft" />
         <CloseTipsOnMove />
-        <FitUS layoutKey={layoutKey} />
+        <HomeControl title="Reset view: whole US" onHome={() => setHome((h) => h + 1)} />
+        <FitUS layoutKey={`${layoutKey}-${home}`} />
         {shapes && <GeoJSON key={key} ref={(l) => { layerRef.current = l }} data={shapes} style={(f) => style(f as Feature)} onEachFeature={onEachFeature} />}
       </MapContainer>
     </section>
@@ -84,7 +86,7 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
 function FitUS({ layoutKey }: { layoutKey: string }) {
   const map = useMap()
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
+    const fit = () => {
       map.invalidateSize()
       const box = map.getContainer().getBoundingClientRect()
       if (window.innerWidth <= 900) {
@@ -102,8 +104,13 @@ function FitUS({ layoutKey }: { layoutKey: string }) {
         paddingTopLeft: [24, freeTop - box.top + 16],
         paddingBottomRight: [box.right - freeRight + 24, box.bottom - freeBottom + 16],
       })
-    })
-    return () => cancelAnimationFrame(raf)
+    }
+    const raf = requestAnimationFrame(fit)
+    // re-frame when the window changes size (a page loaded in a smaller window would otherwise stay zoomed in)
+    let timer = 0
+    const onResize = () => { window.clearTimeout(timer); timer = window.setTimeout(fit, 200) }
+    window.addEventListener('resize', onResize)
+    return () => { cancelAnimationFrame(raf); window.clearTimeout(timer); window.removeEventListener('resize', onResize) }
   }, [map, layoutKey])
   return null
 }
