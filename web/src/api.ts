@@ -17,9 +17,10 @@ import type {
   RollupResponse,
   SeriesResponse,
   SnapshotMeta,
+  UnlabeledYearView,
 } from './types'
-import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
-import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
+import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary, adaptUnlabeled } from './adapter.ts'
+import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary, SavedUnlabeled } from './adapter'
 
 export * from './types.ts'
 
@@ -39,6 +40,7 @@ export const snap = {
   agentRun: () => 'agent_run',
   agentTrace: (runId: string) => `agent_trace_${runId}`,
   convergenceAcres: () => 'convergence_acres',
+  unlabeled: () => 'unlabeled',
 }
 
 export class ApiError extends Error {
@@ -110,6 +112,11 @@ export const api = {
     STATIC
       ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
       : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
+
+  /** Model calls on blank-label field-years CDL marks as corn: same saved shape live and static. */
+  unlabeled: (year: number): Promise<UnlabeledYearView> =>
+    (STATIC ? fromSnapshot<SavedUnlabeled>(snap.unlabeled()) : getJson<SavedUnlabeled>(`${API_URL}/api/unlabeled`))
+      .then((data) => adaptUnlabeled(data, year)),
 
   series: (id: number, year: number) =>
     STATIC

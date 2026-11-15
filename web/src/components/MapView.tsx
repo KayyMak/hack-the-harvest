@@ -3,7 +3,7 @@ import type { GeoJSON as LeafletGeoJSON, Layer, PathOptions } from 'leaflet'
 import { useEffect, useMemo, useRef } from 'react'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
-import type { FieldFeature, FieldsResponse, Pred } from '../api'
+import type { FieldFeature, FieldsResponse, Pred, UnlabeledCallView } from '../api'
 import { classColor, num } from '../format'
 import { fieldLayerKey } from '../adapter'
 
@@ -14,6 +14,8 @@ const ESRI_ATTRIBUTION = 'Imagery &copy; Esri, Maxar, Earthstar Geographics, and
 interface Props {
   fields: FieldsResponse | null
   preds: Map<number, Pred>
+  /** season-end model calls on fields with no BARC label (CDL corn); drawn apart from labeled fields */
+  unlabeled: Map<number, UnlabeledCallView>
   selectedId: number | null
   onSelect: (id: number) => void
   error: Error | null
@@ -21,9 +23,14 @@ interface Props {
   layoutKey: string
 }
 
-function styleFor(f: FieldFeature, preds: Map<number, Pred>): PathOptions {
+function styleFor(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView>): PathOptions {
   const pred = preds.get(f.properties.OBJECTID)
   const label = f.properties.label
+  const call = !label && !pred ? unlabeled.get(f.properties.OBJECTID) : undefined
+  if (call) {
+    // A model call with no label to check it against: light fill, dotted outline in the call's color.
+    return { fillColor: classColor(call.label), fillOpacity: 0.3, color: classColor(call.label), weight: 2.25, opacity: 0.95, dashArray: '1 6', lineCap: 'round' }
+  }
   const decided = pred?.class === 'Grain' || pred?.class === 'Silage'
   return {
     fillColor: classColor(pred?.class),
@@ -35,16 +42,19 @@ function styleFor(f: FieldFeature, preds: Map<number, Pred>): PathOptions {
   }
 }
 
-function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>) {
+function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView>) {
   const p = preds.get(f.properties.OBJECTID)
   const label = f.properties.label ?? 'unlabeled'
+  const u = !f.properties.label && !p ? unlabeled.get(f.properties.OBJECTID) : undefined
+  if (u) return `<strong>Field ${f.properties.OBJECTID}</strong><br/>Label: none (CDL: ${Math.round(u.corn_share * 100)}% corn)<br/>Model call, no label: ${u.label} · P(silage) ${num(u.p_silage)}<br/><em>Season end; nothing to check it against</em>`
   const call = p ? (p.p_silage == null ? p.class : `${p.class} · P(silage) ${num(p.p_silage)}`) : '—'
   return `<strong>Field ${f.properties.OBJECTID}</strong><br/>Label: ${label}<br/>Predicted: ${call}`
 }
 
-export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey }: Props) {
+export function MapView({ fields, preds, unlabeled, selectedId, onSelect, error, layoutKey }: Props) {
   const geoRef = useRef<LeafletGeoJSON | null>(null)
   const predsRef = useRef(preds)
+  const unlabeledRef = useRef(unlabeled)
   const onSelectRef = useRef(onSelect)
 
   useEffect(() => {
@@ -54,8 +64,9 @@ export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey 
   // Restyle in place when predictions change (as-of slider) instead of rebuilding the layer.
   useEffect(() => {
     predsRef.current = preds
-    geoRef.current?.setStyle((f) => styleFor(f as FieldFeature, preds))
-  }, [preds])
+    unlabeledRef.current = unlabeled
+    geoRef.current?.setStyle((f) => styleFor(f as FieldFeature, preds, unlabeled))
+  }, [preds, unlabeled])
 
   const selected = useMemo(
     () => fields?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null,
@@ -65,7 +76,7 @@ export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey 
   const onEachFeature = (feature: Feature, layer: Layer) => {
     const f = feature as FieldFeature
     layer.on('click', () => onSelectRef.current(f.properties.OBJECTID))
-    layer.bindTooltip(() => tooltipHtml(f, predsRef.current), { sticky: true, className: 'field-tip', direction: 'top', offset: [0, -8] })
+    layer.bindTooltip(() => tooltipHtml(f, predsRef.current, unlabeledRef.current), { sticky: true, className: 'field-tip', direction: 'top', offset: [0, -8] })
   }
 
   return (
@@ -89,7 +100,7 @@ export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey 
             key={fieldLayerKey(fields)}
             ref={geoRef}
             data={fields}
-            style={(f) => styleFor(f as FieldFeature, predsRef.current)}
+            style={(f) => styleFor(f as FieldFeature, predsRef.current, unlabeledRef.current)}
             onEachFeature={onEachFeature}
           />
         )}
