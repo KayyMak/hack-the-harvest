@@ -1,7 +1,19 @@
 # forecast_v2: results
 
 A pre-registered rerun of the 2025 state forecast, mainly for corn-for-silage acres harvested. It is not
-adopted anywhere. Kyle decides. `forecast/` is unchanged.
+adopted anywhere. Kyle decides. `forecast/` is unchanged. There are two rounds.
+
+- **Round 1** (below): the clean, pre-registered result.
+- **Round 2** (at the end): run after round 1's 2025 score had been seen, so it carries extra selection risk.
+
+**Why grain is so much more accurate than silage.**
+- **Grain:** the grain number is NASS's own in-season survey forecast of corn area to be harvested for grain (the
+  November Crop Production figure, or September where November omits a state). NASS revises it little before the
+  final: 1.6% acre-weighted error in the 2013–2024 backtest.
+- **Silage:** NASS publishes no in-season silage area, so it has to be inferred. Half the inference is the share of
+  past silage in planted acres or in planted minus grain. That residual also holds abandoned, grazed and other-use
+  corn, and in big grain states it is a small difference of two large numbers. The other half is last year's
+  acres. Silage error is about 13% acre-weighted in the backtest.
 
 ## What was fixed in advance, and in what order (git proves the order)
 
@@ -148,5 +160,94 @@ The benchmark matched 91 rows. The one unmatched reference row is OTHER STATES g
 |---|---|
 | `backtest.py` | writes `outputs/backtest.json` |
 | `estimate_2025.py` | writes `outputs/state_estimates_2025.csv`, `summary.json` and `convergence_by_state_2025.csv` |
-| `compare_2025.py` | after the fact only |
-| `test_forecast_v2.py` | 12 tests: no 2025/2026 final loaded; mutation test (scrambling finals for years >= t leaves forecasts for t unchanged); S1 reproduces the current forecast; winner follows the rule; CSV rows equal the current CSV's; summary schema |
+| `backtest_round2.py` | writes `outputs/backtest_round2.json` |
+| `estimate_2025.py --round2` | writes `outputs/round2/` (R2 estimates; its `benchmark.json` is the one round-2 score) |
+| `compare_2025.py` | after the fact only; all three forecasts in `outputs/compare_2025.json` |
+| `test_forecast_v2.py` | 14 tests: no 2025/2026 final loaded; mutation test (scrambling finals for years >= t leaves forecasts for t unchanged); S1 reproduces the current forecast; the round-2 share code reproduces D; both selection rules are followed; CSV rows equal the current CSV's; summary schema |
+
+## Round 2: run AFTER round 1's 2025 score was seen
+
+**Selection risk.** Round 2 was requested after round 1's 2025 score was known, including that the Plains
+remained 25–61% too high. A second pass at the same answer key is a second chance to get lucky, so treat any
+round-2 gain on 2025 with extra suspicion.
+
+What stayed honest:
+- **Pre-registered:** the candidates and rule were committed before any round-2 score (`59bedaf`).
+- **Backtest-only selection:** the selection used the backtest only.
+- **Nothing tuned on 2025:** nothing was fit or tuned on 2025.
+- **Round 1 untouched:** round 1's files are unchanged. Round 2's are in `outputs/round2/`.
+
+**Candidates.** Each is S5 with method D's shares estimated differently:
+
+| id | name | how D's shares are estimated |
+|---|---|---|
+| R1 | SHRINK3 | 3-year means shrunk toward the USDA farm-production region (empirical Bayes) |
+| R2 | MED5 | 5-year medians |
+| R3 | SHRINK5 | 5-year means, shrunk toward the region |
+
+The code reproduces method D exactly when set to 3-year means with no shrinkage (582 of 582 state-years; tested).
+
+**Not run:**
+- **FSA blend:** the FSA file covers 2021–2025 only, so it cannot be backtested on 2018–2024.
+- **"Latest planted":** round 1 already used the latest pre-January planted figure.
+
+**Rule.** The best round-2 candidate replaces S5 only if both conditions hold:
+- its 2018–2024 acre-weighted MAPE is at least 0.50 pp below S5's;
+- its median APE is no more than 0.50 pp above S5's.
+
+| candidate | acre-wtd MAPE 2018–24 | median APE | mean APE | within 10% | acre-wtd 2013–24 | first-print 2023–24 |
+|---|---|---|---|---|---|---|
+| S1 D (current) | 13.78 | 12.36 | 17.68 | 46.1% | 16.38 | 10.65 |
+| S5 (round 1) | 13.30 | 10.58 | 15.81 | 48.5% | 14.46 | 10.73 |
+| R1 SHRINK3 | 13.26 | 10.60 | 15.82 | 48.8% | 14.50 | 10.93 |
+| **R2 MED5** | **12.68** | 10.26 | **15.78** | 49.1% | **14.03** | **10.46** |
+| R3 SHRINK5 | 12.90 | **10.11** | 15.85 | **49.7%** | 14.27 | 10.93 |
+
+**R2 qualifies:**
+- **Accuracy:** 0.62 pp better than S5 on the 2018–2024 acre-weighted MAPE, with a median 0.32 pp better.
+- **Robustness:** it is also best on 2013–2024 and on the first-print check.
+- **Shrinkage:** regional shrinkage (R1) barely moved the backtest.
+
+**Ranges.** R2's 95% state range covers 94.6% leave-one-year-out. Per release:
+
+| release | acre-wtd MAPE | state coverage | US silage band |
+|---|---|---|---|
+| Jun | 12.73 | 94.3% | ±8.7% |
+| Aug | 12.64 | 94.3% | ±9.2% |
+| Sep | 12.77 | 94.6% | ±10.4% |
+| Nov | 12.68 | 94.6% | ±9.9% |
+
+As in round 1, the silage band does not narrow through the season.
+
+### 2025, side by side (each round-2 and round-1 file scored once)
+
+| | current (Karthik) | round 1 (S5) | round 2 (R2) |
+|---|---|---|---|
+| US silage | +11.31% | **+4.95%** | +5.18% |
+| Maryland silage | **−6.01%** (37,595) | −9.26% (36,297) | −8.38% (36,648) |
+| state silage mean abs error | 19.0% | **16.4%** | **16.4%** |
+| state silage median abs error | **10.3%** | 10.5% | 12.1% |
+| state silage acre-weighted error | 17.0% | 15.6% | **14.6%** |
+| states within 10%, silage | 23 / 48 | **24 / 48** | 22 / 48 |
+| silage truths inside the 95% range | 45 / 48 | **48 / 48** | **48 / 48** |
+| grain (all three identical) | US −0.99%, MD −1.22%, 33/41 within 10% | same | same; range covers 38/41 vs 32/41 current |
+| US silage 95% range (Nov) | 5.59M – 8.19M | 5.82M – 7.17M | 5.87M – 7.15M |
+
+Plains silage, 2025:
+
+| state | current | R2 |
+|---|---|---|
+| North Dakota | +69% | +62% |
+| Kansas | +54% | +42% |
+| Nebraska | +43% | +30% |
+| South Dakota | +46% | +25% |
+| Oklahoma | +51% | +20% |
+| Texas | −2.5% | −14% |
+
+**Plainly:**
+- **Mixed result on 2025.** By the pre-registered rule, R2 is the pick.
+- **Better than round 1:** it improves the acre-weighted state error (14.6% vs 15.6%) and Maryland (−8.4% vs −9.3%).
+- **Worse than round 1:** the median state error (12.1% vs 10.5%), the count within 10% (22 vs 24) and, slightly, US silage (+5.2% vs +5.0%).
+- **Against the current forecast:** R2 is better on the US, the mean, the acre-weighted error and coverage. It is worse on Maryland, the median and the count within 10%.
+- **The Plains are still 20–62% too high** under every method.
+- **Weight of evidence:** R2's backtest gain over S5 (0.6 pp) is about the size of year-to-year noise, and 2025 does not confirm it on a per-state basis.
