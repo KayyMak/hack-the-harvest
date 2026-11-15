@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Area, Bar, CartesianGrid, Cell as BarCell, ComposedChart, Line, ReferenceArea, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../theme'
 import { xTitle, yTitle } from './charts'
@@ -20,6 +20,15 @@ interface Props {
 
 /** The graded view: 2025 acres by state vs NASS. Map, headline numbers, convergence, misses, and state detail. */
 export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTable }: Props) {
+  const [sort, setSort] = useState<StateSort>({ key: 'silage', dir: -1 })
+  const [fromTable, setFromTable] = useState(false)
+  // the order the arrows step through: the table's current sort
+  const order = useMemo(() => sortStates(data.states, sort).map((r) => r.state), [data.states, sort])
+  const step = (d: 1 | -1) => {
+    if (!selected || !order.length) return
+    const i = order.indexOf(selected)
+    onSelect(order[(((i < 0 ? 0 : i) + d) % order.length + order.length) % order.length])
+  }
   const t = useTheme().chart
   const md = data.states.find((s) => s.state === 'MARYLAND')
   const sel = data.states.find((s) => s.state === selected) ?? null
@@ -71,7 +80,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           <section>
             <div className="rail__head">
               <h2 className="rail__title">How close we came, 2025</h2>
-              <button className="link" onClick={() => onTable(true)}>All states</button>
+              <button className="link" onClick={() => { onSelect(null); onTable(true) }}>All states</button>
             </div>
             <ul className="closeness">
               <li><b>{data.scores.silage.inside_95_interval} of {data.scores.silage.states}</b> silage states: NASS final inside our 95% range</li>
@@ -132,11 +141,17 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
             </div>
           </div>
           <p className="sheet__lede">Acres harvested, our estimate vs NASS final. Hover an estimate for its 95% range; <b className="ftable__flag">!</b> = NASS fell outside it. Click a state for detail.</p>
-          <StateTable rows={data.states} onSelect={onSelect} selected={selected} />
+          <StateTable rows={data.states} sort={sort} onSort={setSort} selected={selected}
+            onSelect={(s) => { setFromTable(true); onTable(false); onSelect(s) }} />
         </section>
       )}
 
-      {sel && <StateDrawer row={sel} data={data} onClose={() => onSelect(null)} />}
+      {sel && !showTable && (
+        <StateDrawer row={sel} data={data} position={order.indexOf(sel.state) + 1} total={order.length}
+          onPrev={() => step(-1)} onNext={() => step(1)}
+          onBack={fromTable ? () => { onSelect(null); onTable(true) } : undefined}
+          onClose={() => { setFromTable(false); onSelect(null) }} />
+      )}
     </>
   )
 }
@@ -164,14 +179,14 @@ function UsCard({ crop, cell, rel }: { crop: Crop; cell: Cell; rel: Reliability 
           className={`kpi__margin${cell.err != null && Math.abs(cell.err) * 100 <= rel.margin90_pct ? ' is-in' : ''}`}
           title={`NASS reliability format, from the ${rel.years} backtest (${rel.n} years, each forecast with only what was known then): root-mean-square error ${rel.rmse_pct}%; 9 times in 10 the miss is no more than ±${rel.margin90_pct}% (Student t ${rel.t} × RMSE). Largest miss: ${rel.max_abs_pct}%.`}
         >
-          {cell.err != null && Math.abs(cell.err) * 100 <= rel.margin90_pct ? '✓ Inside' : 'Outside'} our ±{rel.margin90_pct}% margin of error (90%)
+          {cell.err != null && Math.abs(cell.err) * 100 <= rel.margin90_pct ? '✓ Within' : 'Outside'} ±{rel.margin90_pct}% margin (90%)
         </div>
       )}
       <div className="kpi__foot">
-        <span className="nowrap">95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}</span>{rel && <> · <span className="nowrap">RMSE {rel.rmse_pct}%</span></>}
+        <span className="nowrap">95%: {fmtAcres(cell.low)}–{fmtAcres(cell.high)}</span>
       </div>
-      <div className="kpi__foot kpi__what">
-        {crop === 'silage' ? 'The only pre-January silage number: NASS has no in-season silage forecast.' : "NASS's own Nov 14 grain forecast."}
+      <div className="kpi__foot kpi__what" title={crop === 'silage' ? 'NASS publishes no silage forecast before its January Annual Summary; this is the only pre-January silage number.' : "Grain acres are NASS's own Nov 14, 2025 forecast."}>
+        {crop === 'silage' ? 'Only pre-January silage number' : "NASS's Nov 14 forecast"}
       </div>
     </article>
   )
@@ -253,14 +268,19 @@ function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSe
 
 type SortKey = 'state' | 'silage' | 'silage_err' | 'grain' | 'grain_err'
 
-function StateTable({ rows, onSelect, selected }: { rows: StateRow[]; onSelect: (s: string) => void; selected: string | null }) {
-  const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'silage', dir: -1 })
+type StateSort = { key: SortKey; dir: 1 | -1 }
+
+function sortStates(rows: StateRow[], sort: StateSort): StateRow[] {
   const val = (r: StateRow, k: SortKey): number | string =>
     k === 'state' ? r.state : k === 'silage' ? r.silage?.est ?? -1 : k === 'grain' ? r.grain?.est ?? -1 : k === 'silage_err' ? Math.abs(r.silage?.err ?? -1) : Math.abs(r.grain?.err ?? -1)
-  const sorted = [...rows].sort((a, b) => (val(a, sort.key) < val(b, sort.key) ? -1 : val(a, sort.key) > val(b, sort.key) ? 1 : 0) * sort.dir)
+  return [...rows].sort((a, b) => (val(a, sort.key) < val(b, sort.key) ? -1 : val(a, sort.key) > val(b, sort.key) ? 1 : 0) * sort.dir)
+}
+
+function StateTable({ rows, sort, onSort, onSelect, selected }: { rows: StateRow[]; sort: StateSort; onSort: (s: StateSort) => void; onSelect: (s: string) => void; selected: string | null }) {
+  const sorted = sortStates(rows, sort)
   const head = (k: SortKey, label: string, num = true) => (
     <th className={num ? 'is-num' : undefined} aria-sort={sort.key === k ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
-      <button onClick={() => setSort((s) => ({ key: k, dir: s.key === k ? ((-s.dir) as 1 | -1) : -1 }))}>
+      <button onClick={() => onSort({ key: k, dir: sort.key === k ? ((-sort.dir) as 1 | -1) : -1 })}>
         {label}
         <span aria-hidden="true" className="sort">{sort.key === k ? (sort.dir === 1 ? '▲' : '▼') : ''}</span>
       </button>
@@ -311,12 +331,35 @@ function StateTable({ rows, onSelect, selected }: { rows: StateRow[]; onSelect: 
   )
 }
 
-function StateDrawer({ row, data, onClose }: { row: StateRow; data: Forecast; onClose: () => void }) {
+function StateDrawer({ row, data, position, total, onPrev, onNext, onBack, onClose }: {
+  row: StateRow; data: Forecast; position: number; total: number
+  onPrev: () => void; onNext: () => void; onBack?: () => void; onClose: () => void
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement | null)?.tagName
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+      // capture phase on document: Leaflet's own keyboard handler would otherwise eat the arrows to pan the map
+      if (e.key === 'ArrowLeft') { e.preventDefault(); e.stopPropagation(); onPrev() }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); onNext() }
+      else if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey, true)
+    return () => document.removeEventListener('keydown', onKey, true)
+  }, [onPrev, onNext, onClose])
   return (
     <aside className="glass drawer" aria-label={titleCase(row.state)}>
       <button className="drawer__close" aria-label="Close state" onClick={onClose}>
         <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2"><path d="M2 2l10 10M12 2L2 12" /></svg>
       </button>
+      <div className="drawer__nav">
+        {onBack && <button className="ghost-btn drawer__back" onClick={onBack}>‹ All states</button>}
+        <div className="drawer__step">
+          <button className="ghost-btn" aria-label="Previous state" title="Previous state (←)" onClick={onPrev}>‹</button>
+          {position > 0 && <span className="drawer__pos">{position} of {total}</span>}
+          <button className="ghost-btn" aria-label="Next state" title="Next state (→)" onClick={onNext}>›</button>
+        </div>
+      </div>
       <div className="eyebrow">2025, acres harvested</div>
       <h2 className="field__title">{titleCase(row.state)}</h2>
       {(['silage', 'grain'] as Crop[]).map((crop) => {
