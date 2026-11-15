@@ -84,6 +84,10 @@ test('live client uses existing /api routes and the published response shapes', 
       '/api/baseline/summary': metrics,
       '/api/baseline/predictions': [{ field_id: 327, year: 2021, predicted_label: 'Grain', silage_probability: 0.01 }],
       '/api/baseline/asof': asof,
+      '/api/baseline/contributions': [
+        { field_id: 327, year: 2021, feature: 'ndvi_09', value: 0.25, contribution: 1.8 },
+        { field_id: 327, year: 2021, feature: 'late_ndvi', value: 0.27, contribution: -0.9 },
+      ],
       '/api/baseline/convergence': { scope: 'Labeled BARC field-years only', method: 'm', years: [{ year: 2022, points: [] }] },
       '/api/baseline/rollup': { scope: 's', years: [{ year: 2022, reference_silage_acres: 74.44, expected_silage_acres: 54.1,
         expected_silage_acres_95ci: [40.2, 68.0], cv_percent: 13.1 }] },
@@ -97,7 +101,9 @@ test('live client uses existing /api routes and the published response shapes', 
     return Response.json(fixtures[url])
   })
   assert.equal((await api.fields(2022)).features.length, 83)
-  assert.equal((await api.predict(2021, '2021-11-30'))[0].OBJECTID, 327)
+  const seasonEnd = (await api.predict(2021, '2021-11-30'))[0]
+  assert.equal(seasonEnd.OBJECTID, 327)
+  assert.deepEqual(JSON.parse(seasonEnd.top_features).map((c) => [c.name, c.contrib]), [['ndvi_09', 1.8], ['late_ndvi', -0.9]])
   assert.equal((await api.evaluate()).n_evaluated, 44)
   const series = await api.series(327, 2021)
   assert.deepEqual(series.points, [{ date: '2021-08-01', ndvi: 0.8, ndti: null }])

@@ -53,11 +53,33 @@ export function adaptFields(data: SavedFields, year: number): FieldsResponse {
   }
 }
 
-export function adaptPredictions(data: SavedPrediction[], year: number, asOf: string): Pred[] {
+/** GET /api/baseline/contributions: per-field signal breakdown of the saved season-end calls. */
+export interface SavedContribution {
+  field_id: number
+  year: number
+  feature: string
+  value: number | null
+  contribution: number
+}
+
+/** The six strongest signals for one field-year, in the dashboard's FeatureContribution shape. */
+function topFeatures(rows: SavedContribution[] | undefined): string {
+  if (!rows?.length) return '[]'
+  const top = [...rows].sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution)).slice(0, 6)
+  return JSON.stringify(top.map((r) => ({ name: r.feature, value: r.value ?? Number.NaN, contrib: r.contribution })))
+}
+
+export function adaptPredictions(data: SavedPrediction[], year: number, asOf: string,
+  contributions: SavedContribution[] = []): Pred[] {
   if (asOf !== `${year}-11-30`) throw new Error('Only saved end-of-season predictions are available.')
+  const byField = new Map<string, SavedContribution[]>()
+  for (const c of contributions) {
+    const key = `${c.field_id}:${c.year}`
+    byField.set(key, [...(byField.get(key) ?? []), c])
+  }
   return data.filter((p) => p.year === year).map((p) => ({
     OBJECTID: p.field_id, year: p.year, as_of: asOf, p_silage: p.silage_probability,
-    class: p.predicted_label, abstain: false, top_features: '[]',
+    class: p.predicted_label, abstain: false, top_features: topFeatures(byField.get(`${p.field_id}:${p.year}`)),
   }))
 }
 
