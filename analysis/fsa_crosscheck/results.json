@@ -1,0 +1,334 @@
+{
+ "states": 46,
+ "over_called": 16,
+ "over_called_fsa_down": 9,
+ "under_called": 8,
+ "under_called_fsa_up": 6,
+ "us_fsa_dec2024": 2782798,
+ "us_fsa_dec2025": 2885058,
+ "us_fsa_change_pct": 3.7,
+ "rows": [
+  {
+   "state": "ARKANSAS",
+   "our_error_pct": 72.5,
+   "fsa_dec2024": 1038,
+   "fsa_dec2025": 1246,
+   "fsa_change_pct": 20.0
+  },
+  {
+   "state": "NORTH DAKOTA",
+   "our_error_pct": 62.0,
+   "fsa_dec2024": 121400,
+   "fsa_dec2025": 118799,
+   "fsa_change_pct": -2.1
+  },
+  {
+   "state": "SOUTH CAROLINA",
+   "our_error_pct": 52.1,
+   "fsa_dec2024": 5129,
+   "fsa_dec2025": 4396,
+   "fsa_change_pct": -14.3
+  },
+  {
+   "state": "IOWA",
+   "our_error_pct": 42.7,
+   "fsa_dec2024": 32921,
+   "fsa_dec2025": 28665,
+   "fsa_change_pct": -12.9
+  },
+  {
+   "state": "KANSAS",
+   "our_error_pct": 41.8,
+   "fsa_dec2024": 19601,
+   "fsa_dec2025": 294,
+   "fsa_change_pct": -98.5
+  },
+  {
+   "state": "NEBRASKA",
+   "our_error_pct": 29.5,
+   "fsa_dec2024": 32208,
+   "fsa_dec2025": 24836,
+   "fsa_change_pct": -22.9
+  },
+  {
+   "state": "FLORIDA",
+   "our_error_pct": 27.6,
+   "fsa_dec2024": 22404,
+   "fsa_dec2025": 23090,
+   "fsa_change_pct": 3.1
+  },
+  {
+   "state": "SOUTH DAKOTA",
+   "our_error_pct": 24.5,
+   "fsa_dec2024": 35686,
+   "fsa_dec2025": 40095,
+   "fsa_change_pct": 12.4
+  },
+  {
+   "state": "GEORGIA",
+   "our_error_pct": 22.1,
+   "fsa_dec2024": 27192,
+   "fsa_dec2025": 36037,
+   "fsa_change_pct": 32.5
+  },
+  {
+   "state": "OREGON",
+   "our_error_pct": 22.1,
+   "fsa_dec2024": 33575,
+   "fsa_dec2025": 35902,
+   "fsa_change_pct": 6.9
+  },
+  {
+   "state": "OKLAHOMA",
+   "our_error_pct": 19.7,
+   "fsa_dec2024": 11019,
+   "fsa_dec2025": 8769,
+   "fsa_change_pct": -20.4
+  },
+  {
+   "state": "KENTUCKY",
+   "our_error_pct": 17.8,
+   "fsa_dec2024": 20301,
+   "fsa_dec2025": 20184,
+   "fsa_change_pct": -0.6
+  },
+  {
+   "state": "INDIANA",
+   "our_error_pct": 15.3,
+   "fsa_dec2024": 27654,
+   "fsa_dec2025": 32048,
+   "fsa_change_pct": 15.9
+  },
+  {
+   "state": "MINNESOTA",
+   "our_error_pct": 15.3,
+   "fsa_dec2024": 66606,
+   "fsa_dec2025": 63585,
+   "fsa_change_pct": -4.5
+  },
+  {
+   "state": "WEST VIRGINIA",
+   "our_error_pct": 14.7,
+   "fsa_dec2024": 4186,
+   "fsa_dec2025": 4834,
+   "fsa_change_pct": 15.5
+  },
+  {
+   "state": "CONNECTICUT",
+   "our_error_pct": 10.5,
+   "fsa_dec2024": 19674,
+   "fsa_dec2025": 18695,
+   "fsa_change_pct": -5.0
+  },
+  {
+   "state": "NEW HAMPSHIRE",
+   "our_error_pct": 10.0,
+   "fsa_dec2024": 9461,
+   "fsa_dec2025": 9793,
+   "fsa_change_pct": 3.5
+  },
+  {
+   "state": "ALABAMA",
+   "our_error_pct": 7.4,
+   "fsa_dec2024": 1322,
+   "fsa_dec2025": 1880,
+   "fsa_change_pct": 42.2
+  },
+  {
+   "state": "VIRGINIA",
+   "our_error_pct": 6.6,
+   "fsa_dec2024": 17415,
+   "fsa_dec2025": 17727,
+   "fsa_change_pct": 1.8
+  },
+  {
+   "state": "PENNSYLVANIA",
+   "our_error_pct": 3.3,
+   "fsa_dec2024": 79293,
+   "fsa_dec2025": 91997,
+   "fsa_change_pct": 16.0
+  },
+  {
+   "state": "VERMONT",
+   "our_error_pct": 1.8,
+   "fsa_dec2024": 78012,
+   "fsa_dec2025": 79659,
+   "fsa_change_pct": 2.1
+  },
+  {
+   "state": "COLORADO",
+   "our_error_pct": 1.6,
+   "fsa_dec2024": 61513,
+   "fsa_dec2025": 63385,
+   "fsa_change_pct": 3.0
+  },
+  {
+   "state": "MAINE",
+   "our_error_pct": 0.3,
+   "fsa_dec2024": 22674,
+   "fsa_dec2025": 22449,
+   "fsa_change_pct": -1.0
+  },
+  {
+   "state": "ILLINOIS",
+   "our_error_pct": 0.0,
+   "fsa_dec2024": 10650,
+   "fsa_dec2025": 8609,
+   "fsa_change_pct": -19.2
+  },
+  {
+   "state": "MASSACHUSETTS",
+   "our_error_pct": 0.0,
+   "fsa_dec2024": 10772,
+   "fsa_dec2025": 10252,
+   "fsa_change_pct": -4.8
+  },
+  {
+   "state": "RHODE ISLAND",
+   "our_error_pct": 0.0,
+   "fsa_dec2024": 943,
+   "fsa_dec2025": 937,
+   "fsa_change_pct": -0.7
+  },
+  {
+   "state": "MICHIGAN",
+   "our_error_pct": -3.2,
+   "fsa_dec2024": 93614,
+   "fsa_dec2025": 88026,
+   "fsa_change_pct": -6.0
+  },
+  {
+   "state": "NORTH CAROLINA",
+   "our_error_pct": -3.3,
+   "fsa_dec2024": 18397,
+   "fsa_dec2025": 19231,
+   "fsa_change_pct": 4.5
+  },
+  {
+   "state": "UTAH",
+   "our_error_pct": -3.4,
+   "fsa_dec2024": 38700,
+   "fsa_dec2025": 47257,
+   "fsa_change_pct": 22.1
+  },
+  {
+   "state": "CALIFORNIA",
+   "our_error_pct": -3.8,
+   "fsa_dec2024": 284943,
+   "fsa_dec2025": 299077,
+   "fsa_change_pct": 5.0
+  },
+  {
+   "state": "IDAHO",
+   "our_error_pct": -5.2,
+   "fsa_dec2024": 251870,
+   "fsa_dec2025": 293996,
+   "fsa_change_pct": 16.7
+  },
+  {
+   "state": "MISSOURI",
+   "our_error_pct": -5.2,
+   "fsa_dec2024": 6428,
+   "fsa_dec2025": 8855,
+   "fsa_change_pct": 37.8
+  },
+  {
+   "state": "MISSISSIPPI",
+   "our_error_pct": -6.5,
+   "fsa_dec2024": 2908,
+   "fsa_dec2025": 1025,
+   "fsa_change_pct": -64.8
+  },
+  {
+   "state": "WASHINGTON",
+   "our_error_pct": -6.5,
+   "fsa_dec2024": 68817,
+   "fsa_dec2025": 65134,
+   "fsa_change_pct": -5.4
+  },
+  {
+   "state": "ARIZONA",
+   "our_error_pct": -6.9,
+   "fsa_dec2024": 48445,
+   "fsa_dec2025": 44403,
+   "fsa_change_pct": -8.3
+  },
+  {
+   "state": "WISCONSIN",
+   "our_error_pct": -7.0,
+   "fsa_dec2024": 417029,
+   "fsa_dec2025": 455854,
+   "fsa_change_pct": 9.3
+  },
+  {
+   "state": "NEW JERSEY",
+   "our_error_pct": -7.1,
+   "fsa_dec2024": 1299,
+   "fsa_dec2025": 1137,
+   "fsa_change_pct": -12.5
+  },
+  {
+   "state": "MARYLAND",
+   "our_error_pct": -8.4,
+   "fsa_dec2024": 9868,
+   "fsa_dec2025": 10582,
+   "fsa_change_pct": 7.2
+  },
+  {
+   "state": "NEW MEXICO",
+   "our_error_pct": -10.3,
+   "fsa_dec2024": 51740,
+   "fsa_dec2025": 52965,
+   "fsa_change_pct": 2.4
+  },
+  {
+   "state": "NEW YORK",
+   "our_error_pct": -13.6,
+   "fsa_dec2024": 443656,
+   "fsa_dec2025": 471564,
+   "fsa_change_pct": 6.3
+  },
+  {
+   "state": "TENNESSEE",
+   "our_error_pct": -13.8,
+   "fsa_dec2024": 10617,
+   "fsa_dec2025": 12724,
+   "fsa_change_pct": 19.8
+  },
+  {
+   "state": "TEXAS",
+   "our_error_pct": -14.3,
+   "fsa_dec2024": 149688,
+   "fsa_dec2025": 125726,
+   "fsa_change_pct": -16.0
+  },
+  {
+   "state": "NEVADA",
+   "our_error_pct": -14.9,
+   "fsa_dec2024": 15792,
+   "fsa_dec2025": 20237,
+   "fsa_change_pct": 28.1
+  },
+  {
+   "state": "MONTANA",
+   "our_error_pct": -17.4,
+   "fsa_dec2024": 64661,
+   "fsa_dec2025": 67569,
+   "fsa_change_pct": 4.5
+  },
+  {
+   "state": "OHIO",
+   "our_error_pct": -18.0,
+   "fsa_dec2024": 13647,
+   "fsa_dec2025": 16379,
+   "fsa_change_pct": 20.0
+  },
+  {
+   "state": "WYOMING",
+   "our_error_pct": -23.3,
+   "fsa_dec2024": 17606,
+   "fsa_dec2025": 15024,
+   "fsa_change_pct": -14.7
+  }
+ ]
+}

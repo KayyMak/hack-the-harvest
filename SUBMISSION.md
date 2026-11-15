@@ -97,7 +97,11 @@ the forecast's backtest, not a classifier split.
   It is a cross-check, not the answer.
 - **Other administrative data.** RMA crop-insurance acreage was not used. FSA December acreage was tried as a silage method
   and lost the 2023-2024 backtest: acre-weighted absolute error 13.27% for the FSA method and 11.19% for the FSA blend,
-  against 10.49% for the chosen NASS-only method (`forecast/outputs/summary.json`, `silage_method`).
+  against 10.49% for the chosen NASS-only method (`forecast/outputs/summary.json`, `silage_method`). After the fact, FSA's
+  December 2025 release (public before January) showed silage falling in 9 of the 16 states we over-called by more than 10%
+  (Iowa -13%, Nebraska -23%) but not North Dakota (-2%) or South Dakota (+12%), and its US total rose 3.7%, so it would not
+  have fixed 2025 reliably; testing FSA's monthly releases with historical December vintages is a next step
+  (`analysis/fsa_crosscheck/`).
 - **NDVI only.** The residue index (second hypothesis) and double-crop handling are not in the model.
 - **Thresholds reflect Maryland timing.** Early harvest is not always silage elsewhere, for example summer grain in Texas.
 
