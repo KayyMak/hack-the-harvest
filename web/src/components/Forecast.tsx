@@ -42,7 +42,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               {data.scores.silage.within_10pct}/{data.scores.silage.states} silage
             </div>
             <div className="kpi__foot">
-              of NASS. Acre-weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
+              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
             </div>
           </article>
           {md && (
@@ -52,7 +52,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               <div className="kpi__sub">
                 NASS {fmtAcres(md[crop]?.nass)} <ErrTag err={md[crop]?.err ?? null} />
               </div>
-              <div className="kpi__foot">Corn for {crop}, 2025; home of BARC</div>
+              <div className="kpi__foot">Home of the BARC fields</div>
             </button>
           )}
         </section>
@@ -71,7 +71,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           </section>
           <section>
             <div className="rail__head">
-              <h2 className="rail__title">Biggest misses, {crop}</h2>
+              <h2 className="rail__title">Biggest misses, {crop} (acres, ours vs NASS)</h2>
               <button className="link" onClick={() => onTable(true)}>All states</button>
             </div>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
@@ -83,7 +83,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
             </p>
             {fsa && (
               <p className="rail__note rail__note--keep">
-                FSA December intended-use acres were tested for silage and lost the backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% error), so they aren't used; nor is RMA insurance data.
+                FSA intended-use acres lost the silage backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% error), so aren't used; nor is RMA data.
               </p>
             )}
             <details className="more">
@@ -132,7 +132,7 @@ function UsCard({ crop, cell }: { crop: Crop; cell: Cell }) {
         NASS {fmtAcres(cell.nass)} <ErrTag err={cell.err} />
       </div>
       <div className="kpi__foot">
-        Corn for {crop}, 2025; 95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
+        95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
       </div>
     </article>
   )
@@ -189,7 +189,7 @@ function ConvergenceChart({ data }: { data: Forecast }) {
 
 function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSelect: (s: string) => void }) {
   const misses = useMemo(
-    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 4),
+    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 6),
     [rows, crop],
   )
   return (
@@ -200,7 +200,7 @@ function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSe
           <li key={r.state}>
             <button className="review__row" onClick={() => onSelect(r.state)}>
               <span className="review__id">{titleCase(r.state)}</span>
-              <span className="review__why">ours {fmtAcres(c.est)} vs NASS {fmtAcres(c.nass)}</span>
+              <span className="review__why">{fmtAcres(c.est)} vs NASS {fmtAcres(c.nass)}</span>
               <span className="review__val"><ErrTag err={c.err} /></span>
             </button>
           </li>

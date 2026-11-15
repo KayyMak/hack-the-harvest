@@ -2180,3 +2180,24 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .shell .ftable table { font-size: 13.5px; }
 .shell .ftable td { padding: 7px 8px; }
 .shell .ftable th button { padding: 8px 8px; }
+
+/* ---------- compact pass 2: card strip, map gets the space, rails fit their content ---------- */
+.shell .kpi { padding: 9px 12px; }
+.shell .kpi__value { font-size: 22px; }
+.shell .kpi__of { font-size: 12px; }
+.shell .kpi__sub, .shell .kpi__foot { font-size: 12px; }
+.shell .kpi__foot { margin-top: 2px; }
+.shell .kpi__bar { margin: 6px 0 4px; }
+.shell .banner { padding: 6px 8px 6px 12px; }
+.shell .banner .ghost-btn { padding: 4px 10px; }
+.shell .review__row { padding: 5px 4px; font-size: 13px; gap: 8px; }
+.shell .review__why { font-size: 12.5px; }
+.shell .mapkey { padding: 8px 12px; gap: 4px 12px; }
+.shell .mapkey__fine { font-size: 11px; }
+@media (min-width: 901px) {
+  /* the 2025 rail ends after its content instead of leaving an empty block; it scrolls only if it must */
+  .shell--states .rail { bottom: auto; max-height: calc(100vh - 152px); }
+}
+@media (min-width: 901px) {
+  .shell--overview .rail { bottom: auto; max-height: calc(100vh - 112px); }
+}
