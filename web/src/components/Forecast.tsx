@@ -3,6 +3,7 @@ import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveCont
 import { useTheme } from '../theme'
 import type { Cell, Crop, Forecast, StateRow } from './forecastTypes'
 import { ERROR_STEPS, fmtAcres, fmtFull, fmtPct, releaseDate, titleCase } from './forecastFormat'
+import { ScoreUpload } from './ScoreUpload'
 
 const CROP_LABEL: Record<Crop, string> = { silage: 'corn for silage', grain: 'corn for grain' }
 
@@ -73,6 +74,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               No January 2026 data used.
             </p>
           </section>
+          <ScoreUpload data={data} crop={crop} />
         </aside>
       )}
 
