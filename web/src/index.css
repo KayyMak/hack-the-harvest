@@ -2131,3 +2131,26 @@ details.more > summary::marker { color: currentColor; }
 .shell .trace__summary { font-size: 13.5px; line-height: 1.45; }
 .shell .agent__form textarea { font-size: 14px; }
 .shell .agent__actions .muted { font-size: 13px; }
+.facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 10px 0 0; }
+.facts > div { padding: 9px 11px; border-radius: 12px; background: rgba(0, 0, 0, 0.18); border: 1px solid rgba(255, 255, 255, 0.06); min-width: 0; }
+.facts dt { font-size: 12px; color: #a9b8b2; font-weight: 600; }
+.facts dd { margin: 2px 0 0; font-size: 22px; font-weight: 600; line-height: 1.15; }
+.facts span { display: block; font-size: 12px; color: #a9b8b2; margin-top: 2px; }
+.facts__line { margin: 0 0 6px; font-size: 13px; }
+.limits { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.5; }
+.limits li + li { margin-top: 4px; }
+details.more.section { margin: 10px 0 0; padding: 8px 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); background: rgba(0, 0, 0, 0.12); }
+details.more.section > summary { font-size: 14px; color: #e8eeeb; }
+:root[data-theme='glass'][data-mode='light'] .facts > div { background: rgba(255, 255, 255, 0.6); border-color: rgba(20, 45, 38, 0.1); }
+:root[data-theme='glass'][data-mode='light'] .facts dt, :root[data-theme='glass'][data-mode='light'] .facts span { color: #44564f; }
+:root[data-theme='glass'][data-mode='light'] details.more.section { background: rgba(255, 255, 255, 0.5); border-color: rgba(20, 45, 38, 0.12); }
+:root[data-theme='glass'][data-mode='light'] details.more.section > summary { color: #13221d; }
+@media (max-width: 700px) { .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.agent__badge { margin: 14px 0 4px; display: inline-block; padding: 4px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; background: rgba(242, 196, 109, 0.14); color: #f2c46d; border: 1px solid rgba(242, 196, 109, 0.35); }
+.agent__working { margin: 12px 0 0; font-size: 13.5px; color: #f2c46d; }
+.agent__report.is-error { border-color: rgba(255, 158, 146, 0.5); }
+.agent__report.is-error .eyebrow { color: #ff9e92; }
+.agent__steps .trace { margin-top: 10px; }
+:root[data-theme='glass'][data-mode='light'] .agent__badge { background: #fdf0cc; color: #6b4500; border-color: rgba(107, 69, 0, 0.3); }
+:root[data-theme='glass'][data-mode='light'] .agent__working { color: #8a5a00; }
+:root[data-theme='glass'][data-mode='light'] .agent__report.is-error .eyebrow { color: #b3261e; }

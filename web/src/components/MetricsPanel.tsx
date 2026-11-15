@@ -27,41 +27,24 @@ export function MetricsPanel({ data, error, asOf }: Props) {
   if (error) return <p className="inline-error">Metrics unavailable: {error.message}</p>
   if (!data) return <div className="skeleton skeleton--panel" />
   const total = data.confusion.flat().reduce((a, b) => a + b, 0)
-  const correct = data.labels.reduce((a, _, i) => a + (data.confusion[i]?.[i] ?? 0), 0)
   const si = data.labels.indexOf('Silage')
-  const gi = data.labels.indexOf('Grain')
   const sHit = data.confusion[si]?.[si] ?? 0
   const sN = data.confusion[si]?.reduce((a, b) => a + b, 0) ?? 0
   const S = data.per_class.Silage
   const G = data.per_class.Grain
+  const n = data.n_evaluated ?? total
+  const bal = data.convergence.some((c) => c.bal_acc != null)
+  const early = data.convergence.map((c) => `${shortDate(c.as_of)} ${num(bal ? (c.bal_acc ?? null) : c.acc_decided)}`).join(' · ')
   return (
     <div className="metrics">
       {data.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {data.convergence_error}</p>}
-      <p className="muted small">Full-season (Nov 30) calls, pooled over 2021–2023; only the season chart follows the selected date.</p>
-      {data.model_version === 'v2' && data.selection && <ModelV2Note data={data} />}
-      <p className="finding">
-        On field-years {data.split_label ?? 'held out by year'} the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
-        <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.
-      </p>
-      <section className="reliability" aria-label="Reliability of these scores">
-        <h3>Reliability</h3>
-        <p>
-          Wilson 95% intervals: silage recall <b>{num(S.recall.lo)}</b>–<b>{num(S.recall.hi)}</b>, silage precision <b>{num(S.precision.lo)}</b>–<b>{num(S.precision.hi)}</b>.
-        </p>
-        <details className="more">
-          <summary>Details</summary>
-          <p>These intervals do not establish accuracy on new regions or account for repeated years of the same field.</p>
-          <p className="muted small">
-            Based on {data.n_evaluated ?? total} labeled field-years scored out of fold. With few silage examples the ranges are wide; read overlapping ranges as "not yet distinguishable".
-          </p>
-        </details>
-      </section>
-      <div className="tiles">
-        <Tile kicker="Evaluated field-years" value={String(data.n_evaluated ?? total)} />
-        <Tile kicker="Correct" value={`${correct} / ${total}`} sub={pct(total ? correct / total : null)} />
-        <Tile kicker="Abstained" value={String(data.abstained)} sub="too few clear looks" />
-        <Tile kicker="Balanced accuracy" value={data.balanced_accuracy != null ? num(data.balanced_accuracy) : '—'} sub={data.baseline ? `${data.baseline.name ?? 'Baseline'}: ${num(data.baseline.balanced_accuracy)}` : (data.split_label ?? '')} />
-      </div>
+      <p className="muted small">{n} labeled BARC field-years, 2021–2023, {data.split_label ?? 'held out by field'}; full-season (Nov 30) calls.</p>
+      <dl className="facts" aria-label="Held-out accuracy">
+        <div><dt>Balanced accuracy</dt><dd>{num(data.balanced_accuracy ?? null)}</dd><span>{data.baseline ? `${data.baseline.name ?? 'Always grain'}: ${num(data.baseline.balanced_accuracy)}` : ''}</span></div>
+        <div><dt>Silage recall</dt><dd>{num(S.recall.value)}</dd><span>95% {num(S.recall.lo)}–{num(S.recall.hi)}; {sHit} of {sN} found</span></div>
+        <div><dt>Silage precision</dt><dd>{num(S.precision.value)}</dd><span>95% {num(S.precision.lo)}–{num(S.precision.hi)}</span></div>
+        <div><dt>Grain recall</dt><dd>{num(G.recall.value)}</dd><span>95% {num(G.recall.lo)}–{num(G.recall.hi)}</span></div>
+      </dl>
 
       <section className="block">
         <div className="block__head">
@@ -71,22 +54,55 @@ export function MetricsPanel({ data, error, asOf }: Props) {
         <Confusion data={data} />
       </section>
 
-      <section className="block">
-        <div className="block__head">
-          <h3>Precision and recall</h3>
-          <span className="block__note">bars = estimate · whiskers = 95% CI</span>
-        </div>
-        <PrecisionRecall data={data} />
-      </section>
-
       {data.convergence.length > 1 && <section className="block">
         <div className="block__head">
-          <h3>Convergence through the season</h3>
+          <h3>How early the call is reliable</h3>
           <span className="block__note">as-of {shortDate(asOf)} marked</span>
         </div>
+        <p className="facts__line">{bal ? 'Balanced accuracy' : 'Accuracy on decided fields'} by date: {early}</p>
         <Convergence data={data} asOf={asOf} />
       </section>}
+
+      <section className="block">
+        <div className="block__head"><h3>Key limits</h3></div>
+        <ul className="limits">
+          <li><b>One research farm.</b> All {n} labeled field-years ({sN} silage) come from BARC, Beltsville MD; not tested on other farms or states.</li>
+          <li><b>Farm hold-out.</b> Holding out Central Farm, which has nearly all the silage, finds none of its silage.</li>
+          <li><b>Mid-season dates use v1.</b> Before Nov 30 each date refits the v1 model on the months available; v2 needs the full season.</li>
+        </ul>
+      </section>
+
+      <h2 className="sheet__h2">Details</h2>
+      {data.by_year && (
+        <details className="more section">
+          <summary>Per-year results</summary>
+          <table className="mini-table">
+            <thead><tr><th>Year</th><th className="num">Field-years</th><th className="num">Balanced acc.</th><th className="num">Always grain</th><th className="num">Silage recall</th><th className="num">Silage precision</th></tr></thead>
+            <tbody>
+              {Object.entries(data.by_year).map(([y, v]) => (
+                <tr key={y}><td>{y}</td><td className="num">{v.model.n}</td><td className="num">{num(v.model.balanced_accuracy)}</td><td className="num">{num(v.baseline.balanced_accuracy)}</td><td className="num">{num(v.model.silage_recall)}</td><td className="num">{num(v.model.silage_precision)}</td></tr>
+              ))}
+            </tbody>
+          </table>
+        </details>
+      )}
+      <details className="more section">
+        <summary>Precision and recall with 95% ranges</summary>
+        <PrecisionRecall data={data} />
+        <p className="muted small">Wilson 95% intervals; they do not establish accuracy on new regions or account for repeated years of the same field. Abstained: {data.abstained}.</p>
+      </details>
     </div>
+  )
+}
+
+/** The model v2 note as its own collapsed section (placed by the Model quality tab). */
+export function ModelV2Section({ data }: { data: EvaluateResponse | null }) {
+  if (data?.model_version !== 'v2' || !data.selection) return null
+  return (
+    <details className="more section">
+      <summary>Model v2: what changed and how far to trust the gain</summary>
+      <ModelV2Note data={data} />
+    </details>
   )
 }
 
@@ -105,8 +121,7 @@ function ModelV2Note({ data }: { data: EvaluateResponse }) {
       <p>
         NDVI plus harvest-timing features.{v1 && <> Recovers <b>{silage(data.confusion)}</b> silage field-years (balanced accuracy <b>{num(data.balanced_accuracy ?? null)}</b>) vs <b>{silage(v1.confusion_matrix)}</b> (<b>{num(v1.balanced_accuracy)}</b>) for v1; optimistic, since this split was seen when v2 was picked.</>}
       </p>
-      <details className="more">
-        <summary>Details</summary>
+      <div>
         <p>
           {data.model_name}: the nine NDVI features plus four harvest-timing features (when greenness falls, how sharply, and whether it regrows), chosen from eight candidates in a comparison written down before any was scored.
         </p>
@@ -114,18 +129,8 @@ function ModelV2Note({ data }: { data: EvaluateResponse }) {
           Repeating the selection inside each training fold gives about <b>{num(sel.nested_selection_mean_balanced_accuracy)}</b> balanced accuracy against <b>{num(sel.v1_mean_balanced_accuracy_same_seeds)}</b> for v1, and a 95% bootstrap range for the gain of <b>{num(lo, 3)}</b> to <b>{num(hi, 3)}</b>, which touches zero. The gain rests on three or four silage field-years.
         </p>
         <p className="muted small">Details: {sel.details}. Mid-season dates still use the v1 model, refit on the months available by each date.</p>
-      </details>
+      </div>
     </section>
-  )
-}
-
-function Tile({ kicker, value, sub }: { kicker: string; value: string; sub?: string }) {
-  return (
-    <div className="tile">
-      <div className="tile__kicker">{kicker}</div>
-      <div className="tile__value">{value}</div>
-      {sub && <div className="tile__sub">{sub}</div>}
-    </div>
   )
 }
 

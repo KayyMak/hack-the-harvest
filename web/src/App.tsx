@@ -4,7 +4,7 @@ import { unlabeledCallsAt } from './adapter'
 import type { FieldLandcover, Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { Estimate2025Panel } from './components/Estimate2025'
-import { Forecast2025Panel } from './components/Forecast2025'
+import { DeclineRulePanel } from './components/DeclineRule'
 import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
@@ -13,7 +13,7 @@ import { ForecastKey, ForecastPanels } from './components/Forecast'
 import type { Crop, Forecast } from './components/forecastTypes'
 import { USMap } from './components/USMap'
 import { MarketPanel } from './components/MarketPanel'
-import { MetricsPanel } from './components/MetricsPanel'
+import { MetricsPanel, ModelV2Section } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
 import { AcresConvergence } from './components/AcresConvergence'
@@ -106,7 +106,7 @@ export default function App() {
   const rollup = useAsync(() => api.rollup(year), [year])
   const acresConv = useAsync(() => api.convergenceAcres(), [])
   const estimate = useAsync(() => api.estimate2025(), [])
-  const forecast = useAsync(() => api.forecast2025(), [])
+  const declineRule = useAsync(() => api.declineRule(), [])
   const unlabeled = useAsync(() => api.unlabeled(year), [year])
   const landcover = useAsync(() => api.landcover(year), [year])
   const coverMap = useMemo(() => new Map<number, FieldLandcover>((landcover.data ?? []).map((c) => [c.field_id, c])), [landcover.data])
@@ -311,31 +311,33 @@ export default function App() {
                 <h1 className="sheet__title">Model quality</h1>
                 <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />
                 {seasonEnd && (
-                  <>
-                    <h2 className="sheet__h2">Through the season</h2>
-                    <Pending title="Mid-season calls">
-                      Calls as of Aug 12, Sep 12, Oct 12 and Nov 12, showing how many fields are decided and how accurate those calls are at each date.
-                    </Pending>
-                  </>
-                )}
-                <h2 className="sheet__h2">Silage acres through the season</h2>
-                <AcresConvergence data={acresConv.data} error={acresConv.error} year={year} onYear={setYear} />
-                <h2 className="sheet__h2">Acreage roll-up</h2>
-                {rollup.error ? (
-                  <Pending title="Silage acres roll-up">
-                    {rollup.error.message}
+                  <Pending title="Mid-season calls">
+                    Calls as of Aug 12, Sep 12, Oct 12 and Nov 12, showing how many fields are decided and how accurate those calls are at each date.
                   </Pending>
-                ) : (
-                  <RollupPanel data={rollup.data} error={rollup.error} />
                 )}
-                <h2 className="sheet__h2">2025 forecast (graded output)</h2>
-                <p className="muted small">Shown in full on the 2025 by state tab; method, backtest and sources are here.</p>
-                <details className="more">
-                  <summary>Method, backtest and sources</summary>
-                  <Forecast2025Panel state={forecast} />
+                <details className="more section">
+                  <summary>Silage acres through the season</summary>
+                  <AcresConvergence data={acresConv.data} error={acresConv.error} year={year} onYear={setYear} />
                 </details>
-                <h2 className="sheet__h2">Satellite cross-check, Maryland 2025</h2>
-                <Estimate2025Panel state={estimate} />
+                <details className="more section">
+                  <summary>Acre roll-up, {year}</summary>
+                  {rollup.error ? (
+                    <Pending title="Silage acres roll-up">
+                      {rollup.error.message}
+                    </Pending>
+                  ) : (
+                    <RollupPanel data={rollup.data} error={rollup.error} />
+                  )}
+                </details>
+                <details className="more section">
+                  <summary>Decline-rule baseline</summary>
+                  <DeclineRulePanel state={declineRule} />
+                </details>
+                <ModelV2Section data={evaluation.data} />
+                <details className="more section">
+                  <summary>Satellite cross-check, Maryland 2025 (not our submitted answer)</summary>
+                  <Estimate2025Panel state={estimate} />
+                </details>
               </>
             )}
             {view === 'market' && (

@@ -374,6 +374,26 @@ export interface MarketReport {
 }
 
 /** One model call on a field-year with no BARC label (CDL says it was corn). Not a reference label. */
+/** GET /api/baseline/decline_rule: one row of the saved rule-vs-model comparison. */
+export interface RuleMetrics {
+  n: number
+  silage_precision: number
+  silage_recall: number
+  false_positive_rate: number | null
+  balanced_accuracy: number
+  confusion_matrix: number[][]
+}
+/** GET /api/baseline/decline_rule: a simple NDVI-decline rule vs the model and always-grain, same rows. */
+export interface DeclineRuleBaseline {
+  protocol: string
+  drop: number
+  evaluated_field_years: number
+  decline_rule: RuleMetrics
+  logistic_same_rows: RuleMetrics
+  always_grain_same_rows: RuleMetrics
+  limitations: string[]
+}
+
 /** GET /api/fields/landcover?year=: USDA Cropland Data Layer cover inside each BARC field-year.
  *  Satellite land cover only: never a BARC reference label and never a model call. */
 export interface FieldLandcover {

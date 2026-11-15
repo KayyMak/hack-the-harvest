@@ -95,7 +95,7 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
       </section>
 
       <details className="more">
-        <summary>Details: method, sampled fields, limitations and sources</summary>
+        <summary>Details: method, sampled fields and limitations</summary>
       <p className="muted small">
         A model estimate from a sample of Maryland corn fields, compared with NASS survey acres harvested. It is not a USDA or NASS release.
         Saved {s.generated_utc.slice(0, 10)}.
@@ -175,18 +175,6 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
         </ul>
       </section>
 
-      <section className="block">
-        <div className="block__head">
-          <h3>Sources</h3>
-        </div>
-        <ul className="est__list">
-          {s.sources.map((src) => (
-            <li key={`${src.name}-${src.url}`}>
-              <a href={src.url} target="_blank" rel="noreferrer">{src.name}</a> <span className="muted">accessed {src.accessed}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
       </details>
     </div>
   )
