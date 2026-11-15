@@ -15,13 +15,14 @@ export const toTime = (iso: string) => Date.parse(`${iso.slice(0, 10)}T00:00:00Z
 export const pct = (x: number | null | undefined, digits = 0) => (x == null ? '—' : `${(x * 100).toFixed(digits)}%`)
 export const num = (x: number | null | undefined, digits = 2) => (x == null ? '—' : x.toFixed(digits))
 export const acres = (x: number) => x.toLocaleString('en-US', { maximumFractionDigits: 0 })
-/** Three significant figures with k / M / B: 6,886,596 -> "6.89M", 187,176,856 -> "187M", 37,595 -> "37.6k"; under 1,000 unchanged. */
+/** Three significant figures with k / M (billions keep two decimals): 6,886,596 -> "6.89M", 187,176,856 -> "187M",
+ *  37,595 -> "37.6k", 16,752,193,000 -> "16.75B"; under 1,000 unchanged. */
 export function compact(x: number): string {
   const a = Math.abs(x)
   const [div, unit] = a >= 1e9 ? [1e9, 'B'] : a >= 1e6 ? [1e6, 'M'] : a >= 1e3 ? [1e3, 'k'] : [1, '']
   if (!unit) return acres(x)
   const v = x / div
-  const text = v.toFixed(Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2)
+  const text = v.toFixed(unit === 'B' && Math.abs(v) < 100 ? 2 : Math.abs(v) >= 100 ? 0 : Math.abs(v) >= 10 ? 1 : 2)
   if (Math.abs(Number(text)) >= 1000 && unit !== 'B') return compact(Math.sign(x) * 1000 * div) // 999,600 -> "1.00M"
   return `${text}${unit}`
 }

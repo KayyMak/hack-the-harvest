@@ -5,6 +5,7 @@ import { xTitle, yTitle } from './charts'
 import type { Cell, Crop, Forecast, StateRow } from './forecastTypes'
 import { ERROR_STEPS, fmtAcres, fmtFull, fmtPct, releaseDate, titleCase } from './forecastFormat'
 
+const NASS_RELEASE_TIP = '2025 NASS releases: Jun 30 Acreage; Aug 12, Sep 12, Nov 14 Crop Production (no October report in 2025)'
 const CROP_SHORT: Record<Crop, string> = { silage: 'silage', grain: 'grain' }
 
 interface Props {
@@ -61,8 +62,8 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
       {!showTable && (
         <aside className="glass rail" aria-label="How the estimate was built">
           <section>
-            <h2 className="rail__title">US silage estimate through the season</h2>
-            <ConvergenceChart data={data} />
+            <h2 className="rail__title" title={NASS_RELEASE_TIP}>US silage estimate by NASS release</h2>
+            <div title={NASS_RELEASE_TIP}><ConvergenceChart data={data} /></div>
             <div className="linekey">
               <span><i style={{ background: t.share }} />Our estimate</span>
               <span><i style={{ background: t.share, opacity: 0.35, height: 8 }} />95% range</span>

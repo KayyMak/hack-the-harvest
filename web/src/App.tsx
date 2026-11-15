@@ -36,6 +36,7 @@ type ViewId = (typeof VIEWS)[number]['id']
 /** Views driven by the BARC As-of date and Year controls; on the others those controls have no effect. */
 const BARC_VIEWS: ReadonlySet<ViewId> = new Set(['overview', 'fields', 'quality'])
 
+const CHECKPOINT_TIP = 'Aug–Nov 12: what the model could call on roughly each NASS report day, using only imagery to that date; Nov 30: full-season final call (model v2)'
 const SHOW_DESIGN = new URLSearchParams(window.location.search).has('design')
 const LIVE_YEARS = [2021, 2022, 2023]
 const asOfDatesFor = (year: number) => ['08-12', '09-12', '10-12', '11-12'].map((md) => `${year}-${md}`)
@@ -229,15 +230,15 @@ export default function App() {
           </nav>
           <div className="topbar__spacer" />
           {BARC_VIEWS.has(view) && <>
-          <div className="asof" role="group" aria-label="As-of date">
-            <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
+          <div className="asof" role="group" aria-label="Satellite checkpoint" title={CHECKPOINT_TIP}>
+            <span className="asof__label">{seasonEnd ? 'Calls' : 'Satellite checkpoint'}</span>
             {seasonEnd ? (
               <span className="season-pill" title="Mid-season calls are pending">End of season {year}</span>
             ) : (
             <div className="seg">
               {asOfDates.map((d, i) => (
-                <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)}>
-                  {shortDate(d)}
+                <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)} title={CHECKPOINT_TIP}>
+                  {shortDate(d)}{d.endsWith('-11-30') ? ' · season end' : ''}
                 </button>
               ))}
             </div>

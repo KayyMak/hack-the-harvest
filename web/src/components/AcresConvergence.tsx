@@ -55,7 +55,7 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
         <ResponsiveContainer width="100%" height={260}>
           <ComposedChart data={rows} margin={{ top: 10, right: 16, bottom: 0, left: 4 }}>
             <CartesianGrid stroke={t.grid} vertical={false} />
-            <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(`As-of date, ${current.year}`, t.muted)} />
+            <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(`Satellite checkpoint, ${current.year}`, t.muted)} />
             <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} domain={[0, Math.ceil(top / 10) * 10]} label={yTitle('Silage acres', t.muted)} />
             <Tooltip formatter={(v, name) => [typeof v === 'number' ? `${acres(v)} ac` : '—', name]}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />

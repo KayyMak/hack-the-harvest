@@ -2204,3 +2204,21 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .backtest { margin-top: 8px; font-size: 12px; }
 .backtest caption { text-align: left; font-size: 12px; color: #a9b8b2; padding-bottom: 4px; }
 .backtest th, .backtest td { padding: 4px 6px; }
+.market__dates { display: flex; align-items: center; gap: 8px; }
+.market__dates .asof__label { font-size: 13px; color: #a9b8b2; }
+:root[data-theme='glass'][data-mode='light'] .market__dates .asof__label { color: #44564f; }
+.sheet .market__chart { margin: 0 0 10px; }
+.sheet .market__kpis { margin: 0 0 14px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+/* BARC checkpoint row: keep its label visible but compact so the bar stays on one line */
+@media (max-width: 1520px) and (min-width: 901px) {
+  .shell .topbar .asof__label { display: inline; font-size: 12px; white-space: normal; max-width: 72px; line-height: 1.1; text-align: right; }
+  .shell .yearpick { font-size: 0; gap: 0; }
+  .shell .topbar .brand__title { font-size: 15px; }
+}
+@media (max-width: 1520px) and (min-width: 901px) {
+  .shell .topbar { gap: 6px; padding-left: 12px; padding-right: 10px; }
+  .shell .views__btn { padding: 8px 5px; }
+  .shell .topbar .seg__btn { padding: 4px 5px; font-size: 12.5px; }
+  .shell .topbar .ghost-btn { padding: 5px 8px; font-size: 12.5px; }
+  .shell .topbar .asof { gap: 6px; }
+}

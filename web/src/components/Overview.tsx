@@ -176,7 +176,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 12, right: 16, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
-        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} height={34} label={xTitle('As-of date', t.muted)} />
+        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} height={34} label={xTitle('Satellite checkpoint', t.muted)} />
         <YAxis domain={[0, 1]} ticks={[0, 0.5, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Percent', t.muted)} />
         {current && <ReferenceLine x={current.label} stroke={t.share} strokeOpacity={0.35} strokeWidth={28} />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />

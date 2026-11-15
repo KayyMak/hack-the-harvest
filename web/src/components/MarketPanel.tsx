@@ -16,6 +16,7 @@ const SEASONS = [
   { season: 2022, label: '2022 (BARC model)' },
   { season: 2021, label: '2021 (BARC model)' },
 ]
+const NASS_RELEASE_TIP = '2025 NASS releases: Jun 30 Acreage; Aug 12, Sep 12, Nov 14 Crop Production (no October report in 2025)'
 const str = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? String(v) : '—')
 /** Backend figures arrive preformatted ("187,176,856 bu"); show them to three significant figures ("187M bu"). */
 const big = (v: unknown) => compactText(str(v))
@@ -68,12 +69,15 @@ export function MarketPanel() {
           </select>
         </label>
         {o && (
-          <div className="seg" role="group" aria-label="Outlook as of">
+          <div className="market__dates" title={season === 2025 ? NASS_RELEASE_TIP : 'Satellite checkpoint dates for the BARC model'}>
+          <span className="asof__label">{season === 2025 ? 'NASS release' : 'Satellite checkpoint'}</span>
+          <div className="seg" role="group" aria-label={season === 2025 ? 'NASS release' : 'Satellite checkpoint'}>
             {o.dates.map((d) => (
               <button key={d} className={`seg__btn${d === o.as_of ? ' is-on' : ''}`} aria-pressed={d === o.as_of} onClick={() => setAsOf(d)}>
                 {shortDate(d)}
               </button>
             ))}
+          </div>
           </div>
         )}
       </div>
@@ -84,8 +88,8 @@ export function MarketPanel() {
         <div className="skeleton skeleton--chart" />
       ) : (
         <>
-          <OutlookCards outlook={o} />
           <OutlookChart outlook={o} />
+          <OutlookCards outlook={o} />
           <p className="muted small">{str(o.timeline.what_is_ours ?? o.timeline.scope)} {str(o.timeline.next_official_numbers)}</p>
         </>
       )}
@@ -155,11 +159,13 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   const tl = outlook.timeline as Dict
   const series = (tl.series as Dict[]) ?? []
   const grid = <CartesianGrid stroke={t.grid} vertical={false} />
-  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'As-of date', t.muted)} />
+  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
   const tip = <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
   const legend = <Legend verticalAlign="top" align="left" height={40} iconType="plainline" wrapperStyle={{ fontSize: 12, color: t.ink, paddingBottom: 8 }} />
   if (tl.kind === 'statewide_and_us_outlook') {
     const rows = series.map((r) => ({ label: shortDate(String(r.as_of)), supply: r.us_production_change_pct, md: r.md_silage_share_pct }))
+    // The June Acreage report carries no grain production forecast, so the supply line starts at the first one.
+    const firstNoSupply = rows.length > 0 && rows[0].supply == null
     return (
       <figure className="market__chart" role="img" aria-label="US grain supply change versus 2024 and our Maryland silage share, by release date">
         <ResponsiveContainer width="100%" height={280}>
@@ -168,7 +174,7 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
             <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={60} unit="%" label={yTitle('Percent', t.muted)} />
             {tip}
             {legend}
-            <Line type="monotone" dataKey="supply" name="US grain supply vs 2024 (NASS forecast)" stroke={DATA.grain} strokeWidth={2.5} dot={{ r: 3 }} connectNulls isAnimationActive={false} unit="%" />
+            <Line type="monotone" dataKey="supply" name={`US grain supply vs 2024 (NASS forecast${firstNoSupply ? `; none in the ${rows[0].label} Acreage report` : ''})`} stroke={DATA.grain} strokeWidth={2.5} dot={{ r: 3 }} connectNulls isAnimationActive={false} unit="%" />
             <Line type="monotone" dataKey="md" name="Maryland silage share (our estimate)" stroke={DATA.silage} strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} unit="%" />
           </ComposedChart>
         </ResponsiveContainer>

@@ -57,9 +57,9 @@ export function MetricsPanel({ data, error, asOf }: Props) {
       {data.convergence.length > 1 && <section className="block">
         <div className="block__head">
           <h3>How early the call is reliable</h3>
-          <span className="block__note">as-of {shortDate(asOf)} marked</span>
+          <span className="block__note">{shortDate(asOf)} checkpoint marked</span>
         </div>
-        <p className="facts__line">{bal ? 'Balanced accuracy' : 'Accuracy on decided fields'} by date: {early}</p>
+        <p className="facts__line">{bal ? 'Balanced accuracy' : 'Accuracy on decided fields'} by satellite checkpoint: {early}</p>
         <Convergence data={data} asOf={asOf} />
       </section>}
 
@@ -229,7 +229,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
     <ResponsiveContainer width="100%" height={240}>
       <LineChart data={rows} margin={{ top: 12, right: 24, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
-        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.ink, fontSize: 13 }} tickLine={false} padding={{ left: 16, right: 16 }} height={36} label={xTitle('As-of date', t.muted)} />
+        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.ink, fontSize: 13 }} tickLine={false} padding={{ left: 16, right: 16 }} height={36} label={xTitle('Satellite checkpoint', t.muted)} />
         <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Percent', t.muted)} />
         {current && <ReferenceLine x={current.label} stroke={t.muted} strokeDasharray="4 4" />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
