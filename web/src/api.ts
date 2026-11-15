@@ -10,7 +10,7 @@
 import type {
   AgentRunResponse,
   AgentTraceResponse,
-  BarcRollupYear,
+  ConvergenceAcres,
   Estimate2025,
   EvaluateResponse,
   FieldsResponse,
@@ -19,7 +19,7 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
-import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary, byYearFromPredictions } from './adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
 import type { SavedAsOf, SavedEstimate2025, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
 
 export * from './types.ts'
@@ -39,6 +39,7 @@ export const snap = {
   series: (id: number, year: number) => `series_${id}_${year}`,
   agentRun: () => 'agent_run',
   agentTrace: (runId: string) => `agent_trace_${runId}`,
+  convergenceAcres: () => 'convergence_acres',
 }
 
 export class ApiError extends Error {
@@ -96,18 +97,10 @@ export const api = {
       ? fromSnapshot<EvaluateResponse>(snap.evaluate(split))
       : Promise.all([
           getJson<SavedSummary>(`${API_URL}/api/baseline/summary`),
-          getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`),
           // The season chart is optional: without saved as-of results the scores still show.
           savedAsOf().then((data) => ({ points: adaptConvergence(data, year), error: undefined }))
             .catch((error: unknown) => ({ points: [], error: error instanceof Error ? error.message : String(error) })),
-        ]).then(([summary, preds, season]) => ({
-          ...adaptSummary(summary, season.points), by_year: byYearFromPredictions(preds), convergence_error: season.error,
-        })),
-
-  /** Acre roll-up over BARC's labeled fields for one year. Live: /api/baseline/rollup; snapshot: barc_rollup.json. */
-  barcRollup: (year: number): Promise<BarcRollupYear | null> =>
-    (STATIC ? fromSnapshot<SavedRollup>('barc_rollup') : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`))
-      .then((data) => adaptBarcRollup(data, year)),
+        ]).then(([summary, season]) => ({ ...adaptSummary(summary, season.points), convergence_error: season.error })),
 
   /**
    * 2025 Maryland silage and grain acres: a model estimate from a sample of corn fields, next to
@@ -121,6 +114,11 @@ export const api = {
     STATIC
       ? fromSnapshot<RollupResponse>(snap.rollup(year))
       : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`).then((data) => adaptRollup(data, year)),
+
+  convergenceAcres: () =>
+    STATIC
+      ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
+      : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
 
   series: (id: number, year: number) =>
     STATIC

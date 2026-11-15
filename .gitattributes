@@ -12,3 +12,7 @@
 /data/reference/** -text whitespace=cr-at-eol
 # Matplotlib SVG path data contains generated trailing whitespace.
 /baseline/outputs/**/*.svg -whitespace
+
+# 2025 forecast inputs: public NASS report text pinned by sha256 in forecast/sources.json.
+/forecast/cache/** -text whitespace=cr-at-eol
+/forecast/outputs/** -text whitespace=cr-at-eol

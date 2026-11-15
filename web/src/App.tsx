@@ -10,14 +10,12 @@ import { MapView } from './components/MapView'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
+import { AcresConvergence } from './components/AcresConvergence'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
 import { THEMES, ThemeContext, applyTheme, modeById, themeById, withMode } from './theme'
 import type { Mode } from './theme'
-
-/** Build date, shown so viewers know how fresh the published results are. */
-const BUILT = new Date(__BUILD_DATE__ + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' })
 
 const VIEWS = [
   { id: 'overview', label: 'Overview' },
@@ -83,6 +81,7 @@ export default function App() {
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
   const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
+  const acresConv = useAsync(() => api.convergenceAcres(), [])
   const estimate = useAsync(() => api.estimate2025(), [])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
@@ -251,11 +250,6 @@ export default function App() {
             {view === 'quality' && (
               <>
                 <h1 className="sheet__title">Model quality</h1>
-                <p className="sheet__meta">
-                  {evaluation.data?.model_name ?? 'Model'}. Saved held-out results
-                  {evaluation.data?.n_evaluated ? ` for ${evaluation.data.n_evaluated} field-years` : ''}
-                  {evaluation.data?.n_fields ? ` on ${evaluation.data.n_fields} fields` : ''}, {evaluation.data?.split_label ?? 'held out'}. Dashboard built {BUILT}.
-                </p>
                 <MetricsPanel data={evaluation.data} error={evaluation.error} asOf={asOf} />
                 {seasonEnd && (
                   <>
@@ -265,6 +259,8 @@ export default function App() {
                     </Pending>
                   </>
                 )}
+                <h2 className="sheet__h2">Silage acres through the season</h2>
+                <AcresConvergence data={acresConv.data} error={acresConv.error} year={year} onYear={setYear} />
                 <h2 className="sheet__h2">Acreage roll-up</h2>
                 {rollup.error ? (
                   <Pending title="Silage acres roll-up">
@@ -304,7 +300,7 @@ export default function App() {
           {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
           <span className="mapkey__note">Fill is the model's call, outline is the BARC label</span>
           <span className="mapkey__fine">
-            Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Built {BUILT}. Prototype, not a USDA or NASS release.
+            Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Prototype, not a USDA or NASS release.
           </span>
         </div>
       </div>

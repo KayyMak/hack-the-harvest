@@ -135,6 +135,62 @@ class QuickStatsRow(BaseModel):
     suppressed: bool
 
 
+class RuleMetrics(BaseModel):
+    n: int
+    silage_precision: float
+    silage_recall: float
+    silage_f1: float
+    false_positive_rate: float | None
+    balanced_accuracy: float
+    confusion_matrix: list[list[int]]
+    matrix_order: list[HarvestType]
+    matrix_rows: str
+    matrix_columns: str
+
+
+class DeclineRuleYear(BaseModel):
+    decline_rule: RuleMetrics
+    logistic: RuleMetrics
+
+
+class DeclineRuleBaseline(BaseModel):
+    protocol: str
+    drop: float
+    threshold_grid: list[int]
+    thresholds_by_fold: dict[str, int]
+    evaluated_field_years: int
+    no_sustained_decline: int
+    decline_rule: RuleMetrics
+    logistic_same_rows: RuleMetrics
+    always_grain_same_rows: RuleMetrics
+    by_year: dict[str, DeclineRuleYear]
+    limitations: list[str]
+
+
+class ConvergencePoint(BaseModel):
+    as_of: date
+    mode: str
+    field_years: int = Field(ge=0)
+    expected_silage_acres: float = Field(ge=0)
+    expected_silage_acres_95ci: tuple[float, float]
+    cv_percent: float | None
+    predicted_silage_acres: float = Field(ge=0)
+    reference_silage_acres: float = Field(ge=0)
+    total_acres: float = Field(ge=0)
+    missing_acres_field_years: int = Field(ge=0)
+
+
+class ConvergenceYear(BaseModel):
+    year: int
+    points: list[ConvergencePoint]
+
+
+class Convergence(BaseModel):
+    scope: str
+    method: str
+    years: list[ConvergenceYear]
+
+
 class _Estimate(BaseModel):
     """Saved estimate sections keep any extra fields the analysis writes."""
     model_config = ConfigDict(extra='allow')

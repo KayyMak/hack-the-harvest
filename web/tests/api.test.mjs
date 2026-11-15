@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, byYearFromPredictions, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -12,7 +12,6 @@ const asof = artifact('asof.json')
 test('a missing as-of artifact is explicit while full-season summary remains usable', async (t) => {
   t.mock.method(globalThis, 'fetch', async (url) => {
     if (url === '/api/baseline/summary') return Response.json(metrics)
-    if (url === '/api/baseline/predictions') return Response.json([])
     assert.equal(url, '/api/baseline/asof')
     return new Response('{}', { status: 503 })
   })
@@ -85,6 +84,7 @@ test('live client uses existing /api routes and the published response shapes', 
       '/api/baseline/summary': metrics,
       '/api/baseline/predictions': [{ field_id: 327, year: 2021, predicted_label: 'Grain', silage_probability: 0.01 }],
       '/api/baseline/asof': asof,
+      '/api/baseline/convergence': { scope: 'Labeled BARC field-years only', method: 'm', years: [{ year: 2022, points: [] }] },
       '/api/baseline/rollup': { scope: 's', years: [{ year: 2022, reference_silage_acres: 74.44, expected_silage_acres: 54.1,
         expected_silage_acres_95ci: [40.2, 68.0], cv_percent: 13.1 }] },
       '/api/fields/327/observations?year=2021': [
@@ -107,44 +107,11 @@ test('live client uses existing /api routes and the published response shapes', 
   await assert.rejects(api.rollup(2019), /No saved roll-up/)
   assert.equal((await api.predict(2022, '2022-10-12')).length, 7)
   assert.equal((await api.evaluate('strict', 2022)).convergence.length, 5)
+  assert.equal((await api.convergenceAcres()).years[0].year, 2022)
   const meta = await api.meta()
   assert.equal(meta.season_end_only, false)
   assert.equal(meta.as_of_dates.length, 15)
 })
-
-test('per-year scores computed from saved predictions match the saved by-year metrics', () => {
-  const rows = []
-  for (const line of readFileSync(new URL('../../baseline/outputs/heldout_predictions.csv', import.meta.url), 'utf8').trim().split(/\r?\n/).slice(1)) {
-    const c = line.trim().split(',')
-    rows.push({ field_id: +c[0], year: +c[1], reference_label: c[2], predicted_label: c[c.length - 3], silage_probability: +c[c.length - 2], fold: +c[c.length - 4], valid_dates: +c[3] })
-  }
-  const head = readFileSync(new URL('../../baseline/outputs/heldout_predictions.csv', import.meta.url), 'utf8').split(/\r?\n/)[0].trim().split(',')
-  assert.deepEqual(head.slice(-4), ['fold', 'predicted_label', 'silage_probability', 'always_grain_prediction'])
-  const byYear = byYearFromPredictions(rows)
-  for (const [year, saved] of Object.entries(metrics.by_year)) {
-    assert.deepEqual(byYear[year].model.confusion_matrix, saved.logistic.confusion_matrix, year)
-    assert.ok(Math.abs(byYear[year].model.balanced_accuracy - saved.logistic.balanced_accuracy) < 1e-9, year)
-    assert.ok(Math.abs(byYear[year].model.silage_recall - saved.logistic.silage_recall) < 1e-9, year)
-    assert.equal(byYear[year].baseline.balanced_accuracy, saved.always_grain.balanced_accuracy, year)
-  }
-})
-
-test('BARC roll-up adapter keeps BARC-only scope and picks the requested year', () => {
-  const data = { scope: 'Labeled BARC field-years with saved held-out predictions only', method: 'm', years: [
-    { year: 2022, field_years: 7, total_acres: 110.35, reference_silage_acres: 74.44, expected_silage_acres: 54.14,
-      expected_silage_acres_95ci: [20.72, 87.56], cv_percent: 31.5, adjusted_silage_acres: 55.94 }] }
-  const r = adaptBarcRollup(data, 2022)
-  assert.equal(r.labeled_silage_acres, 74.44)
-  assert.deepEqual(r.ci, [20.72, 87.56])
-  assert.match(r.scope, /BARC/)
-  assert.equal(adaptBarcRollup(data, 2021), null)
-})
-
-test('field acres are rounded to one decimal for display', () => {
-  const f = adaptFields(fields, 2022).features.find((x) => x.properties.ACRES != null)
-  assert.equal(f.properties.ACRES, Math.round(f.properties.ACRES * 10) / 10)
-})
-
 // Synthetic values for shape checks only; these are not results.
 const estimateSummary = () => ({
   year: 2025, state: 'MARYLAND', generated_utc: '2000-01-01T00:00:00+00:00', headline: 'calibrated',

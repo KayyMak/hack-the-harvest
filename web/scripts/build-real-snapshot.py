@@ -19,6 +19,7 @@ Agent execution is unavailable in static mode.
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
 """
 import csv
+import sys
 import os
 import shutil
 import json
@@ -195,6 +196,23 @@ def main() -> None:
             convergence.append({'as_of': f'{YEARS[1]}-{md}', 'share_decided': round(len(dec) / max(1, len(rows_)), 4),
                                 'acc_decided': round(ok / len(dec), 4) if dec else 0.0})
 
+    # ---- saved as-of calls from `python -m harvest.export_asof` (what the live API serves) ----
+    jpath = BASE / 'asof.json'
+    if not asof_dates and jpath.exists():
+        saved = json.loads(jpath.read_text(encoding='utf-8'))
+        for d in saved['dates']:
+            rows_ = [{'OBJECTID': p['field_id'], 'year': d['year'], 'as_of': d['as_of'],
+                      'p_silage': round(p['silage_probability'], 4), 'class': p['predicted_label'],
+                      'abstain': False, 'top_features': '[]'} for p in d['predictions']]
+            rows_ += [{'OBJECTID': i, 'year': d['year'], 'as_of': d['as_of'], 'p_silage': None, 'class': 'Pending',
+                       'abstain': False, 'top_features': '[]'} for i in d['pending_field_ids']]
+            if not d['as_of'].endswith(f'-{SEASON_END}'):  # season end already written from held-out predictions
+                write(f"predict_{d['year']}_{d['as_of']}", rows_)
+            asof_dates.append(d['as_of'])
+        convergence = [{'as_of': f"{YEARS[1]}-{p['month_day']}", 'share_decided': p['share_decided'],
+                        'acc_decided': p['accuracy_decided'], 'bal_acc': p['balanced_accuracy']}
+                       for p in saved['pooled'] if p['share_decided'] is not None]
+
     # ---- evaluation ----
     m = json.loads((BASE / 'metrics.json').read_text(encoding='utf-8'))
     order = m['logistic']['matrix_order']
@@ -256,6 +274,16 @@ def main() -> None:
         write(f'rollup_{year}', {'year': year, 'region': r['region'], 'acres': r['acres'], 'ci': [r['ci_lo'], r['ci_hi']],
                                  'cv_pct': r.get('cv_pct', 0), 'census_acres': r['census_acres'], 'csv_url': f'rollup_{year}.csv'})
 
+    # ---- silage acres by as-of date (same code the API route uses) ----
+    has_acres_convergence = False
+    try:
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app.artifacts import compute_convergence  # needs backend requirements installed
+        write('convergence_acres', json.loads(compute_convergence().model_dump_json()))
+        has_acres_convergence = True
+    except Exception as exc:  # explicit, never a silent substitute
+        print(f'convergence_acres.json NOT written: {exc}')
+
     # ---- optional: before/after chips ----
     has_chips = False
     cdir = BASE / 'chips'
@@ -293,6 +321,7 @@ def main() -> None:
         'season_end_only': not asof_dates,
         'has_chips': has_chips,
         'has_rollup': has_rollup,
+        'has_acres_convergence': has_acres_convergence,
         'has_contributions': bool(contrib),
     })
     print(f'wrote real snapshot: {len(rows)} fields x {len(YEARS)} years, {sum(len(v) for v in preds.values())} predictions, {len(series)} series -> {OUT}')

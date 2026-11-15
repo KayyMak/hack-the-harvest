@@ -43,6 +43,8 @@ are separate fields.
 | Method and path | Response |
 | --- | --- |
 | `GET /api/health` | `{"status": "ok"}` |
+| `GET /api/baseline/convergence` | Saved as-of silage-acre estimates and probability-based intervals per year for labeled BARC fields; reports missing acreage counts, or 503 when no acreage is usable |
+| `GET /api/baseline/decline_rule` | Validated saved decline-date rule metrics compared with logistic regression and always-Grain on the same rows; 503 if unavailable |
 | `GET /api/baseline/summary` | Evaluation counts, quality counts, logistic and always-Grain metrics |
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
 | `GET /api/baseline/asof?year=` | Saved mid-season calls for Aug 12, Sep 12, Oct 12, Nov 12 and Nov 30 of each year, with scores pooled over 2021-2023; written by `python -m harvest.export_asof`; 503 if missing |

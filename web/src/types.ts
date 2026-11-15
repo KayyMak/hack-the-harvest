@@ -78,19 +78,6 @@ export interface EvaluateResponse {
   baseline?: BaselineSummary
   by_year?: Record<string, { model: BaselineSummary; baseline: BaselineSummary }>
 }
-/** Acres on BARC's own labeled fields: model estimate vs BARC's labels (not statewide). */
-export interface BarcRollupYear {
-  year: number
-  scope: string
-  method: string
-  field_years: number
-  total_acres: number
-  labeled_silage_acres: number
-  expected_silage_acres: number
-  ci: [number, number]
-  cv_pct: number | null
-  adjusted_silage_acres: number | null
-}
 export interface BaselineSummary {
   name?: string
   n: number
@@ -245,4 +232,21 @@ export function parseTopFeatures(raw: string | null | undefined): FeatureContrib
   } catch {
     return []
   }
+}
+
+/** GET /api/baseline/convergence (also written to snapshot/convergence_acres.json) */
+export interface ConvergenceAcresPoint {
+  as_of: string
+  mode: string
+  field_years: number
+  expected_silage_acres: number
+  expected_silage_acres_95ci: [number, number]
+  cv_percent: number | null
+  predicted_silage_acres: number
+  reference_silage_acres: number
+}
+export interface ConvergenceAcres {
+  scope: string
+  method: string
+  years: { year: number; points: ConvergenceAcresPoint[] }[]
 }
