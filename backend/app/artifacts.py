@@ -371,11 +371,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
                     uses = set(re.findall(r'\b(grain|silage)\b', get(r, c_item), flags=re.IGNORECASE))
                     uses = {u.lower() for u in uses}
                     use = uses.pop() if len(uses) == 1 else ''
-                if crop_use:
-                    if not use:
-                        raise ValueError('Cannot identify crop use for the requested filter')
-                    if use != crop_use.lower():
-                        continue
+                if crop_use and use != crop_use.lower():
+                    continue  # other uses, and rows for all corn (e.g. acres planted), are not this crop use
                 raw, cv = get(r, c_value), get(r, c_cv)
                 out.append(QuickStatsRow(year=int(y) if y.isdigit() else None,
                     state=get(r, c_state) or None, county=get(r, c_county) or None,
