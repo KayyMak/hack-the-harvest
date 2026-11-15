@@ -29,6 +29,7 @@ import math
 import re
 import statistics
 import urllib.request
+from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -159,22 +160,56 @@ METHODS = {
     'B': 'persistence: last year silage x planted / last year planted',
     'C': 'share of planted: mean[silage/planted] x planted',
     'D': 'average of A and C',
+    'E': 'FSA: mean[NASS silage / FSA silage] over prior years x FSA December silage acres (falls back to D)',
+    'F': 'average of D and E',
 }
 
+FSA_PATH = HERE / 'fsa_corn_by_state.csv'
 
-def silage_alternatives(state, planted, grain, hist, years):
+
+def load_fsa():
+    """FSA December corn planted+failed acres by state, year and intended use (see fsa_extract.py)."""
+    fsa = defaultdict(dict)
+    if FSA_PATH.exists():
+        for r in csv.DictReader(FSA_PATH.open(encoding='utf-8')):
+            fsa[(r['state'], int(r['year']))][r['intended_use']] = float(r['acres'])
+    return fsa
+
+
+FSA = load_fsa()
+
+
+def fsa_silage(state, year):
+    return FSA.get((state, year), {}).get('Silage')
+
+
+def silage_alternatives(state, planted, grain, hist, years, target, a_val, a_se):
+    """Each candidate's (value, standard error). The SE shapes the interval; its width is then calibrated on the backtest."""
     prev = hist.get((state, years[-1]), {})
     sp = [hist[(state, y)]['silage'] / hist[(state, y)]['planted'] for y in years
           if hist.get((state, y), {}).get('silage') is not None and hist.get((state, y), {}).get('planted')]
-    out = {}
+    out = {'A': (a_val, a_se)}
     if prev.get('silage') is not None and prev.get('planted'):
-        out['B'] = prev['silage'] * planted / prev['planted']
+        out['B'] = (prev['silage'] * planted / prev['planted'], a_se)
     if sp:
-        out['C'] = statistics.mean(sp) * planted
+        c_sd = statistics.stdev(sp) if len(sp) > 1 else statistics.mean(sp) * 0.25
+        out['C'] = (statistics.mean(sp) * planted, c_sd * planted)
+        out['D'] = ((a_val + out['C'][0]) / 2, (a_se + out['C'][1]) / 2)
+    d = out.get('D', out['A'])
+    ks = [hist[(state, y)]['silage'] / fsa_silage(state, y) for y in range(target - 4, target)
+          if hist.get((state, y), {}).get('silage') and fsa_silage(state, y)]
+    now = fsa_silage(state, target)
+    if ks and now:
+        k_mean = statistics.mean(ks)
+        k_sd = statistics.stdev(ks) if len(ks) > 1 else k_mean * 0.15
+        out['E'] = (k_mean * now, k_sd * now)
+    else:
+        out['E'] = d
+    out['F'] = ((d[0] + out['E'][0]) / 2, (d[1] + out['E'][1]) / 2)
     return out
 
 
-def estimate_state(state, planted, grain, hist, years, grain_rel_sd, method='A'):
+def estimate_state(state, planted, grain, hist, years, grain_rel_sd, method='A', target=None):
     sh = shares(hist, state, years)
     if planted is None or not sh:
         return None
@@ -194,12 +229,11 @@ def estimate_state(state, planted, grain, hist, years, grain_rel_sd, method='A')
         # grain revisions move the residual one-for-one
         se = math.sqrt((sd * base) ** 2 + (mean * grain_se) ** 2)
         grain_out = grain
-    alts = silage_alternatives(state, planted, grain, hist, years)
-    alts['A'] = silage
-    if 'C' in alts:
-        alts['D'] = (silage + alts['C']) / 2
-    chosen = alts.get(method, silage)
-    return dict(silage=chosen, silage_se=se, alternatives=alts, grain=grain_out, grain_se=grain_se,
+    target = target or years[-1] + 1
+    alts = silage_alternatives(state, planted, grain, hist, years, target, silage, se)
+    value_, se_ = alts.get(method, alts['A'])
+    return dict(silage=value_, silage_se=max(se_, 1.0), alternatives={k_: v[0] for k_, v in alts.items()},
+                grain=grain_out, grain_se=grain_se,
                 share_mean=mean, share_sd=sd, share_kind=sorted(kinds)[0], share_years=len(vals))
 
 
@@ -208,7 +242,7 @@ def run_year(target, planted_by, grain_by, hist, years, grain_rel_sd, method='A'
     for st, planted in planted_by.items():
         if st == 'UNITED STATES':
             continue
-        e = estimate_state(st, planted, grain_by.get(st), hist, years, grain_rel_sd, method)
+        e = estimate_state(st, planted, grain_by.get(st), hist, years, grain_rel_sd, method, target)
         if e:
             res[st] = e
     return res
