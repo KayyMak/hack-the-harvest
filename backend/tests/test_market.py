@@ -460,6 +460,72 @@ class MarketChecks(unittest.TestCase):
         self.assertIn('nvidia/nemotron-a', r.json()['detail'])
         self.assertNotIn('meta/llama-x', r.json()['detail'])
 
+    # ---- failures seen against the live model
+
+    def test_text_tool_calls_are_run_and_never_reach_the_report(self):
+        self.configure()
+        text_call = ('<tool_call>\n<function=maryland_supply>\n<parameter=year>\n2022\n</parameter>\n'
+                     '</function>\n</tool_call>')
+        line = 'Maryland harvested 40,000 silage acres [maryland_supply].'
+        script = ScriptedNvidia([{'content': text_call}, {'content': line + '\n<tool_call>\n</tool_call>'}, VERIFIED])
+        body = self.report(script).json()
+        self.assertEqual([(c['name'], c['args'], c['ok']) for c in body['tool_calls']], [('maryland_supply', {'year': 2022}, True)])
+        self.assertEqual(body['markdown'], line)
+        self.assertNotIn('<tool_call>', json.dumps(script.requests[1][1]['messages'][2:]))
+
+    def test_markup_only_report_is_re_asked_once_without_tools(self):
+        self.configure()
+        line = 'Maryland harvested 40,000 silage acres [maryland_supply].'
+        junk = {'content': '{"name": "maryland_supply", "arguments": {"year": 2022}}'}
+        script = ScriptedNvidia([{'content': None, 'tool_calls': [tool_call(1, 'maryland_supply', year=2022)]}]
+                                + [junk] * (market.MAX_ROUNDS - 1)
+                                + [{'content': '<tool_call><function=maryland_supply></function></tool_call>'},
+                                   {'content': line}, VERIFIED])
+        body = self.report(script).json()
+        reask = script.requests[-2][1]
+        self.assertNotIn('tools', reask)
+        self.assertIn('Do not call tools', reask['messages'][-1]['content'])
+        self.assertEqual(body['markdown'], line)
+
+        script = ScriptedNvidia([{'content': None, 'tool_calls': [tool_call(1, 'maryland_supply', year=2022)]},
+                                 {'content': ''}, {'content': '<tool_call></tool_call>'}])
+        r = self.report(script)
+        self.assertEqual(r.status_code, 503)
+        self.assertIn('did not return a written report', r.json()['detail'])
+
+    def test_null_ish_and_string_tool_arguments_are_normalised(self):
+        self.configure()
+        script = ScriptedNvidia([
+            {'content': None, 'tool_calls': [tool_call(1, 'price_effect', year='2022', scenario='none'),
+                                             tool_call(2, 'maryland_supply', year='2022', month_day='null')]},
+            {'content': 'Maryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        body = self.report(script).json()
+        self.assertEqual([c['args'] for c in body['tool_calls']], [{'year': 2022}, {'year': 2022}])
+        self.assertTrue(body['tool_calls'][1]['ok'])
+        self.assertNotIn('price_effect.none', json.dumps(body))
+
+    def test_rate_limits_are_retried_inside_post(self):
+        self.configure()
+        from app import llm_guard
+        replies = [http_error(429, 'slow down'), http_error(502, 'bad gateway'),
+                   {'content': None, 'tool_calls': [tool_call(1, 'maryland_supply', year=2022)]},
+                   {'content': 'Maryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED]
+        sleeps = []
+
+        def urlopen(req, timeout):
+            r = replies.pop(0)
+            if isinstance(r, Exception):
+                raise r
+            return io.BytesIO(json.dumps({'choices': [{'message': r}]}).encode())
+
+        with patch.object(llm_guard.urllib.request, 'urlopen', urlopen), patch.object(llm_guard, '_sleep', sleeps.append):
+            r = self.client.post('/api/market/report', json={'year': 2023})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual(r.json()['grounding']['ungrounded'], [])
+        self.assertEqual(len(sleeps), 2)
+        self.assertLessEqual(sum(sleeps), llm_guard.RETRY_MAX_WAIT)
+        self.assertNotIn(FAKE_KEY, r.text)
+
     def test_bad_key_is_explained(self):
         self.configure()
         r = self.report(ScriptedNvidia([http_error(401, 'unauthorized')]))
