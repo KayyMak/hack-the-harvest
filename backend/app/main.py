@@ -6,7 +6,7 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_fields_geojson,
+from .artifacts import (ArtifactUnavailable, compute_rollup, read_asof, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
@@ -37,6 +37,16 @@ def summary() -> BaselineSummary:
 @app.get('/api/baseline/predictions', response_model=list[Prediction])
 def predictions() -> list[Prediction]:
     return _serve(read_predictions)
+
+
+@app.get('/api/baseline/asof')
+def asof(year: int | None = None) -> dict:
+    """Saved mid-season calls per year and release date, plus scores pooled over the years.
+    Read from baseline/outputs/asof.json; nothing is fitted in this request."""
+    data = _serve(read_asof)
+    if year is None:
+        return data
+    return {**data, 'dates': [entry for entry in data['dates'] if entry['year'] == year]}
 
 
 @app.get('/api/baseline/rollup', response_model=Rollup)

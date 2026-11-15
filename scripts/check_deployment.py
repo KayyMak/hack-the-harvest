@@ -27,6 +27,7 @@ def check(base: str) -> None:
     assert json.loads(get('/api/fields'))
     assert json.loads(get('/api/fields.geojson'))['features']
     assert json.loads(get('/api/baseline/rollup'))['years']
+    assert json.loads(get('/api/baseline/asof'))['pooled']
     row = rows[0]
     assert json.loads(get(f"/api/fields/{row['field_id']}/observations?year={row['year']}"))
     assert json.loads(get('/openapi.json'))['paths']

@@ -210,6 +210,27 @@ class ApiChecks(unittest.TestCase):
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/fields.geojson').status_code, 503)
 
+    def test_saved_asof_calls(self):
+        data = self.client.get('/api/baseline/asof').json()
+        self.assertEqual(len(data['dates']), 15)  # three years x five dates
+        final = {(p['field_id'], y['year']): p for y in data['dates'] if y['as_of'].endswith('-11-30')
+                 for p in y['predictions']}
+        saved = self.client.get('/api/baseline/predictions').json()
+        self.assertEqual(len(final), len(saved))
+        for p in saved:  # the season-end entry is the saved full-season model, unchanged
+            self.assertEqual(final[(p['field_id'], p['year'])]['predicted_label'], p['predicted_label'])
+            self.assertEqual(final[(p['field_id'], p['year'])]['reference_label'], p['reference_label'])
+        pooled = {row['month_day']: row for row in data['pooled']}
+        self.assertEqual(pooled['08-12']['balanced_accuracy'], 0.5)  # July alone: no better than always-Grain
+        summary = self.client.get('/api/baseline/summary').json()
+        self.assertAlmostEqual(pooled['11-30']['balanced_accuracy'], summary['logistic']['balanced_accuracy'])
+        self.assertEqual(pooled['11-30']['confusion_matrix'], summary['logistic']['confusion_matrix'])
+        only = self.client.get('/api/baseline/asof?year=2022').json()
+        self.assertEqual({entry['year'] for entry in only['dates']}, {2022})
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/baseline/asof').status_code, 503)
+
 
 if __name__ == '__main__':
     unittest.main()

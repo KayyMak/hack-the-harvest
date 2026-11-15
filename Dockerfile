@@ -12,7 +12,7 @@ COPY backend/requirements.txt backend/constraints.txt ./backend/
 RUN python -m pip install --no-cache-dir -r backend/requirements.txt \
     && useradd --create-home harvest
 COPY backend/app/ ./backend/app/
-COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv baseline/outputs/observations.csv baseline/outputs/fields.geojson ./baseline/outputs/
+COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv baseline/outputs/observations.csv baseline/outputs/fields.geojson baseline/outputs/asof.json ./baseline/outputs/
 COPY BARC_Corn.2021-2023.gpkg ./
 COPY --from=frontend /build/dist/ ./web/dist/
 USER harvest
