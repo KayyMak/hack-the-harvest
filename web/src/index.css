@@ -1649,8 +1649,11 @@ textarea {
     margin-right: calc(var(--free-right, 16px) - 16px) !important; margin-bottom: 16px !important;
   }
 }
-/* in Fields / Model quality the field drawer sits beside the sheet, never on top of it */
-.shell:has(.drawer) .sheet { right: 456px; width: max(420px, min(640px, calc(100vw - 688px))); }
+/* in Fields / Model quality the field drawer sits beside the sheet, never on top of it.
+   Desktop only: on phones the panels stack (position: relative), where `right` would shift the sheet off-screen. */
+@media (min-width: 901px) {
+  .shell:has(.drawer) .sheet { right: 456px; width: max(420px, min(640px, calc(100vw - 688px))); }
+}
 
 /* ---------- phone: undo the desktop free-area offsets ---------- */
 @media (max-width: 900px) {
