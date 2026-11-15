@@ -2326,3 +2326,25 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .shell .map-home a { width: 36px !important; height: 36px !important; display: flex !important; align-items: center; justify-content: center; }
 /* the four headline tiles are the same size on the 2025 and BARC tabs */
 @media (min-width: 901px) { .lead .kpis .kpi { min-height: 136px; box-sizing: border-box; } }
+/* before/after images: trimmed PNGs shown whole on a dark backing (no white bands, no cropping of the title) */
+.shell .chip img { object-fit: contain !important; background: #0d1715; image-rendering: auto; }
+:root[data-mode='light'] .shell .chip img { background: #e9eeec; }
+/* track record chart in the 2025 rail */
+.track { height: 150px; }
+.whymiss { width: 100%; font-size: 13px; }
+.whymiss tbody tr { cursor: pointer; }
+.whymiss tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+
+/* clean market outlook */
+.outlook { margin-top: 14px; padding: 16px 18px; border-radius: 14px; }
+.outlook__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.outlook__head h3 { margin: 0; font-size: 16px; }
+.outlook__list { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; line-height: 1.5; }
+.outlook__table { width: 100%; font-size: 13.5px; }
+
+/* US tiles: margin verdict and what the number is */
+.kpi__margin { margin-top: 6px; font-size: 13px; font-weight: 600; color: #c7d2ce; }
+.kpi__margin.is-in { color: #8fd9a5; }
+.kpi__what { font-style: italic; opacity: 0.85; }
+:root[data-mode='light'] .kpi__margin { color: #2c3a35; }
+:root[data-mode='light'] .kpi__margin.is-in { color: #1f7a3f; }

@@ -126,7 +126,7 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
 
       <section className="block">
         <div className="block__head">
-          <h3>Greenness and residue over the season</h3>
+          <h3>Greenness (NDVI) over the season</h3>
           {series.data?.decline_date && (
             <span className="block__note txt-flag">
               Decline {shortDate(series.data.decline_date)}

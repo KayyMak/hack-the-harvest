@@ -312,7 +312,7 @@ export default function App() {
                 <p className="sheet__lede">BARC-labeled fields for {year}, called as of {shortDate(asOf)}; tick "Show unlabeled" for the rest. Click a row for its evidence.</p>
                 <details className="more">
                   <summary>What the columns mean</summary>
-                  <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. CDL crop is the USDA Cropland Data Layer's satellite crop map for that year (hover a cell for detail): context only, never a BARC label or a model call.</p>
+                  <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. USDA land cover is the Cropland Data Layer's satellite crop map for that year, and it can say Soybeans where BARC grew corn (hover a cell for detail): context only, never a BARC label or a model call.</p>
                 </details>
                 <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} coverError={landcover.error} seasonEnd={atSeasonEnd} onSelect={select} selectedId={selectedId} />
               </>

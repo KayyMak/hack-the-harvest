@@ -1,12 +1,11 @@
 import { useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, STATIC } from '../api'
-import type { MarketOutlook, MarketReport } from '../api'
+import type { MarketOutlook } from '../api'
 import { compactText, shortDate } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { xTitle, yTitle } from './charts'
-import { Markdown } from './Markdown'
 import { Pending } from './Pending'
 
 type Dict = Record<string, unknown>
@@ -26,37 +25,19 @@ const big = (v: unknown) => compactText(str(v))
 export function MarketPanel() {
   const [season, setSeason] = useState(2025)
   const [asOf, setAsOf] = useState<string | null>(null) // null = latest date for the season
-  const [statusKey, setStatusKey] = useState(0)
-  const status = useAsync(() => api.marketStatus(), [statusKey])
   const outlook = useAsync(() => api.marketOutlook(season, asOf), [season, asOf])
-  const [report, setReport] = useState<MarketReport | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [busy, setBusy] = useState(false)
+  const [showOutlook, setShowOutlook] = useState(false)
 
-  if (STATIC) return <Pending title="Market outlook">Market outlooks need the live backend; this static snapshot cannot run Nemotron.</Pending>
+  if (STATIC) return <Pending title="Market outlook">Market outlooks need the live backend; this static snapshot cannot load them.</Pending>
 
   const o = outlook.data
   const shownAsOf = o?.as_of ?? asOf
-  const generate = async () => {
-    setBusy(true)
-    setError(null)
-    setReport(null)
-    try {
-      setReport(await api.marketReport(season, shownAsOf))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : String(e))
-    } finally {
-      setBusy(false)
-      setStatusKey((k) => k + 1)
-    }
-  }
-  const shownReport = report && report.year === season && report.as_of === shownAsOf ? report : null
 
   return (
     <div className="market">
       <p className="sheet__lede">
-        A sample, forward-looking corn market outlook that updates month by month. Pick a season and a date: everything shown
-        uses only what was known on that date. NVIDIA Nemotron can then write the outlook from our model and USDA data.
+        A sample corn supply outlook that updates release by release. Pick a season and a date: everything shown uses only
+        what was known on that date. NASS forecasts plus our silage estimates; no price forecasts.
       </p>
 
       <div className="market__controls">
@@ -90,32 +71,121 @@ export function MarketPanel() {
         <>
           <OutlookChart outlook={o} />
           <OutlookCards outlook={o} />
-          <p className="muted small">{str(o.timeline.what_is_ours ?? o.timeline.scope)} {str(o.timeline.next_official_numbers)}</p>
         </>
       )}
 
-      {/* No NVIDIA key on the server: the chart stands alone; no placeholder for the report. */}
-      {status.data?.configured !== false && <div className="market__actions">
-        <button className="button" onClick={() => void generate()} disabled={busy || !o}>
-          {busy ? 'Nemotron is writing…' : shownReport ? 'Regenerate outlook' : `Write outlook as of ${shownAsOf ? shortDate(shownAsOf) : '…'}`}
-        </button>
-        {status.data && (
-          <span className={`status status--${status.data.configured ? 'done' : 'error'}`}>
-            <span className="status__dot" />
-            {status.data.configured ? status.data.model : 'No NVIDIA key on the server'}
-          </span>
-        )}
-        {busy && <span className="muted">Calling tools, writing and checking every sentence; this can take up to a minute.</span>}
-      </div>}
+      {o && (
+        <div className="market__actions">
+          <button className="button" onClick={() => setShowOutlook((v) => !v)}>
+            {showOutlook ? 'Hide outlook' : `Write outlook as of ${shownAsOf ? shortDate(shownAsOf) : '…'}`}
+          </button>
+        </div>
+      )}
+      {showOutlook && o && <CleanOutlook outlook={o} />}
+    </div>
+  )
+}
 
-      {error && (
-        <p className="inline-error" role="alert">
-          {error}
-        </p>
+/** A short, readable outlook built only from the loaded data (NASS forecasts + our estimates): an overview, then tabs. */
+function CleanOutlook({ outlook }: { outlook: MarketOutlook }) {
+  const [tab, setTab] = useState<'overview' | 'months' | 'sure' | 'sources'>('overview')
+  const tl = outlook.timeline as Dict
+  const latest = (tl.latest_release as Dict | undefined) ?? {}
+  const earlier = ((tl.earlier_releases as Dict[] | undefined) ?? []).filter((r) => r.as_of !== latest.as_of)
+  const series = (tl.series as Dict[] | undefined) ?? []
+  const supplyAt = (d: unknown) => {
+    const v = series.find((r) => r.as_of === d)?.us_production_change_pct
+    return typeof v === 'number' ? `${v > 0 ? '+' : ''}${v.toFixed(1)}%` : '—'
+  }
+  const date = shortDate(outlook.as_of)
+  const us = tl.kind === 'statewide_and_us_outlook'
+  const base = (us ? tl.baseline_2024_official : tl.latest_official_baseline) as Dict | undefined
+  const TABS = [['overview', 'Overview'], ['months', us ? 'Release by release' : 'Checkpoint by checkpoint'], ['sure', 'How sure'], ['sources', 'Sources']] as const
+  const rows = us ? [...earlier, latest] : []
+  return (
+    <section className="glass outlook" aria-label="Outlook">
+      <div className="outlook__head">
+        <h3>{us ? `Corn supply outlook, as of ${date}, 2025` : `BARC silage outlook, as of ${date}, ${outlook.season}`}</h3>
+        <div className="seg" role="tablist">
+          {TABS.map(([id, name]) => (
+            <button key={id} role="tab" aria-selected={tab === id} className={`seg__btn${tab === id ? ' is-on' : ''}`} onClick={() => setTab(id)}>{name}</button>
+          ))}
+        </div>
+      </div>
+
+      {tab === 'overview' && us && (
+        <ul className="outlook__list">
+          <li>
+            <b>US corn for grain:</b>{' '}
+            {latest.us_grain_production_forecast
+              ? <>NASS forecasts {str(latest.us_grain_production_forecast)} ({str(latest.us_grain_acres_forecast)} acres at {str(latest.us_grain_yield_forecast)}), {str(latest.us_grain_supply_change_vs_2024)} vs 2024 ({str(base?.us_grain_production)}).</>
+              : <>NASS forecasts {str(latest.us_grain_acres_forecast)} acres for grain; its first yield and production forecast comes in August.</>}
+          </li>
+          <li><b>US corn for silage:</b> our forecast is {str(latest.us_silage_acres_estimate)} acres (95% range {str(latest.us_silage_95pct_range)}). NASS publishes silage acres only in January.</li>
+          <li>
+            <b>Maryland:</b> our silage forecast is {str(latest.md_silage_acres_estimate)} acres, {str(latest.md_silage_share_estimate)} of its harvested corn
+            {latest.md_grain_production_forecast ? <>; NASS forecasts {str(latest.md_grain_production_forecast)} of grain at {str(latest.md_grain_yield_forecast)}.</> : '.'}
+          </li>
+          {latest.grain_kept_off_market_by_us_silage != null && (
+            <li><b>Silage vs grain supply:</b> US silage acres keep about {big(latest.grain_kept_off_market_by_us_silage)} of corn off the grain market (silage acres times the NASS grain yield).</li>
+          )}
+        </ul>
+      )}
+      {tab === 'overview' && !us && (
+        <ul className="outlook__list">
+          <li><b>BARC fields:</b> the satellite model expects {str(latest.barc_expected_silage_acres)} silage acres as of {date} (95% range {str(latest.range_95pct)} acres), with {str(latest.fields_decided)} labeled fields decided.</li>
+          {base && <li><b>Maryland, {str(base.year)} (NASS, official):</b> silage was {str(base.maryland_silage_share_of_harvested_corn)} of harvested corn ({str(base.maryland_silage_acres_harvested)} silage vs {str(base.maryland_grain_acres_harvested)} grain acres).</li>}
+          <li><b>What this is:</b> the BARC model's call through the season for one research farm; it is not a state estimate.</li>
+        </ul>
       )}
 
-      {shownReport && <Report report={shownReport} />}
-    </div>
+      {tab === 'months' && us && (
+        <table className="mini-table outlook__table">
+          <thead><tr><th>NASS release</th><th className="num">US grain acres</th><th className="num">Grain supply vs 2024</th><th className="num">US silage (ours)</th><th className="num">MD silage share</th></tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={str(r.as_of)}>
+                <td>{shortDate(str(r.as_of))}</td>
+                <td className="num">{str(r.us_grain_acres_forecast)}</td>
+                <td className="num">{supplyAt(r.as_of)}</td>
+                <td className="num">{str(r.us_silage_acres_estimate)}</td>
+                <td className="num">{str(r.md_silage_share_estimate)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {tab === 'months' && !us && (
+        <table className="mini-table outlook__table">
+          <thead><tr><th>Checkpoint</th><th className="num">BARC silage acres (model)</th><th className="num">95% range</th></tr></thead>
+          <tbody>
+            {series.map((r) => (
+              <tr key={str(r.as_of)}>
+                <td>{shortDate(str(r.as_of))}</td>
+                <td className="num">{typeof r.barc_expected_silage_acres === 'number' ? r.barc_expected_silage_acres.toFixed(1) : '—'}</td>
+                <td className="num">{typeof r.barc_low === 'number' && typeof r.barc_high === 'number' ? `${r.barc_low.toFixed(1)}–${r.barc_high.toFixed(1)}` : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      {tab === 'sure' && (
+        <ul className="outlook__list">
+          {us && <li>US silage: 95% range {str(latest.us_silage_95pct_range)} acres, calibrated on the 2018–2024 backtest.</li>}
+          {us && <li>Grain acres, yields and production are NASS's own forecasts on each date; they converge to the January final.</li>}
+          <li>{str(tl.what_is_ours ?? tl.scope)}</li>
+          <li>{str(tl.next_official_numbers)}</li>
+        </ul>
+      )}
+
+      {tab === 'sources' && (
+        <ul className="outlook__list">
+          {rows.map((r) => r.source).filter(Boolean).map((s) => <li key={str(s)}>USDA NASS: {str(s)}</li>)}
+          {Object.values(outlook.sources ?? {}).map((s) => <li key={String(s)}>{String(s)}</li>)}
+        </ul>
+      )}
+    </section>
   )
 }
 
@@ -156,7 +226,28 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   const series = (tl.series as Dict[]) ?? []
   const grid = <CartesianGrid stroke={t.grid} vertical={false} />
   const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} padding={{ left: 18, right: 18 }} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
-  const tip = <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
+  // compact value-only tooltip: short names, one decimal, same style as the other charts
+  const SHORT: Record<string, string> = { supply: 'US grain supply vs 2024', md: 'MD silage share', est: 'BARC silage acres' }
+  const tip = (
+    <Tooltip
+      cursor={{ stroke: t.axis, strokeDasharray: '3 3' }}
+      content={({ active, payload, label }) => {
+        const items = (payload ?? []).filter((p) => p.value != null && SHORT[String(p.dataKey)])
+        if (!active || !items.length) return null
+        return (
+          <div className="chart-tip">
+            <div className="chart-tip__title">{label}</div>
+            {items.map((p) => {
+              const v = Number(p.value)
+              const pct = p.dataKey === 'supply' || p.dataKey === 'md'
+              const text = pct ? `${p.dataKey === 'supply' && v > 0 ? '+' : ''}${v.toFixed(1)}%` : Math.round(v).toLocaleString('en-US')
+              return <div className="chart-tip__row" key={String(p.dataKey)}>{SHORT[String(p.dataKey)]} <span className="chart-tip__value">{text}</span></div>
+            })}
+          </div>
+        )
+      }}
+    />
+  )
   const legend = <Legend verticalAlign="top" align="left" height={58} iconType="plainline" wrapperStyle={{ fontSize: 12, lineHeight: '18px', color: t.ink, paddingBottom: 14 }} />
   if (tl.kind === 'statewide_and_us_outlook') {
     const rows = series.map((r) => ({ label: shortDate(String(r.as_of)), supply: r.us_production_change_pct, md: r.md_silage_share_pct }))
@@ -205,91 +296,6 @@ function Kpi({ label, value, sub, foot }: { label: string; value: string; sub: s
       <div className="kpi__value">{value}</div>
       <div className="kpi__sub">{sub}</div>
       <div className="kpi__foot">{foot}</div>
-    </article>
-  )
-}
-
-function Report({ report }: { report: MarketReport }) {
-  const cites = new Map(report.citations.map((c) => [c.id, c]))
-  const { claims_checked, ungrounded, verifier } = report.grounding
-  const serious = ungrounded.filter((u) => u.kind !== 'miscited')
-  const miscited = ungrounded.filter((u) => u.kind === 'miscited')
-  return (
-    <article className="market__report" aria-label={`Sample market report ${report.year}`}>
-      <p className="market__badge">Sample report · {report.model} · {new Date(report.generated_at).toLocaleString()}</p>
-      {serious.length > 0 && (
-        <div className="inline-error" role="alert">
-          <strong>
-            {serious.length} of {claims_checked} sentences were removed because they are not backed by our data
-          </strong>{' '}
-          (they would have come from the model itself):
-          <ul className="market__ungrounded">
-            {serious.map((u, i) => (
-              <li key={i}>
-                “{u.text}” <span className="muted">({u.reason})</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {miscited.length > 0 && (
-        <details className="market__miscited">
-          <summary>
-            {miscited.length} sentence{miscited.length === 1 ? '' : 's'} cite{miscited.length === 1 ? 's' : ''} the wrong source for a figure that is in our data (minor)
-          </summary>
-          <ul className="market__ungrounded">
-            {miscited.map((u, i) => (
-              <li key={i}>
-                “{u.text}” <span className="muted">({u.reason})</span>
-              </li>
-            ))}
-          </ul>
-        </details>
-      )}
-      {ungrounded.length > 0 ? null : (
-        <p className="market__grounded">
-          All {claims_checked} sentences cite our model outputs or project documents, every number matches its cited source
-          {verifier === 'nemotron' ? ', and a second check confirmed each cited source supports its sentence.' : '.'}
-        </p>
-      )}
-      {verifier === 'unavailable' && (
-        <p className="inline-error" role="status">The wording check (does each source support its sentence?) could not run; only citations and numbers were verified.</p>
-      )}
-      <Markdown text={report.markdown} cites={cites} className="md market__md" />
-      <section className="market__sources" aria-label="Cited sources">
-        <h3>Cited sources</h3>
-        <ul>
-          {report.citations.map((c) => (
-            <li key={c.id}>
-              <code className="cite">{c.id}</code> {c.kind === 'doc' ? <span className="muted">project document: {c.label}</span> : <span className="muted">model/data tool: {c.label}</span>}
-              {c.excerpt && <blockquote>{c.excerpt}{c.excerpt.length >= 400 ? '…' : ''}</blockquote>}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <p className="market__disclaimer">{report.disclaimer}</p>
-      <details className="market__tools">
-        <summary>
-          How Nemotron used the model: {report.tool_calls.length} tool call{report.tool_calls.length === 1 ? '' : 's'}
-          {report.mode === 'context' ? ' (pre-fetched; this endpoint did not call tools itself)' : ''}
-        </summary>
-        <ol className="trace">
-          {report.tool_calls.map((c, i) => (
-            <li key={i} className={`trace__item${c.ok ? '' : ' flag'}`}>
-              <div className="trace__step">{i + 1}</div>
-              <div className="trace__body">
-                <div className="trace__meta">
-                  <code className="trace__tool">{c.name}</code>
-                  <span className="trace__type">{c.ok ? 'tool result' : 'tool error'}</span>
-                </div>
-                <p className="trace__summary">{c.summary}</p>
-                <code className="trace__args">{JSON.stringify(c.args)}</code>
-              </div>
-            </li>
-          ))}
-        </ol>
-        <p className="muted">Sources: {report.sources.join('; ')}</p>
-      </details>
     </article>
   )
 }

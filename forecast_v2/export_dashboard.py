@@ -9,9 +9,11 @@ The estimator never reads the reference; this script only compares after the fac
     python forecast_v2/export_dashboard.py   ->  web/public/forecast_2025.json, web/public/forecast_state_estimates_2025.csv
 """
 import json
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 ESTIMATES = ROOT / 'forecast_v2' / 'outputs' / 'state_estimates_2025.csv'
 BENCHMARK = ROOT / 'forecast_v2' / 'outputs' / 'benchmark.json'
@@ -37,13 +39,36 @@ def main():
         return dict(est=est, se=se, low=lo, high=hi, nass=truth, err=err,
                     inside=None if truth is None else (lo <= truth <= hi))
 
+    # each state's 2020-2024 silage average exactly as the forecast saw it (Quick Stats to 2021, the January 2025
+    # Annual Summary for 2022-2024): used only to explain the 2025 misses after the fact
+    from common import load_quickstats  # noqa: E402  (forecast_v2 modules)
+    from estimate_2025 import history_2025  # noqa: E402
+    hist = history_2025(load_quickstats()[0])
+
+    def avg5(state):
+        vals = [hist[(state, y)].get('silage') for y in range(2020, 2025) if (state, y) in hist]
+        vals = [v for v in vals if v]
+        return round(sum(vals) / len(vals)) if len(vals) >= 3 else None
+
     states = []
     for st in s['states']:
+        sil = cell(st['silage'], st['silage_se'], st['silage_low'], st['silage_high'], nass.get((st['state'], 'silage')))
+        if sil is not None:
+            sil['hist5'] = avg5(st['state'])
         states.append(dict(
             state=st['state'],
-            silage=cell(st['silage'], st['silage_se'], st['silage_low'], st['silage_high'], nass.get((st['state'], 'silage'))),
+            silage=sil,
             grain=cell(st['grain'], st['grain_se'], st['grain_low'], st['grain_high'], nass.get((st['state'], 'grain'))),
         ))
+
+    def why_silage():
+        """After the fact: do the big silage misses line up with 2025 breaking from each state's recent history?"""
+        rows = [x['silage'] for x in states if x['silage'] and x['silage']['nass'] and x['silage'].get('hist5')]
+        over = [r for r in rows if r['err'] > 0.10]
+        under = [r for r in rows if r['err'] < -0.10]
+        return dict(threshold_pct=10, history_years='2020-2024',
+                    over=len(over), over_below_history=sum(r['nass'] < r['hist5'] for r in over),
+                    under=len(under), under_above_history=sum(r['nass'] > r['hist5'] for r in under))
     us = s['us']
     z = s['interval_z']
     # forecast_v2 saves its own US grain range (Student t on the backtest US errors); fall back to z x SE
@@ -84,6 +109,7 @@ def main():
         method=s['method'], silage_method=s['silage_method'], backtest=s['backtest'], interval_z=z,
         us=us_out, scores=dict(grain=score('grain'), silage=score('silage')),
         reliability=dict(grain=reliability('grain'), silage=reliability('silage')),
+        why_silage=why_silage(),
         convergence=s['convergence'], states=states,
         sources=s['sources'],
     )

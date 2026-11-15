@@ -11,6 +11,18 @@ export interface Cell {
   /** (est - nass) / nass */
   err: number | null
   inside: boolean | null
+  /** silage only: the state's 2020-2024 average as the forecast saw it (explains misses after the fact) */
+  hist5?: number | null
+}
+
+/** After the fact: how many large silage misses line up with 2025 breaking from the state's recent history. */
+export interface WhySilage {
+  threshold_pct: number
+  history_years: string
+  over: number
+  over_below_history: number
+  under: number
+  under_above_history: number
 }
 
 export interface StateRow {
@@ -28,6 +40,8 @@ export interface ConvergencePoint {
   us_silage_high: number
   us_grain: number
   us_grain_se: number
+  us_grain_low?: number
+  us_grain_high?: number
 }
 
 export interface CropScore {
@@ -57,6 +71,7 @@ export interface Reliability {
 }
 
 export interface Forecast {
+  why_silage?: WhySilage
   reliability?: { silage: Reliability | null; grain: Reliability | null }
   title: string
   data_cutoff: string

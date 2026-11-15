@@ -86,31 +86,53 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
 function FitUS({ layoutKey }: { layoutKey: string }) {
   const map = useMap()
   useEffect(() => {
+    const container = map.getContainer()
+    // once the person zooms or drags, stop re-framing until Home (Home changes layoutKey, which resets this)
+    let userMoved = false
+    const onUser = () => { userMoved = true }
+    map.on('dragstart', onUser)
+    container.addEventListener('wheel', onUser, { passive: true })
+    const zoomCtl = container.querySelector('.leaflet-control-zoom')
+    zoomCtl?.addEventListener('click', onUser)
     const fit = () => {
+      if (userMoved) return
       map.invalidateSize()
-      const box = map.getContainer().getBoundingClientRect()
-      if (window.innerWidth <= 900) {
-        map.fitBounds(CONUS, { padding: [8, 8] })
-        return
+      const box = container.getBoundingClientRect()
+      if (!box.width || !box.height) return
+      let tl: [number, number] = [8, 8]
+      let br: [number, number] = [8, 8]
+      if (window.innerWidth > 900) {
+        const rect = (sel: string) => document.querySelector(sel)?.getBoundingClientRect()
+        const right = ['.rail', '.sheet', '.drawer'].map(rect).filter((r): r is DOMRect => !!r && r.width > 0)
+        const freeRight = right.length ? Math.min(...right.map((r) => r.left)) : box.right
+        const tops = ['.topbar', '.lead', '.subbar'].map(rect).filter((r): r is DOMRect => !!r && r.left < freeRight)
+        const freeTop = tops.length ? Math.max(...tops.map((r) => r.bottom)) : box.top
+        const key = rect('.mapkey')
+        const freeBottom = key && key.left < freeRight ? key.top : box.bottom
+        tl = [24, freeTop - box.top + 16]
+        br = [box.right - freeRight + 24, box.bottom - freeBottom + 16]
+        // a layout caught mid-change can leave no room: fall back to the whole map rather than skip the fit
+        if (box.width - tl[0] - br[0] < 160 || box.height - tl[1] - br[1] < 100) { tl = [8, 8]; br = [8, 8] }
       }
-      const rect = (sel: string) => document.querySelector(sel)?.getBoundingClientRect()
-      const right = ['.rail', '.sheet', '.drawer'].map(rect).filter((r): r is DOMRect => !!r && r.width > 0)
-      const freeRight = right.length ? Math.min(...right.map((r) => r.left)) : box.right
-      const tops = ['.topbar', '.lead', '.subbar'].map(rect).filter((r): r is DOMRect => !!r && r.left < freeRight)
-      const freeTop = tops.length ? Math.max(...tops.map((r) => r.bottom)) : box.top
-      const key = rect('.mapkey')
-      const freeBottom = key && key.left < freeRight ? key.top : box.bottom
-      map.fitBounds(CONUS, {
-        paddingTopLeft: [24, freeTop - box.top + 16],
-        paddingBottomRight: [box.right - freeRight + 24, box.bottom - freeBottom + 16],
-      })
+      // no animation: Leaflet drops a new view requested while a zoom animation is still running
+      map.fitBounds(CONUS, { paddingTopLeft: tl, paddingBottomRight: br, animate: false })
     }
-    const raf = requestAnimationFrame(fit)
-    // re-frame when the window changes size (a page loaded in a smaller window would otherwise stay zoomed in)
     let timer = 0
-    const onResize = () => { window.clearTimeout(timer); timer = window.setTimeout(fit, 200) }
-    window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(raf); window.clearTimeout(timer); window.removeEventListener('resize', onResize) }
+    const soon = () => { window.clearTimeout(timer); timer = window.setTimeout(fit, 120) }
+    const raf = requestAnimationFrame(fit)
+    const settle = [300, 1000, 2500].map((ms) => window.setTimeout(fit, ms))
+    // re-frame whenever the map or anything that covers it changes size (window resize, tiles, panel, legend)
+    const ro = new ResizeObserver(soon)
+    ro.observe(container)
+    for (const sel of ['.lead', '.rail', '.sheet', '.drawer', '.mapkey']) {
+      const el = document.querySelector(sel)
+      if (el) ro.observe(el)
+    }
+    return () => {
+      cancelAnimationFrame(raf); settle.forEach((s) => window.clearTimeout(s)); window.clearTimeout(timer)
+      ro.disconnect(); map.off('dragstart', onUser)
+      container.removeEventListener('wheel', onUser); zoomCtl?.removeEventListener('click', onUser)
+    }
   }, [map, layoutKey])
   return null
 }
