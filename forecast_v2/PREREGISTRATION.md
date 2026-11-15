@@ -93,6 +93,30 @@ Simplicity order for ties (simplest first): S2, S3, S4, S1, S6, S5.
   RMS and z are refit on the other years and applied to the held-out year. In-sample coverage is also listed.
 - US: se = est x RMS of the winner's backtest US-total relative errors; range = est +/- z se with the same z.
 
+## Amendment 1 (2026-11-15 04:37): ranges per as-of release
+
+Added at the user's request after the winner was fixed (commit 5deadd5) and after the November-vintage
+interval above had been computed. No 2025 final or judges' data had been read. The winner (S5 silage, G1
+grain) does not change; only how ranges are built for each as-of date. This rule replaces the "US" line
+above, for every date including November.
+
+- As-of releases (the dates of the current `convergence` list), with the in-season inputs a backtest year t
+  had at the same point (each falls back to the earlier release when a state is missing):
+  - JUN (June Acreage): grain JUN ACREAGE; planted JUN ACREAGE (MAR ACREAGE where none);
+  - AUG (Aug Crop Production): grain AUG FORECAST; planted AUG FORECAST or AUG ACREAGE;
+  - SEP (Sep Crop Production): grain SEP FORECAST; planted SEP FORECAST;
+  - NOV (Nov Crop Production): grain NOV, else OCT FORECAST; planted OCT FORECAST or OCT ACREAGE
+    (this is the main backtest above).
+- For each as-of release separately, the winner is run on the backtest years with that release's inputs
+  (silage 2018-2024, grain 2013-2024, as above), and the state-level rule above (size-class RMS and one z,
+  95th percentile of |error| / se, at least 1.96) is fitted on that release's errors only.
+- US level, per release: se = est x RMS of that release's backtest US relative errors (silage: sum of the
+  scored states; grain: NASS's US row). With only n = 7 (silage) or up to 12 (grain) years, the 95% range
+  is est +/- t(0.975, n - 1) x se (Student t, e.g. 2.447 for n = 7), not a percentile.
+- Reported per release: state-level coverage (in-sample and leave-one-year-out), how many backtest years'
+  US totals fall inside the US range, and the 2025 US silage range width next to the current forecast's.
+- The band narrows from June to November only as far as these backtest errors do; nothing forces it.
+
 ## Outputs
 
 `forecast_v2/outputs/state_estimates_2025.csv` has the same headers and the same state x item rows as
