@@ -1,1 +1,1 @@
-OBJECTID,year,label,valid_dates,scene_observations,rejected_cloud_or_nodata,read_errors,ndvi_07,ndvi_08,ndvi_09,ndvi_10,ndvi_11,peak_ndvi,peak_doy,late_ndvi,early_minus_late
+OBJECTID,year,label,valid_dates,scene_observations,rejected_cloud_or_nodata,read_errors,ndvi_07,ndvi_08,ndvi_09,ndvi_10,ndvi_11,peak_ndvi,peak_doy,late_ndvi,early_minus_late,decline_doy,drop_doy,drop_size,regrowth
