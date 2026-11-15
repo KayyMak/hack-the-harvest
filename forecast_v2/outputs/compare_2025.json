@@ -49,7 +49,7 @@
    8187519
   ]
  },
- "forecast_v2": {
+ "forecast_v2 round 1 (S5)": {
   "missing_prediction": [
    [
     "OTHER STATES",
@@ -97,6 +97,56 @@
   "us_silage_range": [
    5815462,
    7171134
+  ]
+ },
+ "forecast_v2 round 2 (R2)": {
+  "missing_prediction": [
+   [
+    "OTHER STATES",
+    "Grain"
+   ]
+  ],
+  "silage": {
+   "us_pct_error": 5.18,
+   "md_pct_error": -8.38,
+   "md_estimate": 36648.0,
+   "states": 48,
+   "within_10pct": 22,
+   "state_mean_abs_pct_error": 16.4,
+   "state_median_abs_pct_error": 12.1,
+   "state_acre_weighted_abs_pct_error": 14.62,
+   "inside_95_range": "48/48",
+   "plains_pct_error": {
+    "KANSAS": 41.8,
+    "NEBRASKA": 29.5,
+    "NORTH DAKOTA": 62.0,
+    "OKLAHOMA": 19.7,
+    "SOUTH DAKOTA": 24.5,
+    "TEXAS": -14.3
+   }
+  },
+  "grain": {
+   "us_pct_error": -0.99,
+   "md_pct_error": -1.22,
+   "md_estimate": 405000.0,
+   "states": 41,
+   "within_10pct": 33,
+   "state_mean_abs_pct_error": 8.8,
+   "state_median_abs_pct_error": 2.5,
+   "state_acre_weighted_abs_pct_error": 1.64,
+   "inside_95_range": "38/41",
+   "plains_pct_error": {
+    "KANSAS": -2.5,
+    "NEBRASKA": -0.9,
+    "NORTH DAKOTA": -2.9,
+    "OKLAHOMA": -5.2,
+    "SOUTH DAKOTA": -3.8,
+    "TEXAS": -4.2
+   }
+  },
+  "us_silage_range": [
+   5866055,
+   7148523
   ]
  }
 }

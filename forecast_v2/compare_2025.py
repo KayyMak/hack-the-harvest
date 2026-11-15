@@ -11,7 +11,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 RUNS = {'current (forecast/)': (ROOT / 'forecast/outputs/benchmark.json', ROOT / 'forecast/outputs/summary.json'),
-        'forecast_v2': (HERE / 'outputs/benchmark.json', HERE / 'outputs/summary.json')}
+        'forecast_v2 round 1 (S5)': (HERE / 'outputs/benchmark.json', HERE / 'outputs/summary.json'),
+        'forecast_v2 round 2 (R2)': (HERE / 'outputs/round2/benchmark.json', HERE / 'outputs/round2/summary.json')}
 PLAINS = ['NORTH DAKOTA', 'SOUTH DAKOTA', 'NEBRASKA', 'KANSAS', 'OKLAHOMA', 'TEXAS']
 
 

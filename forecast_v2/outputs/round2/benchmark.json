@@ -1,0 +1,2020 @@
+{
+  "label": "Per-row errors and descriptive summaries only. This is not a contest score: the judges' scored geographies and formula are unconfirmed.",
+  "unit": "ACRES HARVESTED",
+  "error_definitions": {
+    "signed_error": "prediction - reference, in acres",
+    "absolute_error": "|prediction - reference|, in acres",
+    "relative_error": "(prediction - reference) / reference; null when the reference is 0"
+  },
+  "matching": "year, geography kind (NATIONAL, STATE, OTHER STATES), geography name and crop use; kinds are never combined and states are never summed into a national figure",
+  "reference": {
+    "path": "data/reference/quickstats_2025_judges.csv",
+    "sha256": "78db6757cf3e90d03468134595b04144c74a23f5d294a8cf48250c3386576972",
+    "recorded_sha256": "78db6757cf3e90d03468134595b04144c74a23f5d294a8cf48250c3386576972",
+    "matches_recorded": true,
+    "rows_read": 92,
+    "rows_accepted": 92,
+    "rows_rejected": 0,
+    "rejected": []
+  },
+  "predictions": {
+    "path": "forecast_v2/outputs/round2/state_estimates_2025.csv",
+    "rows_read": 91,
+    "rows_accepted": 91,
+    "rows_rejected": 0,
+    "rejected": []
+  },
+  "status_counts": {
+    "scored": 91,
+    "missing_prediction": 1,
+    "unmatched_prediction": 0,
+    "reference_unknown": 0,
+    "prediction_unknown": 0,
+    "duplicate": 0
+  },
+  "summaries_note": "Unweighted means over scored rows within one geography kind and crop use. Descriptive only; Per-row errors and descriptive summaries only. This is not a contest score: the judges' scored geographies and formula are unconfirmed.",
+  "summaries": [
+    {
+      "geo_kind": "NATIONAL",
+      "crop_use": "Grain",
+      "reference_keys": 1,
+      "scored_rows": 1,
+      "mean_signed_error": -901000.0,
+      "mean_absolute_error": 901000.0,
+      "mean_absolute_relative_error": 0.009906759906759906,
+      "relative_error_rows": 1
+    },
+    {
+      "geo_kind": "NATIONAL",
+      "crop_use": "Silage",
+      "reference_keys": 1,
+      "scored_rows": 1,
+      "mean_signed_error": 320289.0,
+      "mean_absolute_error": 320289.0,
+      "mean_absolute_relative_error": 0.05176806206562146,
+      "relative_error_rows": 1
+    },
+    {
+      "geo_kind": "STATE",
+      "crop_use": "Grain",
+      "reference_keys": 41,
+      "scored_rows": 41,
+      "mean_signed_error": -21975.60975609756,
+      "mean_absolute_error": 36414.634146341465,
+      "mean_absolute_relative_error": 0.08760358989545691,
+      "relative_error_rows": 41
+    },
+    {
+      "geo_kind": "STATE",
+      "crop_use": "Silage",
+      "reference_keys": 48,
+      "scored_rows": 48,
+      "mean_signed_error": 6672.708333333333,
+      "mean_absolute_error": 18848.625,
+      "mean_absolute_relative_error": 0.16382578175508072,
+      "relative_error_rows": 48
+    },
+    {
+      "geo_kind": "OTHER STATES",
+      "crop_use": "Grain",
+      "reference_keys": 1,
+      "scored_rows": 0,
+      "mean_signed_error": null,
+      "mean_absolute_error": null,
+      "mean_absolute_relative_error": null,
+      "relative_error_rows": 0
+    }
+  ],
+  "comparisons": [
+    {
+      "year": 2025,
+      "geo_kind": "NATIONAL",
+      "geography": "US TOTAL",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 90948000.0,
+      "prediction_value": 90047000.0,
+      "signed_error": -901000.0,
+      "absolute_error": 901000.0,
+      "relative_error": -0.009906759906759906,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        2
+      ],
+      "prediction_lines": [
+        92
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "NATIONAL",
+      "geography": "US TOTAL",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 6187000.0,
+      "prediction_value": 6507289.0,
+      "signed_error": 320289.0,
+      "absolute_error": 320289.0,
+      "relative_error": 0.05176806206562146,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        3
+      ],
+      "prediction_lines": [
+        91
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ALABAMA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 330000.0,
+      "prediction_value": 340000.0,
+      "signed_error": 10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": 0.030303030303030304,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        4
+      ],
+      "prediction_lines": [
+        3
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ALABAMA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 4000.0,
+      "prediction_value": 4296.0,
+      "signed_error": 296.0,
+      "absolute_error": 296.0,
+      "relative_error": 0.074,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        5
+      ],
+      "prediction_lines": [
+        2
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ARIZONA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 13000.0,
+      "prediction_value": 27000.0,
+      "signed_error": 14000.0,
+      "absolute_error": 14000.0,
+      "relative_error": 1.0769230769230769,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        6
+      ],
+      "prediction_lines": [
+        5
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ARIZONA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 50000.0,
+      "prediction_value": 46539.0,
+      "signed_error": -3461.0,
+      "absolute_error": 3461.0,
+      "relative_error": -0.06922,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        7
+      ],
+      "prediction_lines": [
+        4
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ARKANSAS",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 790000.0,
+      "prediction_value": 790000.0,
+      "signed_error": 0.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        8
+      ],
+      "prediction_lines": [
+        7
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ARKANSAS",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 3000.0,
+      "prediction_value": 5176.0,
+      "signed_error": 2176.0,
+      "absolute_error": 2176.0,
+      "relative_error": 0.7253333333333334,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        9
+      ],
+      "prediction_lines": [
+        6
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "CALIFORNIA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 75000.0,
+      "prediction_value": 28000.0,
+      "signed_error": -47000.0,
+      "absolute_error": 47000.0,
+      "relative_error": -0.6266666666666667,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        10
+      ],
+      "prediction_lines": [
+        9
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "CALIFORNIA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 370000.0,
+      "prediction_value": 355757.0,
+      "signed_error": -14243.0,
+      "absolute_error": 14243.0,
+      "relative_error": -0.038494594594594596,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        11
+      ],
+      "prediction_lines": [
+        8
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "COLORADO",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 1230000.0,
+      "prediction_value": 1220000.0,
+      "signed_error": -10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": -0.008130081300813009,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        12
+      ],
+      "prediction_lines": [
+        11
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "COLORADO",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 200000.0,
+      "prediction_value": 203172.0,
+      "signed_error": 3172.0,
+      "absolute_error": 3172.0,
+      "relative_error": 0.01586,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        13
+      ],
+      "prediction_lines": [
+        10
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "CONNECTICUT",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 19000.0,
+      "prediction_value": 21000.0,
+      "signed_error": 2000.0,
+      "absolute_error": 2000.0,
+      "relative_error": 0.10526315789473684,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        14
+      ],
+      "prediction_lines": [
+        12
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "DELAWARE",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 172000.0,
+      "prediction_value": 167000.0,
+      "signed_error": -5000.0,
+      "absolute_error": 5000.0,
+      "relative_error": -0.029069767441860465,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        15
+      ],
+      "prediction_lines": [
+        14
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "DELAWARE",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 2000.0,
+      "prediction_value": 2312.0,
+      "signed_error": 312.0,
+      "absolute_error": 312.0,
+      "relative_error": 0.156,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        16
+      ],
+      "prediction_lines": [
+        13
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "FLORIDA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 57000.0,
+      "prediction_value": 52000.0,
+      "signed_error": -5000.0,
+      "absolute_error": 5000.0,
+      "relative_error": -0.08771929824561403,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        17
+      ],
+      "prediction_lines": [
+        16
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "FLORIDA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 24000.0,
+      "prediction_value": 30616.0,
+      "signed_error": 6616.0,
+      "absolute_error": 6616.0,
+      "relative_error": 0.27566666666666667,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        18
+      ],
+      "prediction_lines": [
+        15
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "GEORGIA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 505000.0,
+      "prediction_value": 495000.0,
+      "signed_error": -10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": -0.019801980198019802,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        19
+      ],
+      "prediction_lines": [
+        18
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "GEORGIA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 35000.0,
+      "prediction_value": 42735.0,
+      "signed_error": 7735.0,
+      "absolute_error": 7735.0,
+      "relative_error": 0.221,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        20
+      ],
+      "prediction_lines": [
+        17
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "IDAHO",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 145000.0,
+      "prediction_value": 160000.0,
+      "signed_error": 15000.0,
+      "absolute_error": 15000.0,
+      "relative_error": 0.10344827586206896,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        21
+      ],
+      "prediction_lines": [
+        20
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "IDAHO",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 280000.0,
+      "prediction_value": 265393.0,
+      "signed_error": -14607.0,
+      "absolute_error": 14607.0,
+      "relative_error": -0.05216785714285714,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        22
+      ],
+      "prediction_lines": [
+        19
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ILLINOIS",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 10950000.0,
+      "prediction_value": 11000000.0,
+      "signed_error": 50000.0,
+      "absolute_error": 50000.0,
+      "relative_error": 0.0045662100456621,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        23
+      ],
+      "prediction_lines": [
+        22
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "ILLINOIS",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 90000.0,
+      "prediction_value": 90000.0,
+      "signed_error": 0.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        24
+      ],
+      "prediction_lines": [
+        21
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "INDIANA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 5240000.0,
+      "prediction_value": 5250000.0,
+      "signed_error": 10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": 0.0019083969465648854,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        25
+      ],
+      "prediction_lines": [
+        24
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "INDIANA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 110000.0,
+      "prediction_value": 126868.0,
+      "signed_error": 16868.0,
+      "absolute_error": 16868.0,
+      "relative_error": 0.15334545454545453,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        26
+      ],
+      "prediction_lines": [
+        23
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "IOWA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 13150000.0,
+      "prediction_value": 13000000.0,
+      "signed_error": -150000.0,
+      "absolute_error": 150000.0,
+      "relative_error": -0.011406844106463879,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        27
+      ],
+      "prediction_lines": [
+        26
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "IOWA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 250000.0,
+      "prediction_value": 356783.0,
+      "signed_error": 106783.0,
+      "absolute_error": 106783.0,
+      "relative_error": 0.427132,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        28
+      ],
+      "prediction_lines": [
+        25
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "KANSAS",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 6450000.0,
+      "prediction_value": 6290000.0,
+      "signed_error": -160000.0,
+      "absolute_error": 160000.0,
+      "relative_error": -0.024806201550387597,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        29
+      ],
+      "prediction_lines": [
+        28
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "KANSAS",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 230000.0,
+      "prediction_value": 326066.0,
+      "signed_error": 96066.0,
+      "absolute_error": 96066.0,
+      "relative_error": 0.4176782608695652,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        30
+      ],
+      "prediction_lines": [
+        27
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "KENTUCKY",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 1420000.0,
+      "prediction_value": 1420000.0,
+      "signed_error": 0.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        31
+      ],
+      "prediction_lines": [
+        30
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "KENTUCKY",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 65000.0,
+      "prediction_value": 76544.0,
+      "signed_error": 11544.0,
+      "absolute_error": 11544.0,
+      "relative_error": 0.1776,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        32
+      ],
+      "prediction_lines": [
+        29
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "LOUISIANA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 790000.0,
+      "prediction_value": 770000.0,
+      "signed_error": -20000.0,
+      "absolute_error": 20000.0,
+      "relative_error": -0.02531645569620253,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        33
+      ],
+      "prediction_lines": [
+        32
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "LOUISIANA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 3000.0,
+      "prediction_value": 4715.0,
+      "signed_error": 1715.0,
+      "absolute_error": 1715.0,
+      "relative_error": 0.5716666666666667,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        34
+      ],
+      "prediction_lines": [
+        31
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MAINE",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 25000.0,
+      "prediction_value": 25083.0,
+      "signed_error": 83.0,
+      "absolute_error": 83.0,
+      "relative_error": 0.00332,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        35
+      ],
+      "prediction_lines": [
+        33
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MARYLAND",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 410000.0,
+      "prediction_value": 405000.0,
+      "signed_error": -5000.0,
+      "absolute_error": 5000.0,
+      "relative_error": -0.012195121951219513,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        36
+      ],
+      "prediction_lines": [
+        35
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MARYLAND",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 40000.0,
+      "prediction_value": 36648.0,
+      "signed_error": -3352.0,
+      "absolute_error": 3352.0,
+      "relative_error": -0.0838,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        37
+      ],
+      "prediction_lines": [
+        34
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MASSACHUSETTS",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 11000.0,
+      "prediction_value": 11000.0,
+      "signed_error": 0.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        38
+      ],
+      "prediction_lines": [
+        36
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MICHIGAN",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 1980000.0,
+      "prediction_value": 1990000.0,
+      "signed_error": 10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": 0.005050505050505051,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        39
+      ],
+      "prediction_lines": [
+        38
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MICHIGAN",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 340000.0,
+      "prediction_value": 328999.0,
+      "signed_error": -11001.0,
+      "absolute_error": 11001.0,
+      "relative_error": -0.03235588235294118,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        40
+      ],
+      "prediction_lines": [
+        37
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MINNESOTA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 8440000.0,
+      "prediction_value": 8380000.0,
+      "signed_error": -60000.0,
+      "absolute_error": 60000.0,
+      "relative_error": -0.0071090047393364926,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        41
+      ],
+      "prediction_lines": [
+        40
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MINNESOTA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 360000.0,
+      "prediction_value": 415146.0,
+      "signed_error": 55146.0,
+      "absolute_error": 55146.0,
+      "relative_error": 0.15318333333333334,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        42
+      ],
+      "prediction_lines": [
+        39
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MISSISSIPPI",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 865000.0,
+      "prediction_value": 880000.0,
+      "signed_error": 15000.0,
+      "absolute_error": 15000.0,
+      "relative_error": 0.017341040462427744,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        43
+      ],
+      "prediction_lines": [
+        42
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MISSISSIPPI",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 10000.0,
+      "prediction_value": 9354.0,
+      "signed_error": -646.0,
+      "absolute_error": 646.0,
+      "relative_error": -0.0646,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        44
+      ],
+      "prediction_lines": [
+        41
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MISSOURI",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 3640000.0,
+      "prediction_value": 3630000.0,
+      "signed_error": -10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": -0.0027472527472527475,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        45
+      ],
+      "prediction_lines": [
+        44
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MISSOURI",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 100000.0,
+      "prediction_value": 94783.0,
+      "signed_error": -5217.0,
+      "absolute_error": 5217.0,
+      "relative_error": -0.05217,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        46
+      ],
+      "prediction_lines": [
+        43
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MONTANA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 77000.0,
+      "prediction_value": 84000.0,
+      "signed_error": 7000.0,
+      "absolute_error": 7000.0,
+      "relative_error": 0.09090909090909091,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        47
+      ],
+      "prediction_lines": [
+        46
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "MONTANA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 57000.0,
+      "prediction_value": 47058.0,
+      "signed_error": -9942.0,
+      "absolute_error": 9942.0,
+      "relative_error": -0.17442105263157895,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        48
+      ],
+      "prediction_lines": [
+        45
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEBRASKA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 10390000.0,
+      "prediction_value": 10300000.0,
+      "signed_error": -90000.0,
+      "absolute_error": 90000.0,
+      "relative_error": -0.008662175168431183,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        49
+      ],
+      "prediction_lines": [
+        48
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEBRASKA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 220000.0,
+      "prediction_value": 284876.0,
+      "signed_error": 64876.0,
+      "absolute_error": 64876.0,
+      "relative_error": 0.2948909090909091,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        50
+      ],
+      "prediction_lines": [
+        47
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEVADA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 24000.0,
+      "prediction_value": 20417.0,
+      "signed_error": -3583.0,
+      "absolute_error": 3583.0,
+      "relative_error": -0.14929166666666666,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        51
+      ],
+      "prediction_lines": [
+        49
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW HAMPSHIRE",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 10000.0,
+      "prediction_value": 11000.0,
+      "signed_error": 1000.0,
+      "absolute_error": 1000.0,
+      "relative_error": 0.1,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        52
+      ],
+      "prediction_lines": [
+        50
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW JERSEY",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 67000.0,
+      "prediction_value": 65000.0,
+      "signed_error": -2000.0,
+      "absolute_error": 2000.0,
+      "relative_error": -0.029850746268656716,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        53
+      ],
+      "prediction_lines": [
+        52
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW JERSEY",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 6000.0,
+      "prediction_value": 5573.0,
+      "signed_error": -427.0,
+      "absolute_error": 427.0,
+      "relative_error": -0.07116666666666667,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        54
+      ],
+      "prediction_lines": [
+        51
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW MEXICO",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 44000.0,
+      "prediction_value": 43000.0,
+      "signed_error": -1000.0,
+      "absolute_error": 1000.0,
+      "relative_error": -0.022727272727272728,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        55
+      ],
+      "prediction_lines": [
+        54
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW MEXICO",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 59000.0,
+      "prediction_value": 52905.0,
+      "signed_error": -6095.0,
+      "absolute_error": 6095.0,
+      "relative_error": -0.10330508474576271,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        56
+      ],
+      "prediction_lines": [
+        53
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW YORK",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 435000.0,
+      "prediction_value": 555000.0,
+      "signed_error": 120000.0,
+      "absolute_error": 120000.0,
+      "relative_error": 0.27586206896551724,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        57
+      ],
+      "prediction_lines": [
+        56
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NEW YORK",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 495000.0,
+      "prediction_value": 427484.0,
+      "signed_error": -67516.0,
+      "absolute_error": 67516.0,
+      "relative_error": -0.1363959595959596,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        58
+      ],
+      "prediction_lines": [
+        55
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NORTH CAROLINA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 905000.0,
+      "prediction_value": 885000.0,
+      "signed_error": -20000.0,
+      "absolute_error": 20000.0,
+      "relative_error": -0.022099447513812154,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        59
+      ],
+      "prediction_lines": [
+        58
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NORTH CAROLINA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 30000.0,
+      "prediction_value": 29000.0,
+      "signed_error": -1000.0,
+      "absolute_error": 1000.0,
+      "relative_error": -0.03333333333333333,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        60
+      ],
+      "prediction_lines": [
+        57
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NORTH DAKOTA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 4490000.0,
+      "prediction_value": 4360000.0,
+      "signed_error": -130000.0,
+      "absolute_error": 130000.0,
+      "relative_error": -0.028953229398663696,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        61
+      ],
+      "prediction_lines": [
+        60
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "NORTH DAKOTA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 170000.0,
+      "prediction_value": 275342.0,
+      "signed_error": 105342.0,
+      "absolute_error": 105342.0,
+      "relative_error": 0.6196588235294118,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        62
+      ],
+      "prediction_lines": [
+        59
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OHIO",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 3150000.0,
+      "prediction_value": 3180000.0,
+      "signed_error": 30000.0,
+      "absolute_error": 30000.0,
+      "relative_error": 0.009523809523809525,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        63
+      ],
+      "prediction_lines": [
+        62
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OHIO",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 200000.0,
+      "prediction_value": 164000.0,
+      "signed_error": -36000.0,
+      "absolute_error": 36000.0,
+      "relative_error": -0.18,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        64
+      ],
+      "prediction_lines": [
+        61
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OKLAHOMA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 485000.0,
+      "prediction_value": 460000.0,
+      "signed_error": -25000.0,
+      "absolute_error": 25000.0,
+      "relative_error": -0.05154639175257732,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        65
+      ],
+      "prediction_lines": [
+        64
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OKLAHOMA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 25000.0,
+      "prediction_value": 29926.0,
+      "signed_error": 4926.0,
+      "absolute_error": 4926.0,
+      "relative_error": 0.19704,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        66
+      ],
+      "prediction_lines": [
+        63
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OREGON",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 75000.0,
+      "prediction_value": 65000.0,
+      "signed_error": -10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": -0.13333333333333333,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        67
+      ],
+      "prediction_lines": [
+        66
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "OREGON",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 34000.0,
+      "prediction_value": 41526.0,
+      "signed_error": 7526.0,
+      "absolute_error": 7526.0,
+      "relative_error": 0.22135294117647059,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        68
+      ],
+      "prediction_lines": [
+        65
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "PENNSYLVANIA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 645000.0,
+      "prediction_value": 640000.0,
+      "signed_error": -5000.0,
+      "absolute_error": 5000.0,
+      "relative_error": -0.007751937984496124,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        70
+      ],
+      "prediction_lines": [
+        68
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "PENNSYLVANIA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 315000.0,
+      "prediction_value": 325386.0,
+      "signed_error": 10386.0,
+      "absolute_error": 10386.0,
+      "relative_error": 0.03297142857142857,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        71
+      ],
+      "prediction_lines": [
+        67
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "RHODE ISLAND",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 1000.0,
+      "prediction_value": 1000.0,
+      "signed_error": 0.0,
+      "absolute_error": 0.0,
+      "relative_error": 0.0,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        72
+      ],
+      "prediction_lines": [
+        69
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "SOUTH CAROLINA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 370000.0,
+      "prediction_value": 360000.0,
+      "signed_error": -10000.0,
+      "absolute_error": 10000.0,
+      "relative_error": -0.02702702702702703,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        73
+      ],
+      "prediction_lines": [
+        71
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "SOUTH CAROLINA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 6000.0,
+      "prediction_value": 9125.0,
+      "signed_error": 3125.0,
+      "absolute_error": 3125.0,
+      "relative_error": 0.5208333333333334,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        74
+      ],
+      "prediction_lines": [
+        70
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "SOUTH DAKOTA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 6350000.0,
+      "prediction_value": 6110000.0,
+      "signed_error": -240000.0,
+      "absolute_error": 240000.0,
+      "relative_error": -0.03779527559055118,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        75
+      ],
+      "prediction_lines": [
+        73
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "SOUTH DAKOTA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 390000.0,
+      "prediction_value": 485698.0,
+      "signed_error": 95698.0,
+      "absolute_error": 95698.0,
+      "relative_error": 0.24537948717948718,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        76
+      ],
+      "prediction_lines": [
+        72
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "TENNESSEE",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 865000.0,
+      "prediction_value": 870000.0,
+      "signed_error": 5000.0,
+      "absolute_error": 5000.0,
+      "relative_error": 0.005780346820809248,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        77
+      ],
+      "prediction_lines": [
+        75
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "TENNESSEE",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 35000.0,
+      "prediction_value": 30179.0,
+      "signed_error": -4821.0,
+      "absolute_error": 4821.0,
+      "relative_error": -0.13774285714285714,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        78
+      ],
+      "prediction_lines": [
+        74
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "TEXAS",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 2140000.0,
+      "prediction_value": 2050000.0,
+      "signed_error": -90000.0,
+      "absolute_error": 90000.0,
+      "relative_error": -0.04205607476635514,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        79
+      ],
+      "prediction_lines": [
+        77
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "TEXAS",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 245000.0,
+      "prediction_value": 210085.0,
+      "signed_error": -34915.0,
+      "absolute_error": 34915.0,
+      "relative_error": -0.14251020408163265,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        80
+      ],
+      "prediction_lines": [
+        76
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "UTAH",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 33000.0,
+      "prediction_value": 35000.0,
+      "signed_error": 2000.0,
+      "absolute_error": 2000.0,
+      "relative_error": 0.06060606060606061,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        81
+      ],
+      "prediction_lines": [
+        79
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "UTAH",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 49000.0,
+      "prediction_value": 47314.0,
+      "signed_error": -1686.0,
+      "absolute_error": 1686.0,
+      "relative_error": -0.03440816326530612,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        82
+      ],
+      "prediction_lines": [
+        78
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "VERMONT",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 84000.0,
+      "prediction_value": 85529.0,
+      "signed_error": 1529.0,
+      "absolute_error": 1529.0,
+      "relative_error": 0.018202380952380953,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        83
+      ],
+      "prediction_lines": [
+        80
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "VIRGINIA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 355000.0,
+      "prediction_value": 335000.0,
+      "signed_error": -20000.0,
+      "absolute_error": 20000.0,
+      "relative_error": -0.056338028169014086,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        84
+      ],
+      "prediction_lines": [
+        82
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "VIRGINIA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 95000.0,
+      "prediction_value": 101273.0,
+      "signed_error": 6273.0,
+      "absolute_error": 6273.0,
+      "relative_error": 0.06603157894736843,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        85
+      ],
+      "prediction_lines": [
+        81
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WASHINGTON",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 125000.0,
+      "prediction_value": 100000.0,
+      "signed_error": -25000.0,
+      "absolute_error": 25000.0,
+      "relative_error": -0.2,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        86
+      ],
+      "prediction_lines": [
+        84
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WASHINGTON",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 99000.0,
+      "prediction_value": 92571.0,
+      "signed_error": -6429.0,
+      "absolute_error": 6429.0,
+      "relative_error": -0.06493939393939394,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        87
+      ],
+      "prediction_lines": [
+        83
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WEST VIRGINIA",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 31000.0,
+      "prediction_value": 24000.0,
+      "signed_error": -7000.0,
+      "absolute_error": 7000.0,
+      "relative_error": -0.22580645161290322,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        88
+      ],
+      "prediction_lines": [
+        86
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WEST VIRGINIA",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 9000.0,
+      "prediction_value": 10319.0,
+      "signed_error": 1319.0,
+      "absolute_error": 1319.0,
+      "relative_error": 0.14655555555555555,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        89
+      ],
+      "prediction_lines": [
+        85
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WISCONSIN",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 3210000.0,
+      "prediction_value": 3170000.0,
+      "signed_error": -40000.0,
+      "absolute_error": 40000.0,
+      "relative_error": -0.012461059190031152,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        90
+      ],
+      "prediction_lines": [
+        88
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WISCONSIN",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 885000.0,
+      "prediction_value": 823087.0,
+      "signed_error": -61913.0,
+      "absolute_error": 61913.0,
+      "relative_error": -0.06995819209039549,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        91
+      ],
+      "prediction_lines": [
+        87
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WYOMING",
+      "crop_use": "Grain",
+      "status": "scored",
+      "reference_value": 54000.0,
+      "prediction_value": 62000.0,
+      "signed_error": 8000.0,
+      "absolute_error": 8000.0,
+      "relative_error": 0.14814814814814814,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        92
+      ],
+      "prediction_lines": [
+        90
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "STATE",
+      "geography": "WYOMING",
+      "crop_use": "Silage",
+      "status": "scored",
+      "reference_value": 23000.0,
+      "prediction_value": 17632.0,
+      "signed_error": -5368.0,
+      "absolute_error": 5368.0,
+      "relative_error": -0.2333913043478261,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        93
+      ],
+      "prediction_lines": [
+        89
+      ]
+    },
+    {
+      "year": 2025,
+      "geo_kind": "OTHER STATES",
+      "geography": "OTHER STATES",
+      "crop_use": "Grain",
+      "status": "missing_prediction",
+      "reference_value": 0.0,
+      "prediction_value": null,
+      "signed_error": null,
+      "absolute_error": null,
+      "relative_error": null,
+      "reference_unknown_code": null,
+      "prediction_unknown_code": null,
+      "reference_cv_percent": null,
+      "reference_lines": [
+        69
+      ],
+      "prediction_lines": []
+    }
+  ]
+}
