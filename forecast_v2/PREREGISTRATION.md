@@ -117,6 +117,44 @@ above, for every date including November.
   US totals fall inside the US range, and the 2025 US silage range width next to the current forecast's.
 - The band narrows from June to November only as far as these backtest errors do; nothing forces it.
 
+## Round 2 (2026-11-15 04:48): written AFTER round 1's 2025 score was seen
+
+Round 1's 2025 score (commit 6c25b5a) was seen before this section was written, including that the Plains
+states are still 25-61% too high. Round 2 exists because of that score, so whatever it selects carries extra
+selection risk: a second look at the same answer key is a second chance to get lucky. `results.md` will say so.
+Selection still uses the backtest only; no 2025 final, judges' data or benchmark output is used to fit, tune
+or choose anything. Round 1's files and winner are not edited.
+
+New silage candidates (3). Each keeps S5's structure, (D' + PERSIST) / 2, and changes only how D's two shares
+(A: silage / (planted - grain); C: silage / planted) are estimated from the finals before t. D' is otherwise
+computed exactly like method D (same share definitions, same silage-only-state and missing-grain handling,
+same in-season inputs: the latest pre-January planted and grain values, as in round 1).
+
+| id | name | D' shares |
+|---|---|---|
+| R1 | SHRINK3 | 3-year mean of each share, shrunk toward its USDA farm production region by empirical Bayes: m* = w m_s + (1 - w) mu_r with w = tau2_r / (tau2_r + v_s); v_s = sample variance of the state's yearly shares / n; mu_r and tau2_r = mean and sample variance of the 3-year means over the region's states with >= 2 years of that share (fewer than 3 such states: all states). A state with < 2 years, or v_s = 0, or tau2_r = 0 is not shrunk (w = 1) |
+| R2 | MED5 | 5-year median of each share (t-5..t-1), no shrinkage |
+| R3 | SHRINK5 | as R1 with a 5-year window (t-5..t-1) |
+
+Regions (USDA farm production regions): Northeast ME NH VT MA RI CT NY NJ PA DE MD; Lake States MI WI MN;
+Corn Belt OH IN IL IA MO; Northern Plains ND SD NE KS; Appalachian VA WV NC KY TN; Southeast SC GA FL AL;
+Delta MS AR LA; Southern Plains OK TX; Mountain MT ID WY CO NM AZ UT NV; Pacific WA OR CA AK HI.
+For the A share, silage-only states (method D's "planted" kind) pool only with each other, nationally.
+
+Not run, and why:
+- FSA blend: `forecast/fsa_corn_by_state.csv` has only 2021-2025, so an FSA candidate cannot be backtested on
+  2018-2020 and cannot be judged by the 2018-2024 rule below. (Its 2025 data is the Dec 1 2025 release, which
+  would have been usable.)
+- Latest planted period for D: round 1 already uses the latest pre-January planted value (OCT, else SEP, else
+  AUG, else JUN), not June, in the backtest and in 2025.
+
+Rule: the round-2 winner is the round-2 candidate with the lowest 2018-2024 acre-weighted MAPE (simplest within
+0.20 pp; order R2, R1, R3). It replaces S5 only if (a) its acre-weighted MAPE is at least 0.50 pp below S5's
+13.303 and (b) its median APE is no more than 0.50 pp above S5's 10.58. Otherwise S5 stands and nothing new is
+scored on 2025. If it replaces S5, its 2025 estimate and per-release ranges are built with round 1's rules
+(amendment 1), written to `outputs/round2/`, and scored once with `harvest.benchmark`. Round 1's outputs stay
+as they are. The round-2 backtest is written to `outputs/backtest_round2.json` by `backtest_round2.py`.
+
 ## Outputs
 
 `forecast_v2/outputs/state_estimates_2025.csv` has the same headers and the same state x item rows as
