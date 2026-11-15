@@ -50,6 +50,20 @@ The agent implementation is not included yet. `POST /api/agent/run` returns 501 
 for its dependencies, NVIDIA credentials and launch commands. The saved logistic
 predictions and the dashboard do not require Nemotron.
 
+**Sample trace for the trace view.** `docs/samples/agent_trace_sample.jsonl` is a 39-step
+trace from a scripted run on BARC 2021 as of 2021-10-12 (real tool results, a scripted
+stand-in for the model). Each line is
+`{run_id, step, ts, node, type, tool?, args?, summary?, code?, ok?}` with `node` in
+analyst | tools | verifier | writer and `type` in plan | tool_call | tool_result | flag |
+retrieve | check | report | error. It includes a failed tool (QuickStats not configured),
+Verifier flags that send the analyst back for more data, a rejected invented number, and the
+final report. To serve it through the API:
+
+```sh
+mkdir -p agent_runs/traces && cp docs/samples/agent_trace_sample.jsonl agent_runs/traces/r-sample.jsonl
+curl -s http://127.0.0.1:8000/api/agent/trace/r-sample
+```
+
 ## 5. Submission notebook
 
 Install `numpy pandas matplotlib scikit-learn jupyter nbconvert ipykernel` in the notebook
