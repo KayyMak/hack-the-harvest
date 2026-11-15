@@ -74,6 +74,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
             </div>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
           </section>
+          <ScoreUpload data={data} crop={crop} />
           <section>
             <h2 className="rail__title">How it works</h2>
             <p className="rail__note rail__note--keep">
@@ -112,7 +113,6 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               </table>
             </details>
           </section>
-          <ScoreUpload data={data} crop={crop} />
         </aside>
       )}
 
@@ -121,7 +121,6 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           <div className="sheet__headrow">
             <h1 className="sheet__title">All states, 2025</h1>
             <div className="sheet__actions">
-              <a className="ghost-btn" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">Download CSV</a>
               <button className="ghost-btn" onClick={() => onTable(false)}>Back to map</button>
             </div>
           </div>

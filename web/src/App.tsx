@@ -202,11 +202,6 @@ export default function App() {
         ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} seasonEnd={atSeasonEnd} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
         {view === 'states' && byState.data && (
           <>
-            <div className="glass statecrop seg" role="group" aria-label="Crop">
-              {(['silage', 'grain'] as Crop[]).map((c) => (
-                <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}><i className={`dot dot--${c}`} aria-hidden="true" />{c === 'silage' ? 'Silage' : 'Grain'}</button>
-              ))}
-            </div>
             <ForecastPanels data={byState.data} crop={crop} selected={usState} onSelect={setUsState} showTable={stateTable} onTable={setStateTable} />
             <ForecastKey crop={crop} />
           </>
@@ -238,7 +233,7 @@ export default function App() {
             <div className="seg">
               {asOfDates.map((d, i) => (
                 <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)} title={CHECKPOINT_TIP}>
-                  {shortDate(d)}{d.endsWith('-11-30') ? ' · season end' : ''}
+                  {shortDate(d)}
                 </button>
               ))}
             </div>
@@ -267,6 +262,19 @@ export default function App() {
               </select>
             </label>
           )}
+          {view === 'states' && byState.data && <>
+            <div className="seg statecrop-top" role="group" aria-label="Crop">
+              {(['silage', 'grain'] as Crop[]).map((c) => (
+                <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}><i className={`dot dot--${c}`} aria-hidden="true" />{c === 'silage' ? 'Silage' : 'Grain'}</button>
+              ))}
+            </div>
+            <a className="ghost-btn" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
+              </svg>
+              Download 2025 CSV
+            </a>
+          </>}
           {BARC_VIEWS.has(view) && <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
@@ -374,7 +382,7 @@ export default function App() {
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
           <span><i className="k k--pending" />{seasonEnd || atSeasonEnd ? 'No label, no call' : 'Not yet decided'}</span>
-          {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label (season end)</span>}
+          {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label</span>}
           {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
           <span className="mapkey__note">Fill is the model's call, outline is the BARC label{coverMap.size > 0 ? '; hover a field for its USDA Cropland Data Layer crop' : ''}</span>
           <span className="mapkey__fine">

@@ -119,7 +119,7 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
       {!(unlabeledCall && !label && !pred) && !reason && <ProbabilityBar pred={pred} />}
       {unlabeledCall && !label && !pred && (
         <p className="block__note">
-          <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, season end {year}.
+          <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, Nov 30, {year}.
           {' '}BARC did not label this field-year; the Cropland Data Layer shows it {Math.round(unlabeledCall.corn_share * 100)}% corn. There is no reference to check this call against.
         </p>
       )}

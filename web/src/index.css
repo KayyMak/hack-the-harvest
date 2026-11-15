@@ -2271,3 +2271,9 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 /* selects never run their text under the chevron */
 .yearpick select { padding-right: 34px !important; text-overflow: ellipsis; }
 :root[data-mode='light'] .ftable__flag { color: #b3261e; }
+/* 2025 tab: crop toggle and CSV download live in the top bar, like BARC validation; panels start right under it */
+.topbar .statecrop-top .seg__btn { display: inline-flex; align-items: center; gap: 7px; }
+.shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: 96px; }
+@media (max-width: 900px) { .shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: auto; } }
+/* narrow laptops: headline tiles two per row so nothing is clipped */
+@media (max-width: 1180px) and (min-width: 901px) { .lead .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
