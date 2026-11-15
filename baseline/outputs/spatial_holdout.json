@@ -1,6 +1,6 @@
 {
   "protocol": "GroupKFold over k-means spatial blocks of field centroids (EPSG:32618); baseline pipeline; k in [4, 5, 6], all reported; seed 0",
-  "scope": "Tests leakage between neighbouring fields, not transfer to a new farm. Leave-one-farm-out is in the submission notebook: holding out Central Farm (11 of 12 silage field-years) leaves one silage example for training and no Central Farm silage is found.",
+  "scope": "Tests leakage between neighbouring fields, not transfer to a new farm. Leave-one-farm-out is in the submission notebook: holding out Central Farm (11 of 12 silage field-years) leaves one silage example for training and no Central Farm silage is found. Uses the v1 pipeline (nine NDVI features, C = 1); run before the switch to model v2 and not regenerated.",
   "labeled_field_years_by_farm": {
     "APU": {
       "Grain": 4,
