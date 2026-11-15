@@ -96,6 +96,55 @@ class AgentChecks(unittest.TestCase):
         self.assertEqual([s['type'] for s in steps], ['plan', 'error', 'report'])
         self.assertIn('NVIDIA_API_KEY', steps[-1]['summary'])
 
+    def test_tool_the_model_was_not_offered_is_not_run(self):
+        # write_report takes a run_id: a model must not be able to overwrite another run's report with it.
+        script = Script(
+            {'content': None, 'tool_calls': [call(1, 'write_report', run_id='r-other', markdown='hijacked')]},
+            {'content': 'Nothing to report.'},
+        )
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('try to write a report', 'r-e')
+        result = [s for s in self.trace('r-e') if s['type'] == 'tool_result'][0]
+        self.assertFalse(result['ok'])
+        self.assertFalse((Path(self.tmp.name) / 'runs_dir' / 'reports' / 'r-other.md').exists())
+
+    def test_tool_round_limit_is_enforced(self):
+        # Once MAX_TOOL_ROUNDS is used up no tools are offered; calls the model still makes are not executed.
+        forever = {'content': 'Partial answer.', 'tool_calls': [call(1, 'get_fields')]}
+        script = Script(*[{'content': None, 'tool_calls': [call(1, 'get_fields')]}] * agent.MAX_TOOL_ROUNDS, forever)
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('loop', 'r-f')
+        steps = self.trace('r-f')
+        self.assertEqual(sum(s['type'] == 'tool_result' for s in steps), agent.MAX_TOOL_ROUNDS)
+        self.assertEqual(steps[-1]['type'], 'report')
+        self.assertIn('Partial answer.', steps[-1]['summary'])
+        self.assertIsNone(script.sent[-1][1])  # the last request offered no tools
+
+    def test_tool_arguments_that_are_not_an_object_are_a_tool_error_not_a_crash(self):
+        bad = {'id': 'c1', 'type': 'function', 'function': {'name': 'evaluate', 'arguments': '[2022]'}}
+        script = Script({'content': None, 'tool_calls': [bad]}, {'content': 'Could not evaluate.'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('score 2022', 'r-g')
+        steps = self.trace('r-g')
+        self.assertNotIn('error', [s['type'] for s in steps])
+        result = next(s for s in steps if s['type'] == 'tool_result')
+        self.assertFalse(result['ok'])
+        self.assertIn('JSON object', result['summary'])
+        self.assertEqual(steps[-1]['type'], 'report')
+        self.assertIn('Could not evaluate.', steps[-1]['summary'])
+
+    def test_tool_calls_per_round_are_capped_with_a_note(self):
+        many = [call(i, 'get_fields') for i in range(agent.MAX_CALLS_PER_ROUND + 3)]
+        script = Script({'content': None, 'tool_calls': many}, {'content': 'Done.'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('fields', 'r-h')
+        steps = self.trace('r-h')
+        self.assertEqual(sum(s['type'] == 'tool_result' for s in steps), agent.MAX_CALLS_PER_ROUND)
+        self.assertTrue(any('only the first' in (s.get('summary') or '') for s in steps if s['type'] == 'plan'))
+        sent = script.sent[1][0]
+        self.assertEqual(len(sent[2]['tool_calls']), agent.MAX_CALLS_PER_ROUND)  # each kept call has a reply
+        self.assertEqual(sum(m['role'] == 'tool' for m in sent), agent.MAX_CALLS_PER_ROUND)
+
     def test_api_starts_a_run_and_serves_its_trace(self):
         script = Script({'content': 'No tools needed.'})
         with patch.object(agent, 'chat', script):
