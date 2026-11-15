@@ -5,7 +5,7 @@
 At each 2025 release (June Acreage, Aug/Sep/Nov Crop Production) this records:
   - NASS's own forecasts published that day: US and Maryland grain acres, grain yield and grain
     production (no yield/production in June: NASS's first corn yield forecast is in August);
-  - the team forecast's silage-acre estimate for that date (forecast/outputs/summary.json, built only
+  - the team forecast's silage-acre estimate for that date (forecast_v2/outputs/summary.json, built only
     from reports released before January 2026; the January answer key is never read);
   - the 2024 official baseline (Crop Production 2024 Summary, Crop Values 2024 Summary).
 Derived values (supply change vs 2024, grain bushels kept off the market by silage) are computed here,
@@ -23,7 +23,7 @@ import estimate_2025 as F  # noqa: E402  (team forecast: fetch() reads forecast/
 
 OUT = ROOT / 'market' / 'data' / 'market_timeline.json'
 NASS = ROOT / 'market' / 'data' / 'nass_market.csv'
-SUMMARY = ROOT / 'forecast' / 'outputs' / 'summary.json'
+SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 SEASON, BASE = 2025, 2024
 RELEASES = [  # (as_of, label, report name, report kind)
     ('2025-06-30', 'NASS Acreage (June 30)', 'acrg0625', 'acreage'),

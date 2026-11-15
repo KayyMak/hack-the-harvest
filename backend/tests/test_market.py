@@ -97,7 +97,7 @@ class MarketChecks(unittest.TestCase):
         self.assertEqual(sep['as_of'], '2025-09-12')
         self.assertEqual(sep['us_grain_production_forecast'], '16,814,371,000 bu')   # NASS Sep 12 forecast
         self.assertEqual(sep['us_grain_supply_change_vs_2024'], '+13.1%')
-        self.assertEqual(sep['us_silage_acres_estimate'], '6,886,596')               # team forecast as of Sep 12
+        self.assertEqual(sep['us_silage_acres_estimate'], '6,507,289')               # team forecast as of Sep 12
         self.assertIn('acres only', t['earlier_releases'][0]['note'])                 # June: no yield forecast yet
         self.assertEqual(len(t['series']), 3)
         june = self.client.get('/api/market/outlook', params={'season': 2025, 'as_of': '2025-06-01'})
@@ -217,10 +217,10 @@ class MarketChecks(unittest.TestCase):
         ev.add_tool('maryland_supply', {'year': 2022}, market.maryland_supply(2022))
         ev.add_tool('planting_outlook', {}, market.planting_outlook())
         ok = 'Maryland harvested 40,000 silage acres [maryland_supply].'
-        wrong = 'Maryland harvested 37,595 silage acres [maryland_supply].'  # real number, but from planting_outlook
+        wrong = 'Maryland harvested 36,648 silage acres [maryland_supply].'  # real number, but from planting_outlook
         self.assertEqual(market.check_grounding(ok, ev.sources), [])
         flag = market.check_grounding(wrong, ev.sources)[0]
-        self.assertEqual((flag['kind'], flag['reason']), ('miscited', 'correct figure, wrong citation: 37595 is in [planting_outlook]'))
+        self.assertEqual((flag['kind'], flag['reason']), ('miscited', 'correct figure, wrong citation: 36648 is in [planting_outlook]'))
         invented = market.check_grounding('Maryland harvested 12,345 silage acres [maryland_supply].', ev.sources)[0]
         self.assertEqual((invented['kind'], invented['reason']), ('unsupported', 'numbers not found in any retrieved data: 12345'))
 

@@ -27,7 +27,7 @@ CORPUS = [
     'baseline/outputs/diagnostics/field_323_and_327/findings.md',
     'market/README.md',
 ]
-FORECAST_SUMMARY = 'forecast/outputs/summary.json'  # its method text is indexed as one passage
+FORECAST_SUMMARY = 'forecast_v2/outputs/summary.json'  # its method text is indexed as one passage
 # Methods and data-source documents with no evaluation results or reference labels: the only ones an
 # in-season report may search (every other document reports results computed from BARC labels).
 # Checked by reading each whole; add a document here only after doing the same.
