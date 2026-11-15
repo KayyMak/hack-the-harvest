@@ -129,3 +129,28 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for component boundaries and
 [baseline/outputs/results.md](baseline/outputs/results.md) for measured results.
 Read [docs/MODEL_REVIEW.md](docs/MODEL_REVIEW.md) for the six error cases and
 an interpretation of what the current evaluation supports.
+
+## Optional Nemotron API connection check
+
+Set `$env:NVIDIA_API_KEY` in PowerShell, then run from the project root:
+
+```powershell
+python scripts/check_nemotron.py
+```
+
+This uses Python's standard library to make one small request to NVIDIA's
+hosted `nvidia/nemotron-3.5-super-vl-120b-a12b` endpoint. It requires account
+access to that model and does not start a Brev instance. A successful response
+confirms connectivity only; it does not train a model or evaluate field data.
+The application and existing logistic regression baseline do not require a key.
+
+After connectivity succeeds, follow
+[baseline/NEMOTRON_COMPARISON.md](baseline/NEMOTRON_COMPARISON.md) to run a
+one-field pilot and the cached numerical-feature comparison on the saved folds.
+
+## Shared ML results and parallel work
+
+Read [docs/ML_EXPERIMENTS.md](docs/ML_EXPERIMENTS.md) for the published cached
+experiments, source provenance, judge-reference snapshot, and offline checks.
+Use [docs/CLAUDE_TEAM_PROMPT.md](docs/CLAUDE_TEAM_PROMPT.md) to start a bounded
+Claude Code lead/subagent workflow on the same evidence.

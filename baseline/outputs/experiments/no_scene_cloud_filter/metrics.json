@@ -1,0 +1,316 @@
+{
+  "policy": "Remove only whole-scene cloud prefilter; unchanged per-pixel mask, feature definitions, model, and saved folds",
+  "evaluated_field_years": 44,
+  "original": {
+    "n": 44,
+    "silage_precision": 0.875,
+    "silage_recall": 0.5833333333333334,
+    "silage_f1": 0.7,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.7760416666666667,
+    "brier_score": 0.08256721062853613,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "experiment": {
+    "n": 44,
+    "silage_precision": 0.9,
+    "silage_recall": 0.75,
+    "silage_f1": 0.8181818181818182,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.859375,
+    "brier_score": 0.08076089066132852,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        3,
+        9
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "always_grain": {
+    "n": 44,
+    "silage_precision": 0.0,
+    "silage_recall": 0.0,
+    "silage_f1": 0.0,
+    "false_positive_rate": 0.0,
+    "balanced_accuracy": 0.5,
+    "brier_score": 0.2727272727272727,
+    "confusion_matrix": [
+      [
+        32,
+        0
+      ],
+      [
+        12,
+        0
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "added_usable_field_dates": 306,
+  "additional_scene_records": 1448,
+  "read_errors": 0,
+  "original_acreage": [
+    {
+      "year": 2021,
+      "reference_silage_acres": 76.49378115203,
+      "predicted_silage_acres": 68.57610039093,
+      "expected_silage_acres": 88.32497815802924,
+      "hard_signed_error_acres": -7.9176807611000015,
+      "expected_signed_error_acres": 11.831197005999243
+    },
+    {
+      "year": 2022,
+      "reference_silage_acres": 74.44177235883001,
+      "predicted_silage_acres": 35.109245477,
+      "expected_silage_acres": 54.138886748917784,
+      "hard_signed_error_acres": -39.332526881830006,
+      "expected_signed_error_acres": -20.302885609912224
+    },
+    {
+      "year": 2023,
+      "reference_silage_acres": 107.97750101445,
+      "predicted_silage_acres": 55.64456909949,
+      "expected_silage_acres": 85.93863242962955,
+      "hard_signed_error_acres": -52.33293191496,
+      "expected_signed_error_acres": -22.03886858482045
+    }
+  ],
+  "experiment_acreage": [
+    {
+      "year": 2021,
+      "reference_silage_acres": 76.49378115203,
+      "predicted_silage_acres": 68.57610039093,
+      "expected_silage_acres": 90.41968233314766,
+      "hard_signed_error_acres": -7.9176807611000015,
+      "expected_signed_error_acres": 13.925901181117666
+    },
+    {
+      "year": 2022,
+      "reference_silage_acres": 74.44177235883001,
+      "predicted_silage_acres": 74.44177235883001,
+      "expected_silage_acres": 64.9516504467982,
+      "hard_signed_error_acres": 0.0,
+      "expected_signed_error_acres": -9.49012191203181
+    },
+    {
+      "year": 2023,
+      "reference_silage_acres": 107.97750101445,
+      "predicted_silage_acres": 55.64456909949,
+      "expected_silage_acres": 85.3531477890448,
+      "hard_signed_error_acres": -52.33293191496,
+      "expected_signed_error_acres": -22.6243532254052
+    }
+  ],
+  "changed_predictions": [
+    {
+      "OBJECTID": 231,
+      "year": 2022,
+      "label": "Silage",
+      "predicted_label_original": "Grain",
+      "predicted_label_experiment": "Silage",
+      "silage_probability_original": 0.3790579334395468,
+      "silage_probability_experiment": 0.536400772106866
+    },
+    {
+      "OBJECTID": 252,
+      "year": 2022,
+      "label": "Silage",
+      "predicted_label_original": "Grain",
+      "predicted_label_experiment": "Silage",
+      "silage_probability_original": 0.32951747530223785,
+      "silage_probability_experiment": 0.554891688830165
+    }
+  ],
+  "by_year": {
+    "2021": {
+      "original": {
+        "n": 18,
+        "silage_precision": 0.75,
+        "silage_recall": 0.75,
+        "silage_f1": 0.75,
+        "false_positive_rate": 0.07142857142857142,
+        "balanced_accuracy": 0.8392857142857143,
+        "brier_score": 0.0988316915346302,
+        "confusion_matrix": [
+          [
+            13,
+            1
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "experiment": {
+        "n": 18,
+        "silage_precision": 0.75,
+        "silage_recall": 0.75,
+        "silage_f1": 0.75,
+        "false_positive_rate": 0.07142857142857142,
+        "balanced_accuracy": 0.8392857142857143,
+        "brier_score": 0.0906450297242846,
+        "confusion_matrix": [
+          [
+            13,
+            1
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    "2022": {
+      "original": {
+        "n": 7,
+        "silage_precision": 1.0,
+        "silage_recall": 0.5,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.75,
+        "brier_score": 0.13326694963258015,
+        "confusion_matrix": [
+          [
+            3,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "experiment": {
+        "n": 7,
+        "silage_precision": 1.0,
+        "silage_recall": 1.0,
+        "silage_f1": 1.0,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 1.0,
+        "brier_score": 0.08925962888899495,
+        "confusion_matrix": [
+          [
+            3,
+            0
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    "2023": {
+      "original": {
+        "n": 19,
+        "silage_precision": 1.0,
+        "silage_recall": 0.5,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.75,
+        "brier_score": 0.04847990382127289,
+        "confusion_matrix": [
+          [
+            15,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "experiment": {
+        "n": 19,
+        "silage_precision": 1.0,
+        "silage_recall": 0.5,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.75,
+        "brier_score": 0.06826585535991404,
+        "confusion_matrix": [
+          [
+            15,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    }
+  },
+  "limitations": [
+    "Exploratory comparison on already-inspected BARC data; not an independent test.",
+    "Acreage applies only to these labeled BARC fields, not statewide 2025 targets."
+  ]
+}

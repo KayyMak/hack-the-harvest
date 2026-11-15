@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "signature": "4b4fdefc9e7b311888cce670b506f58eb4448835bbb11272ce8e40d50429677b",
+  "field_id": 323,
+  "year": 2023,
+  "original_dates": 12,
+  "experiment_dates": 17,
+  "note": "Gate checks extraction and coverage, never classification correctness"
+}

@@ -6,3 +6,9 @@
 /field_aoi.geojson -text
 *.ipynb -text
 *.gpkg binary
+
+# Immutable result/reference snapshots are fingerprinted byte-for-byte.
+/baseline/outputs/** -text whitespace=cr-at-eol
+/data/reference/** -text whitespace=cr-at-eol
+# Matplotlib SVG path data contains generated trailing whitespace.
+/baseline/outputs/**/*.svg -whitespace
