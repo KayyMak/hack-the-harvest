@@ -70,6 +70,10 @@ The round-3 pick is the round-2 submission, so the 2025 numbers are identical to
 | state grain acre-weighted error | 1.64% (33 / 41 within 10%) | same |
 | 95% coverage | silage 48 / 48, grain 38 / 41 | same |
 
+The benchmark does not compute coverage. The coverage row comes from `results.md` and uses the same file and ranges.
+R2 and G1 also have the lowest error outright, at 12.68 vs 14.84 and 1.601 vs 1.753. The outcome is therefore the
+same under the stricter replacement bar pre-registered here or under a plain lowest-wins rule with ties to the incumbent.
+
 The 2025 Plains over-call is a year in which silage did not follow a ~9% planted increase. None of the
 simple share or persistence alternatives tested here beat R2 over 2018-2024, so the backtest gives no
 defensible reason to change the method.
