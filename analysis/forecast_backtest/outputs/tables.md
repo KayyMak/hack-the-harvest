@@ -9,6 +9,8 @@ Grain interval of the forecast: +/-9.2% (z 2.06 x rel. SD 0.0448).
 | Nov forecast, pooled | 415 | 1.50% | 6.20% | 6.15% | 13.4% | 47.4% | 20% | 1.52% | 91.3% |
 | latest pre-final (Nov, else Oct/Sep/Aug/Jun), pooled | 524 | 2.28% | 10.08% | 10.04% | 22.5% | 56.5% | 16% | 1.58% | 81.7% |
 |   of which states with no Nov forecast | 109 | 10.45% | 18.49% | 18.53% | 40.7% | 56.5% | 3% | 12.83% | 45.0% |
+|     latest is Sep or Oct | 73 | 9.09% | 16.96% | 16.93% | 36.5% | 56.5% | 3% | 11.53% | 50.7% |
+|     June Acreage only | 36 | 13.38% | 21.26% | 21.56% | 45.3% | 50.0% | 3% | 15.38% | 33.3% |
 | Nov, 2023-2024 only | 63 | 1.05% | 5.32% | 5.20% | 15.4% | 19.1% | 22% | 1.21% | 90.5% |
 | Nov, state forecast under 500k acres | 142 | 2.56% | 9.23% | 9.19% | 20.0% | 47.4% | 23% | 3.82% | 82.4% |
 | Nov, state forecast 500k to 2m acres | 120 | 1.80% | 4.92% | 4.85% | 9.6% | 24.1% | 24% | 3.02% | 91.7% |
@@ -66,8 +68,8 @@ Oct and Nov state forecasts are identical in 383 of 383 state-years that have bo
 
 | set | state-years | persistence acre-wtd | persistence median | persistence mean | 3-yr mean acre-wtd | 3-yr median | 3-yr mean |
 |---|---|---|---|---|---|---|---|
-| 2000-2024, all states | 1222 | 10.61% | 9.18% | 15.86% | 10.11% | 11.11% | 16.5% |
-| 2023-2024 only | 98 | 9.01% | 8.17% | 14.4% | 7.87% | 10.76% | 14.88% |
+| 2000-2024, all states | 1197 | 15.45% | 9.62% | 16.07% | 14.84% | 11.11% | 16.73% |
+| 2023-2024 only | 96 | 12.95% | 8.71% | 14.6% | 11.48% | 11.11% | 15.1% |
 | Maryland 2000-2024 | 25 | 14.98% | 11.11% | 15.58% | 12.11% | 11.11% | 13.14% |
 | forecast method D (reported, 2023-2024, other finals) | 96 | D 10.49% (B 14.07%) | 11.5% | 15.8% | | | |
 

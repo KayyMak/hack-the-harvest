@@ -70,8 +70,10 @@ def load(path=CSV):
 
 
 def finals(d, item):
-    """Final ('YEAR') values through 2024 as a State x Year table. 2026 'YEAR' (= Nov forecast) is dropped."""
-    f = d[(d['Data Item'] == item) & (d['Period'] == 'YEAR') & (d['Year'] <= LAST_FINAL_YEAR)]
+    """State finals ('YEAR') through 2024 as a State x Year table. 2026 'YEAR' (= Nov forecast) is dropped,
+    as are US TOTAL and the OTHER STATES aggregate."""
+    f = d[(d['Data Item'] == item) & (d['Period'] == 'YEAR') & (d['Year'] <= LAST_FINAL_YEAR)
+          & (d['Geo Level'] == 'STATE') & (d['State'] != 'OTHER STATES')]
     return f.pivot(index='State', columns='Year', values='acres')
 
 
@@ -126,6 +128,8 @@ def grain_section(d):
 
     pooled = {v: block(st, v) for v in ('nov', 'latest')}
     pooled['fallback_only'] = block(st[st['latest_month'] != 'nov'], 'latest')  # states with no Nov forecast
+    pooled['fallback_sep_or_oct'] = block(st[st['latest_month'].isin(['sep', 'oct'])], 'latest')
+    pooled['fallback_jun_only'] = block(st[st['latest_month'] == 'jun'], 'latest')
     by_year = {int(y): dict(nov=block(g, 'nov'), latest=block(g, 'latest')) for y, g in st.groupby('Year')}
     by_month_unbalanced = {m: block(st, m) for m, _ in MONTHS}
     bal = st.dropna(subset=[m for m, _ in MONTHS])
@@ -244,6 +248,8 @@ def tables_md(res):
     L.append(row('Nov forecast, pooled', g['pooled_2012_2024']['nov']))
     L.append(row('latest pre-final (Nov, else Oct/Sep/Aug/Jun), pooled', g['pooled_2012_2024']['latest']))
     L.append(row('  of which states with no Nov forecast', g['pooled_2012_2024']['fallback_only']))
+    L.append(row('    latest is Sep or Oct', g['pooled_2012_2024']['fallback_sep_or_oct']))
+    L.append(row('    June Acreage only', g['pooled_2012_2024']['fallback_jun_only']))
     L.append(row('Nov, 2023-2024 only', g['same_years_as_forecast_2023_2024_nov']))
     for k, x in g['by_nov_forecast_size'].items():
         L.append(row(f'Nov, state forecast {k.replace("_", " ")} acres', x))

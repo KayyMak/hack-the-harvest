@@ -74,6 +74,32 @@
     "share_exact_zero": 0.028,
     "coverage_forecast_interval": 0.45,
     "acre_weighted_abs": 0.1283
+   },
+   "fallback_sep_or_oct": {
+    "n": 73,
+    "mean": -0.0217,
+    "median_abs": 0.0909,
+    "rms": 0.1696,
+    "sd": 0.1693,
+    "p90_abs": 0.2712,
+    "p95_abs": 0.3648,
+    "max_abs": 0.5652,
+    "share_exact_zero": 0.027,
+    "coverage_forecast_interval": 0.507,
+    "acre_weighted_abs": 0.1153
+   },
+   "fallback_jun_only": {
+    "n": 36,
+    "mean": 0.0038,
+    "median_abs": 0.1338,
+    "rms": 0.2126,
+    "sd": 0.2156,
+    "p90_abs": 0.381,
+    "p95_abs": 0.4529,
+    "max_abs": 0.5,
+    "share_exact_zero": 0.028,
+    "coverage_forecast_interval": 0.333,
+    "acre_weighted_abs": 0.1538
    }
   },
   "latest_month_counts": {
@@ -749,382 +775,382 @@
   "definition": "persistence: silage_t = silage_(t-1); mean3: mean of t-1..t-3 finals. Scored only on state-years where t-1..t-3 and t are all published (same rows for both). States only.",
   "years": "2000-2024",
   "overall": {
-   "state_years": 1222,
-   "states": 49,
+   "state_years": 1197,
+   "states": 48,
    "persistence": {
-    "acre_weighted_abs_pct_error": 10.61,
-    "median_abs_pct_error": 9.18,
-    "mean_abs_pct_error": 15.86
+    "acre_weighted_abs_pct_error": 15.45,
+    "median_abs_pct_error": 9.62,
+    "mean_abs_pct_error": 16.07
    },
    "mean3": {
-    "acre_weighted_abs_pct_error": 10.11,
+    "acre_weighted_abs_pct_error": 14.84,
     "median_abs_pct_error": 11.11,
-    "mean_abs_pct_error": 16.5
+    "mean_abs_pct_error": 16.73
    }
   },
   "same_years_as_forecast_2023_2024": {
-   "state_years": 98,
-   "states": 49,
+   "state_years": 96,
+   "states": 48,
    "persistence": {
-    "acre_weighted_abs_pct_error": 9.01,
-    "median_abs_pct_error": 8.17,
-    "mean_abs_pct_error": 14.4
+    "acre_weighted_abs_pct_error": 12.95,
+    "median_abs_pct_error": 8.71,
+    "mean_abs_pct_error": 14.6
    },
    "mean3": {
-    "acre_weighted_abs_pct_error": 7.87,
-    "median_abs_pct_error": 10.76,
-    "mean_abs_pct_error": 14.88
+    "acre_weighted_abs_pct_error": 11.48,
+    "median_abs_pct_error": 11.11,
+    "mean_abs_pct_error": 15.1
    }
   },
   "by_year": {
    "2000": {
-    "state_years": 48,
-    "states": 48,
+    "state_years": 47,
+    "states": 47,
     "persistence": {
-     "acre_weighted_abs_pct_error": 7.43,
-     "median_abs_pct_error": 12.37,
-     "mean_abs_pct_error": 18.14
+     "acre_weighted_abs_pct_error": 14.11,
+     "median_abs_pct_error": 13.64,
+     "mean_abs_pct_error": 18.51
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 6.9,
-     "median_abs_pct_error": 11.16,
-     "mean_abs_pct_error": 17.17
+     "acre_weighted_abs_pct_error": 12.47,
+     "median_abs_pct_error": 12.32,
+     "mean_abs_pct_error": 17.5
     }
    },
    "2001": {
-    "state_years": 48,
-    "states": 48,
+    "state_years": 47,
+    "states": 47,
     "persistence": {
-     "acre_weighted_abs_pct_error": 5.31,
-     "median_abs_pct_error": 7.04,
-     "mean_abs_pct_error": 10.4
+     "acre_weighted_abs_pct_error": 9.64,
+     "median_abs_pct_error": 7.41,
+     "mean_abs_pct_error": 10.6
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 7.07,
-     "median_abs_pct_error": 12.24,
-     "mean_abs_pct_error": 16.54
+     "acre_weighted_abs_pct_error": 12.01,
+     "median_abs_pct_error": 12.71,
+     "mean_abs_pct_error": 16.85
     }
    },
    "2002": {
-    "state_years": 48,
-    "states": 48,
+    "state_years": 47,
+    "states": 47,
     "persistence": {
-     "acre_weighted_abs_pct_error": 16.9,
-     "median_abs_pct_error": 10.36,
-     "mean_abs_pct_error": 13.95
+     "acre_weighted_abs_pct_error": 20.05,
+     "median_abs_pct_error": 10.0,
+     "mean_abs_pct_error": 13.96
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 16.8,
-     "median_abs_pct_error": 13.1,
-     "mean_abs_pct_error": 15.44
+     "acre_weighted_abs_pct_error": 19.07,
+     "median_abs_pct_error": 12.86,
+     "mean_abs_pct_error": 15.46
     }
    },
    "2003": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 13.79,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 19.53
+     "acre_weighted_abs_pct_error": 19.4,
+     "median_abs_pct_error": 11.81,
+     "mean_abs_pct_error": 19.77
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 7.55,
-     "median_abs_pct_error": 10.91,
-     "mean_abs_pct_error": 17.44
+     "acre_weighted_abs_pct_error": 13.06,
+     "median_abs_pct_error": 11.34,
+     "mean_abs_pct_error": 17.76
     }
    },
    "2004": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 11.88,
-     "median_abs_pct_error": 9.09,
-     "mean_abs_pct_error": 19.4
+     "acre_weighted_abs_pct_error": 15.87,
+     "median_abs_pct_error": 9.55,
+     "mean_abs_pct_error": 19.64
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 13.07,
-     "median_abs_pct_error": 10.22,
-     "mean_abs_pct_error": 17.2
+     "acre_weighted_abs_pct_error": 17.71,
+     "median_abs_pct_error": 10.67,
+     "mean_abs_pct_error": 17.38
     }
    },
    "2005": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 6.85,
-     "median_abs_pct_error": 9.41,
-     "mean_abs_pct_error": 13.23
+     "acre_weighted_abs_pct_error": 10.81,
+     "median_abs_pct_error": 9.51,
+     "mean_abs_pct_error": 13.45
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 14.2,
+     "acre_weighted_abs_pct_error": 17.07,
      "median_abs_pct_error": 9.52,
-     "mean_abs_pct_error": 17.41
+     "mean_abs_pct_error": 17.53
     }
    },
    "2006": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 12.76,
-     "median_abs_pct_error": 10.64,
-     "mean_abs_pct_error": 14.14
+     "acre_weighted_abs_pct_error": 16.94,
+     "median_abs_pct_error": 10.87,
+     "mean_abs_pct_error": 14.25
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 10.74,
-     "median_abs_pct_error": 11.52,
-     "mean_abs_pct_error": 15.19
+     "acre_weighted_abs_pct_error": 17.14,
+     "median_abs_pct_error": 11.56,
+     "mean_abs_pct_error": 15.41
     }
    },
    "2007": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 14.24,
-     "median_abs_pct_error": 10.0,
-     "mean_abs_pct_error": 15.31
+     "acre_weighted_abs_pct_error": 21.44,
+     "median_abs_pct_error": 10.49,
+     "mean_abs_pct_error": 15.48
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 8.03,
-     "median_abs_pct_error": 8.89,
-     "mean_abs_pct_error": 11.01
+     "acre_weighted_abs_pct_error": 14.19,
+     "median_abs_pct_error": 9.11,
+     "mean_abs_pct_error": 11.2
     }
    },
    "2008": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 6.87,
-     "median_abs_pct_error": 6.25,
-     "mean_abs_pct_error": 9.37
+     "acre_weighted_abs_pct_error": 12.24,
+     "median_abs_pct_error": 6.46,
+     "mean_abs_pct_error": 9.53
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 9.03,
-     "median_abs_pct_error": 9.76,
-     "mean_abs_pct_error": 13.54
+     "acre_weighted_abs_pct_error": 14.91,
+     "median_abs_pct_error": 9.92,
+     "mean_abs_pct_error": 13.76
     }
    },
    "2009": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 9.22,
-     "median_abs_pct_error": 8.89,
-     "mean_abs_pct_error": 18.38
+     "acre_weighted_abs_pct_error": 11.92,
+     "median_abs_pct_error": 8.99,
+     "mean_abs_pct_error": 18.63
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 11.54,
-     "median_abs_pct_error": 10.13,
-     "mean_abs_pct_error": 17.62
+     "acre_weighted_abs_pct_error": 12.96,
+     "median_abs_pct_error": 10.3,
+     "mean_abs_pct_error": 17.78
     }
    },
    "2010": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 5.89,
-     "median_abs_pct_error": 8.57,
-     "mean_abs_pct_error": 10.76
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 7.99,
-     "median_abs_pct_error": 9.52,
-     "mean_abs_pct_error": 12.65
-    }
-   },
-   "2011": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 9.94,
-     "median_abs_pct_error": 8.89,
-     "mean_abs_pct_error": 16.74
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 8.55,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 17.26
-    }
-   },
-   "2012": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 21.66,
-     "median_abs_pct_error": 12.5,
-     "mean_abs_pct_error": 20.14
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 23.97,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 17.17
-    }
-   },
-   "2013": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 21.83,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 25.04
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 8.32,
-     "median_abs_pct_error": 9.52,
-     "mean_abs_pct_error": 16.05
-    }
-   },
-   "2014": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 7.78,
-     "median_abs_pct_error": 8.33,
-     "mean_abs_pct_error": 15.65
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 8.99,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 23.01
-    }
-   },
-   "2015": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 7.79,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 15.23
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 10.86,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 23.6
-    }
-   },
-   "2016": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 6.86,
-     "median_abs_pct_error": 10.0,
-     "mean_abs_pct_error": 12.09
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 6.68,
-     "median_abs_pct_error": 8.33,
-     "mean_abs_pct_error": 13.25
-    }
-   },
-   "2017": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 7.56,
-     "median_abs_pct_error": 7.69,
-     "mean_abs_pct_error": 14.93
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 7.41,
-     "median_abs_pct_error": 11.11,
-     "mean_abs_pct_error": 17.9
-    }
-   },
-   "2018": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 12.55,
-     "median_abs_pct_error": 16.67,
-     "mean_abs_pct_error": 21.71
-    },
-    "mean3": {
-     "acre_weighted_abs_pct_error": 10.57,
-     "median_abs_pct_error": 13.33,
-     "mean_abs_pct_error": 17.63
-    }
-   },
-   "2019": {
-    "state_years": 49,
-    "states": 49,
-    "persistence": {
-     "acre_weighted_abs_pct_error": 12.22,
-     "median_abs_pct_error": 9.09,
-     "mean_abs_pct_error": 15.31
+     "acre_weighted_abs_pct_error": 11.1,
+     "median_abs_pct_error": 8.83,
+     "mean_abs_pct_error": 10.97
     },
     "mean3": {
      "acre_weighted_abs_pct_error": 10.38,
-     "median_abs_pct_error": 13.33,
-     "mean_abs_pct_error": 15.4
+     "median_abs_pct_error": 9.65,
+     "mean_abs_pct_error": 12.8
+    }
+   },
+   "2011": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 13.68,
+     "median_abs_pct_error": 9.44,
+     "mean_abs_pct_error": 16.96
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 13.39,
+     "median_abs_pct_error": 11.11,
+     "mean_abs_pct_error": 17.54
+    }
+   },
+   "2012": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 23.32,
+     "median_abs_pct_error": 12.5,
+     "mean_abs_pct_error": 20.15
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 24.79,
+     "median_abs_pct_error": 11.11,
+     "mean_abs_pct_error": 17.05
+    }
+   },
+   "2013": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 25.35,
+     "median_abs_pct_error": 11.11,
+     "mean_abs_pct_error": 25.19
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 16.07,
+     "median_abs_pct_error": 9.59,
+     "mean_abs_pct_error": 16.37
+    }
+   },
+   "2014": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 14.15,
+     "median_abs_pct_error": 8.61,
+     "mean_abs_pct_error": 15.95
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 15.14,
+     "median_abs_pct_error": 11.39,
+     "mean_abs_pct_error": 23.43
+    }
+   },
+   "2015": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 13.6,
+     "median_abs_pct_error": 11.44,
+     "mean_abs_pct_error": 15.5
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 14.56,
+     "median_abs_pct_error": 11.25,
+     "mean_abs_pct_error": 23.95
+    }
+   },
+   "2016": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 13.23,
+     "median_abs_pct_error": 10.33,
+     "mean_abs_pct_error": 12.33
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 12.0,
+     "median_abs_pct_error": 8.58,
+     "mean_abs_pct_error": 13.5
+    }
+   },
+   "2017": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 12.33,
+     "median_abs_pct_error": 8.01,
+     "mean_abs_pct_error": 15.18
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 12.99,
+     "median_abs_pct_error": 11.44,
+     "mean_abs_pct_error": 18.24
+    }
+   },
+   "2018": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 20.25,
+     "median_abs_pct_error": 16.67,
+     "mean_abs_pct_error": 22.06
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 18.1,
+     "median_abs_pct_error": 13.61,
+     "mean_abs_pct_error": 17.93
+    }
+   },
+   "2019": {
+    "state_years": 48,
+    "states": 48,
+    "persistence": {
+     "acre_weighted_abs_pct_error": 17.2,
+     "median_abs_pct_error": 9.09,
+     "mean_abs_pct_error": 15.47
+    },
+    "mean3": {
+     "acre_weighted_abs_pct_error": 15.61,
+     "median_abs_pct_error": 13.53,
+     "mean_abs_pct_error": 15.62
     }
    },
    "2020": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 6.05,
-     "median_abs_pct_error": 8.33,
-     "mean_abs_pct_error": 11.93
+     "acre_weighted_abs_pct_error": 12.03,
+     "median_abs_pct_error": 8.71,
+     "mean_abs_pct_error": 12.17
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 7.34,
-     "median_abs_pct_error": 10.53,
-     "mean_abs_pct_error": 13.57
+     "acre_weighted_abs_pct_error": 11.43,
+     "median_abs_pct_error": 11.28,
+     "mean_abs_pct_error": 13.79
     }
    },
    "2021": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 8.06,
-     "median_abs_pct_error": 9.09,
-     "mean_abs_pct_error": 16.26
+     "acre_weighted_abs_pct_error": 14.43,
+     "median_abs_pct_error": 9.55,
+     "mean_abs_pct_error": 16.56
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 6.64,
-     "median_abs_pct_error": 11.25,
-     "mean_abs_pct_error": 15.44
+     "acre_weighted_abs_pct_error": 12.58,
+     "median_abs_pct_error": 11.61,
+     "mean_abs_pct_error": 15.75
     }
    },
    "2022": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 10.0,
-     "median_abs_pct_error": 12.5,
-     "mean_abs_pct_error": 19.84
+     "acre_weighted_abs_pct_error": 14.16,
+     "median_abs_pct_error": 12.66,
+     "mean_abs_pct_error": 20.13
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 11.02,
-     "median_abs_pct_error": 16.67,
-     "mean_abs_pct_error": 21.19
+     "acre_weighted_abs_pct_error": 17.29,
+     "median_abs_pct_error": 17.31,
+     "mean_abs_pct_error": 21.53
     }
    },
    "2023": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 9.78,
-     "median_abs_pct_error": 7.14,
-     "mean_abs_pct_error": 13.09
+     "acre_weighted_abs_pct_error": 13.53,
+     "median_abs_pct_error": 7.74,
+     "mean_abs_pct_error": 13.24
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 6.04,
-     "median_abs_pct_error": 10.14,
-     "mean_abs_pct_error": 12.04
+     "acre_weighted_abs_pct_error": 9.6,
+     "median_abs_pct_error": 10.28,
+     "mean_abs_pct_error": 12.23
     }
    },
    "2024": {
-    "state_years": 49,
-    "states": 49,
+    "state_years": 48,
+    "states": 48,
     "persistence": {
-     "acre_weighted_abs_pct_error": 8.22,
-     "median_abs_pct_error": 9.09,
-     "mean_abs_pct_error": 15.72
+     "acre_weighted_abs_pct_error": 12.34,
+     "median_abs_pct_error": 9.26,
+     "mean_abs_pct_error": 15.96
     },
     "mean3": {
-     "acre_weighted_abs_pct_error": 9.78,
-     "median_abs_pct_error": 12.5,
-     "mean_abs_pct_error": 17.73
+     "acre_weighted_abs_pct_error": 13.44,
+     "median_abs_pct_error": 12.66,
+     "mean_abs_pct_error": 17.97
     }
    }
   },

@@ -47,6 +47,12 @@ class BacktestChecks(unittest.TestCase):
         self.assertNotIn('OTHER STATES', set(p['State']))
         self.assertEqual(n_states, int(p[(p['State'] != 'US TOTAL')]['nov'].notna().sum()))
 
+    def test_silage_excludes_aggregates(self):
+        f = bt.finals(self.d, bt.SILAGE)
+        self.assertNotIn('US TOTAL', f.index)
+        self.assertNotIn('OTHER STATES', f.index)
+        self.assertEqual(self.res['silage']['same_years_as_forecast_2023_2024']['state_years'], 96)
+
     def test_silage_baselines_use_only_earlier_years(self):
         rows = self.res['silage']['maryland_rows']
         s = bt.finals(self.d, bt.SILAGE).loc['MARYLAND']

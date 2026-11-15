@@ -32,6 +32,7 @@ def main():
     qs_final = {(x.State, x.Year): x.acres for x in qs[(qs['Data Item'] == backtest.GRAIN) & (qs['Period'] == 'YEAR')].itertuples()}
     qs_sil = {(x.State, x.Year): x.acres for x in qs[(qs['Data Item'] == backtest.SILAGE) & (qs['Period'] == 'YEAR')].itertuples()}
 
+    half = backtest.FORECAST['interval_z_grain'] * backtest.FORECAST['grain_revision_rel_sd']
     revs, final_diffs, padded, grain_rows = [], [], 0, 0
     pers_err = pers_tot = 0.0
     pers_pct, d_rows = [], 0
@@ -63,6 +64,9 @@ def main():
     out = dict(
         grain_revision_rel_sd_reproduced=round(math.sqrt(statistics.mean(r * r for r in revs)), 4),
         nov_state_years=len(revs),
+        nov_inside_forecast_interval_annual_summary_finals=round(
+            sum(abs(r) <= half + 1e-12 for r in revs) / len(revs), 3),
+        nov_inside_count=sum(abs(r) <= half + 1e-12 for r in revs),
         quickstats_grain_finals_differing_from_annual_summary=final_diffs,
         forecast_grain_backtest_rows=grain_rows,
         forecast_grain_rows_filled_with_final=padded,

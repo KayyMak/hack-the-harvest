@@ -1,6 +1,8 @@
 {
  "grain_revision_rel_sd_reproduced": 0.0448,
  "nov_state_years": 63,
+ "nov_inside_forecast_interval_annual_summary_finals": 0.921,
+ "nov_inside_count": 58,
  "quickstats_grain_finals_differing_from_annual_summary": [
   {
    "state": "ALABAMA",
