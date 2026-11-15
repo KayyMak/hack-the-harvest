@@ -2,3 +2,7 @@
 fastapi==0.163.0
 uvicorn==0.54.0
 pydantic>=2.9,<3
+# Agent (agent/run.py): LangGraph loop over harvest/tools.py; scikit-learn for harvest/asof.py mid-season refits.
+langchain-core==1.8.0
+langgraph==1.2.22
+scikit-learn==1.9.1

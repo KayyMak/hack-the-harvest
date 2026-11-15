@@ -12,6 +12,11 @@ COPY backend/requirements.txt backend/constraints.txt ./backend/
 RUN python -m pip install --no-cache-dir -r backend/requirements.txt \
     && useradd --create-home harvest
 COPY backend/app/ ./backend/app/
+# Nemotron agent (POST /api/agent/run imports agent.run) and the LangChain tools it uses.
+COPY agent/ ./agent/
+COPY harvest/ ./harvest/
+# The app runs as a non-root user: agent traces and reports go to a writable folder (backend/app/tools.py).
+ENV AGENT_RUNS_DIR=/tmp/agent_runs
 COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv baseline/outputs/observations.csv baseline/outputs/fields.geojson baseline/outputs/asof.json baseline/outputs/feature_contributions.csv ./baseline/outputs/
 COPY baseline/outputs/chips/ ./baseline/outputs/chips/
 COPY baseline/outputs/decline_rule/metrics.json ./baseline/outputs/decline_rule/metrics.json
