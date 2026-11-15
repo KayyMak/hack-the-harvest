@@ -6,6 +6,9 @@ Grounding (the report may only say what our data says):
     (baseline/outputs via artifacts.py), USDA NASS figures (market/data/nass_market.csv), the team's
     2025 acreage forecast (forecast/outputs/summary.json), and BM25 retrieval over the team's
     analysis documents (docsearch.py). Nothing is fitted or downloaded here.
+  * No hindsight: tools refuse data published after the report's as-of date. For an in-season date
+    (before Dec 31) they also hide BARC reference labels, the model's held-out accuracy and the
+    project's results documents (search covers only docsearch.IN_SEASON_SAFE).
   * Every sentence must cite the tool result or document passage it rests on, as [tool_name] or
     [path#n]. Each sentence is checked: it must cite at least one source actually retrieved in this
     run, and every number in it must appear in the sources it cites. Failing sentences get one
@@ -161,6 +164,23 @@ def _labels_known(year: int) -> bool:
 
 
 LABEL_NOTE = 'BARC reference labels are not known yet on this date (they are recorded after harvest).'
+ACCURACY_NOTE = ('The model\'s held-out accuracy is withheld until after harvest: it is computed from the BARC '
+                 'reference labels of 2021-2023, not all of which are known on this date.')
+DOCS_NOTE = ('Project results are hidden for in-season runs: only methods and data-source documents are searched, '
+             'because the other documents report results computed from BARC labels recorded after harvest.')
+
+
+def _results_known() -> bool:
+    """Project results (accuracy figures, model review, experiments) are computed from the 2021-2023 BARC
+    labels, so they count as known only on a post-season date (Dec 31) from the 2023 harvest on, or with no
+    as-of date at all. Any in-season date (before Dec 31 of its year) hides them."""
+    as_of = _AS_OF.get()
+    return as_of is None or (_labels_known(as_of.year) and _labels_known(max(YEARS)))
+
+
+def _doc_sources() -> tuple[str, ...] | None:
+    """Documents a report may search on its date: all of them, or in-season only the methods allow-list."""
+    return None if _results_known() else docsearch.IN_SEASON_SAFE
 
 
 def _points_known(year: int):
@@ -213,11 +233,10 @@ def maryland_supply(year: int) -> dict:
 
 
 def barc_predictions(year: int) -> dict:
-    """The prediction model's latest silage estimate at BARC (as of the report date) versus BARC's reference labels."""
+    """The prediction model's latest silage estimate at BARC (as of the report date). After harvest also
+    BARC's reference labels and the model's held-out accuracy; both are withheld for in-season dates."""
     year = _check_year(year)
     p = _points_known(year)[-1]
-    summary = artifacts.read_summary()
-    s = summary.logistic
     lo, hi = p.expected_silage_acres_95ci
     tot = p.total_acres
     out = {
@@ -231,7 +250,11 @@ def barc_predictions(year: int) -> dict:
         'model_silage_share': _pct(p.expected_silage_acres / tot),
         'reference_silage_share': _pct(p.reference_silage_acres / tot),
         'model_error_in_silage_share': _pp((p.expected_silage_acres - p.reference_silage_acres) / tot),
-        'model_reliability_all_years': {
+    }
+    if _results_known():
+        summary = artifacts.read_summary()
+        s = summary.logistic
+        out['model_reliability_all_years'] = {
             'held_out_field_years': summary.evaluated_field_years,
             'silage_field_years': sum(s.confusion_matrix[s.matrix_order.index('Silage')]),
             'silage_field_years_caught': s.confusion_matrix[1][1],
@@ -240,8 +263,9 @@ def barc_predictions(year: int) -> dict:
             'silage_recall': _pct(s.silage_recall), 'silage_precision': _pct(s.silage_precision),
             'balanced_accuracy': _pct(s.balanced_accuracy),
             'decision_rule': 'a field is called Silage when its silage probability is at least 0.5',
-            'note': 'Field-held-out validation at one site (2021-2023, computed after those seasons); small sample, wide uncertainty.'},
-    }
+            'note': 'Field-held-out validation at one site (2021-2023, computed after those seasons); small sample, wide uncertainty.'}
+    else:
+        out['model_reliability'] = ACCURACY_NOTE
     if not _labels_known(year):
         for k in ('reference_silage_acres_from_barc_labels', 'reference_grain_acres_from_barc_labels',
                   'reference_silage_share', 'model_error_in_silage_share'):
@@ -499,25 +523,31 @@ def season_timeline(season: int) -> dict:
 
 
 def search_project_docs(query: str) -> dict:
-    """Retrieve passages from the team's own analysis write-ups (BM25). Cite them as [path#n]."""
+    """Retrieve passages from the team's own documents (BM25). Cite them as [path#n]. For an in-season
+    date only an allow-list of methods and data-source documents is searched; documents with evaluation
+    results or reference labels are hidden until after harvest."""
     query = str(query).strip()
     if not query:
         raise ValueError('query must not be empty')
-    hits = docsearch.search(query, k=4)
-    return {'query': query, 'passages': hits,
-            'note': 'Cite a passage by its id, e.g. [' + (hits[0]['id'] if hits else 'docs/MODEL_REVIEW.md#0') + '].'
-                    if hits else 'No passage in the project documents matches; say the documents do not cover it.'}
+    allowed = _doc_sources()
+    hits = docsearch.search(query, k=4, sources=allowed)
+    out = {'query': query, 'passages': hits,
+           'note': f"Cite a passage by its id, e.g. [{hits[0]['id']}]." if hits
+                   else 'No passage in the searchable project documents matches; say the documents do not cover it.'}
+    if allowed is not None:
+        out['hidden'] = DOCS_NOTE + ' Searched: ' + ', '.join(allowed) + '.'
+    return out
 
 
 TOOLS = {
     'maryland_supply': (maryland_supply, 'Official NASS Maryland corn: planted acres, HARVESTED grain vs silage acres, yields, production and price received for a year, and the grain bushels silage acres displaced.', ['year']),
-    'barc_predictions': (barc_predictions, 'Our satellite model\'s season-end silage estimate for labeled BARC fields vs reference labels, plus the model\'s held-out accuracy.', ['year']),
+    'barc_predictions': (barc_predictions, 'Our satellite model\'s latest silage estimate for labeled BARC fields as of the report date; after harvest also the BARC reference labels and the model\'s held-out accuracy (withheld for in-season dates).', ['year']),
     'season_convergence': (season_convergence, 'How our model\'s BARC silage estimate changes from August to season end; the trend is spelled out in plain words.', ['year']),
     'model_field_calls': (model_field_calls, 'Our model\'s per-field inference (silage probability, call, BARC label) for every labeled BARC field on a saved date (month_day 08-12, 09-12, 10-12, 11-12 or 11-30).', ['year', 'month_day']),
     'price_effect': (price_effect, 'US corn price effect (assumed elasticity range) of a Maryland grain supply change. scenario: one_point_of_maryland_silage_share, all_maryland_silage_harvested_as_grain or barc_model_error_applied_statewide.', ['year', 'scenario']),
     'season_timeline': (season_timeline, 'Month-by-month market outlook for a season using only what was known on each date: for 2025, NASS grain forecasts plus our silage estimates, supply change vs 2024 and price pressure; for 2021-2023, our BARC model calls through the season. Call this first.', ['season']),
     'planting_outlook': (planting_outlook, 'What Maryland farmers grow: NASS 2021-2023 harvested grain vs silage acres and the team\'s 2025 acreage forecast with 95% ranges.', []),
-    'search_project_docs': (search_project_docs, 'Search the team\'s own analysis documents (model review, experiments, data sources, validation, limitations, forecast method). Returns passages with ids to cite.', ['query']),
+    'search_project_docs': (search_project_docs, 'Search the team\'s own documents. Returns passages with ids to cite. For in-season dates only methods and data-source documents are searched (project results are hidden until after harvest); otherwise also the model review, experiments, validation, limitations and forecast method.', ['query']),
 }
 REQUIRED = {'month_day': False}  # optional parameters
 
@@ -763,18 +793,20 @@ station (Beltsville, Maryland), and a team forecast of state and US silage acres
 The outlook is written AS OF a date given by the user. Only information published by that date exists for
 you; the tools refuse anything later. Never mention final results, later reports or how the season ended.
 
+Before harvest the project's own results (accuracy figures, model review, experiments) are hidden too.
+
 You may ONLY use information from tool results and project-document passages retrieved in this
 conversation. Do not use outside knowledge (no general agronomy, economics, weather or market facts
 that the sources do not state). If the sources do not cover something, write "Our data does not cover this."
 
 Gather facts first. Call season_timeline first, then whatever else applies to the season: planting_outlook,
 maryland_supply for the latest year with official figures, price_effect, and for 2021-2023 also
-barc_predictions, season_convergence and model_field_calls. Use search_project_docs for the model's
-limitations and for how the forecast works.
+barc_predictions, season_convergence and model_field_calls. Use search_project_docs for methods, data
+sources and, after harvest, the model's documented limitations and how the forecast works.
 
 Citations are mandatory: end EVERY sentence and bullet with the source(s) it rests on, in square
 brackets: the cite_as id given in each tool result (e.g. [season_timeline] or
-[price_effect.one_point_of_maryland_silage_share]), or a document passage id like [docs/MODEL_REVIEW.md#3].
+[price_effect.one_point_of_maryland_silage_share]), or a document passage id like [market/README.md#0].
 Cite the specific result a number comes from; never mix numbers from different scenarios in one sentence.
 A sentence may cite several sources. Copy every number exactly as written in a cited source; never
 compute, round or convert. Acre figures from NASS are harvested acres.
@@ -976,4 +1008,4 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
             'disclaimer': DISCLAIMER,
             'sources': list(_sources().values()) + ['Team model: baseline/outputs (field-held-out predictions)',
                                                     'Team 2025 forecast: forecast/outputs/summary.json and market/data/market_timeline.json',
-                                                    'Project documents: ' + ', '.join(docsearch.corpus_files())]}
+                                                    'Project documents: ' + ', '.join(docsearch.corpus_files(_doc_sources()))]}

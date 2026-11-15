@@ -22,6 +22,12 @@ Files (all reproducible, no API key):
 
 The API (`backend/app/market.py`) serves `/api/market/outlook?season=&as_of=` (no LLM) and
 `/api/market/report` (Nemotron). In a report every tool refuses data published after the as-of
-date, every sentence must cite a retrieved tool result or project-document passage, numbers must
+date. A date before December 31 of its season is in-season (every date the tab offers is), and then
+the tools also hide what is computed from BARC labels recorded after harvest: that season's
+reference labels, the model's held-out accuracy (it uses the 2021-2023 labels), and the project's
+results documents. Document search then covers only the methods and data-source documents
+(`data_sources.md` and this file) and says "project results are hidden for in-season runs".
+A season's labels reappear on its December 31; accuracy and results documents only on a December 31
+from 2023 on. Every sentence must cite a retrieved tool result or project-document passage, numbers must
 appear in the cited source, a second Nemotron pass checks wording, and anything unsupported is
 removed. To enable Nemotron, put `NVIDIA_API_KEY` in the repo-root `.env` (template: `.env.example`).
