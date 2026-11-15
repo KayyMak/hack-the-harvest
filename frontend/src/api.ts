@@ -44,6 +44,26 @@ export interface BarcField {
   acres: number | null;
 }
 
+export interface FieldProperties {
+  field_id: number;
+  farm: string | null;
+  field: string | null;
+  acres: number;
+  reference_2021: HarvestType | null;
+  reference_2022: HarvestType | null;
+  reference_2023: HarvestType | null;
+}
+
+export interface FieldsGeoJSON {
+  type: 'FeatureCollection';
+  features: {
+    type: 'Feature';
+    id: number;
+    geometry: { type: 'Polygon' | 'MultiPolygon'; coordinates: unknown };
+    properties: FieldProperties;
+  }[];
+}
+
 export interface Observation {
   date: string;
   ndvi: number | null;
@@ -102,6 +122,7 @@ export async function loadBaseline(signal: AbortSignal) {
 }
 
 export const loadFields = (signal: AbortSignal) => get<BarcField[]>('/api/fields', signal);
+export const loadFieldShapes = (signal: AbortSignal) => get<FieldsGeoJSON>('/api/fields.geojson', signal);
 export const loadRollup = (signal: AbortSignal) => get<Rollup>('/api/baseline/rollup', signal);
 export const loadQuickStats = (signal: AbortSignal, state = 'MARYLAND',
   filters: { year?: number; crop_use?: 'grain' | 'silage'; level?: 'STATE' | 'COUNTY' } = {}) => {
