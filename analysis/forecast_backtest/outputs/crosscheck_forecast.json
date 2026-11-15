@@ -1,0 +1,94 @@
+{
+ "grain_revision_rel_sd_reproduced": 0.0448,
+ "nov_state_years": 63,
+ "quickstats_grain_finals_differing_from_annual_summary": [
+  {
+   "state": "ALABAMA",
+   "year": 2024,
+   "annual_summary": 260000.0,
+   "quickstats": 270000.0
+  },
+  {
+   "state": "DELAWARE",
+   "year": 2024,
+   "annual_summary": 162000.0,
+   "quickstats": 161000.0
+  },
+  {
+   "state": "IDAHO",
+   "year": 2024,
+   "annual_summary": 120000.0,
+   "quickstats": 110000.0
+  },
+  {
+   "state": "MARYLAND",
+   "year": 2024,
+   "annual_summary": 390000.0,
+   "quickstats": 380000.0
+  },
+  {
+   "state": "MICHIGAN",
+   "year": 2024,
+   "annual_summary": 1910000.0,
+   "quickstats": 1950000.0
+  },
+  {
+   "state": "MISSOURI",
+   "year": 2024,
+   "annual_summary": 3300000.0,
+   "quickstats": 3350000.0
+  },
+  {
+   "state": "NEW YORK",
+   "year": 2024,
+   "annual_summary": 570000.0,
+   "quickstats": 555000.0
+  },
+  {
+   "state": "NORTH CAROLINA",
+   "year": 2024,
+   "annual_summary": 815000.0,
+   "quickstats": 810000.0
+  },
+  {
+   "state": "PENNSYLVANIA",
+   "year": 2024,
+   "annual_summary": 660000.0,
+   "quickstats": 700000.0
+  },
+  {
+   "state": "SOUTH CAROLINA",
+   "year": 2024,
+   "annual_summary": 295000.0,
+   "quickstats": 305000.0
+  },
+  {
+   "state": "TEXAS",
+   "year": 2024,
+   "annual_summary": 1860000.0,
+   "quickstats": 1890000.0
+  },
+  {
+   "state": "VIRGINIA",
+   "year": 2024,
+   "annual_summary": 305000.0,
+   "quickstats": 290000.0
+  },
+  {
+   "state": "WASHINGTON",
+   "year": 2024,
+   "annual_summary": 88000.0,
+   "quickstats": 103000.0
+  }
+ ],
+ "forecast_grain_backtest_rows": 82,
+ "forecast_grain_rows_filled_with_final": 19,
+ "silage_persistence_on_forecast_rows": {
+  "state_years": 96,
+  "of_method_D_rows": 96,
+  "acre_weighted_abs_pct_error": 12.67,
+  "median_abs_pct_error": 8.11,
+  "mean_abs_pct_error": 14.43
+ },
+ "silage_finals_differing_quickstats_vs_annual_summary": 12
+}
