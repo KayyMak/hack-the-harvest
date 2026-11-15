@@ -161,14 +161,17 @@ function UsCard({ crop, cell, rel }: { crop: Crop; cell: Cell; rel: Reliability 
       </div>
       {rel && (
         <div
-          className="kpi__foot"
+          className={`kpi__margin${cell.err != null && Math.abs(cell.err) * 100 <= rel.margin90_pct ? ' is-in' : ''}`}
           title={`NASS reliability format, from the ${rel.years} backtest (${rel.n} years, each forecast with only what was known then): root-mean-square error ${rel.rmse_pct}%; 9 times in 10 the miss is no more than ±${rel.margin90_pct}% (Student t ${rel.t} × RMSE). Largest miss: ${rel.max_abs_pct}%.`}
         >
-          <span className="nowrap">Margin of error ±{rel.margin90_pct}% (90%)</span> · <span className="nowrap">RMSE {rel.rmse_pct}%</span>
+          {cell.err != null && Math.abs(cell.err) * 100 <= rel.margin90_pct ? '✓ Inside' : 'Outside'} our ±{rel.margin90_pct}% margin of error (90%)
         </div>
       )}
       <div className="kpi__foot">
-        95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
+        <span className="nowrap">95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}</span>{rel && <> · <span className="nowrap">RMSE {rel.rmse_pct}%</span></>}
+      </div>
+      <div className="kpi__foot kpi__what">
+        {crop === 'silage' ? 'The only pre-January silage number: NASS has no in-season silage forecast.' : "NASS's own Nov 14 grain forecast."}
       </div>
     </article>
   )

@@ -2334,3 +2334,17 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .whymiss { width: 100%; font-size: 13px; }
 .whymiss tbody tr { cursor: pointer; }
 .whymiss tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+
+/* clean market outlook */
+.outlook { margin-top: 14px; padding: 16px 18px; border-radius: 14px; }
+.outlook__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 10px; }
+.outlook__head h3 { margin: 0; font-size: 16px; }
+.outlook__list { margin: 0; padding-left: 18px; display: grid; gap: 8px; font-size: 14px; line-height: 1.5; }
+.outlook__table { width: 100%; font-size: 13.5px; }
+
+/* US tiles: margin verdict and what the number is */
+.kpi__margin { margin-top: 6px; font-size: 13px; font-weight: 600; color: #c7d2ce; }
+.kpi__margin.is-in { color: #8fd9a5; }
+.kpi__what { font-style: italic; opacity: 0.85; }
+:root[data-mode='light'] .kpi__margin { color: #2c3a35; }
+:root[data-mode='light'] .kpi__margin.is-in { color: #1f7a3f; }
