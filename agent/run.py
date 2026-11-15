@@ -318,7 +318,6 @@ INTERVAL_AFTER = re.compile(r'\s*(?:%|percent)?\s*[-–]?\s*(?:[A-Za-z]+\s+){0,2
                             re.I)
 INTERVAL_BEFORE = re.compile(r'(?:wilson|ci|interval|confidence)\W{0,3}$', re.I)
 PERCENT_AFTER = re.compile(r'\s*(?:%|percent\b)', re.I)
-_NOT_COUNTS = re.compile(r'(?:^|_)(?:ids?|year|fold|step|pending)$|^\d{4}$', re.I)  # ids, years: not quantities
 
 
 

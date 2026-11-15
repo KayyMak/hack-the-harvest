@@ -390,9 +390,6 @@ class Reliability(AgentChecks):
                          'p=0.59, 12.35, 0.00001, 0.1234, 2022-10-12')
 
 
-if __name__ == '__main__':
-    unittest.main()
-
 
 class ModelCallLimits(unittest.TestCase):
     """One model call is bounded in total time and never waits forever for a busy slot."""
@@ -414,3 +411,7 @@ class ModelCallLimits(unittest.TestCase):
         with patch.object(llm_guard, 'RETRY_DEADLINE', 0.0):
             with self.assertRaisesRegex(TimeoutError, 'within'):
                 llm_guard.post_json(urllib.request.Request('http://127.0.0.1:9/never'), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
