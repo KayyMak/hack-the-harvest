@@ -318,7 +318,7 @@ export default function App() {
                 )}
                 <h2 className="sheet__h2">2025 forecast (graded output)</h2>
                 <Forecast2025Panel state={forecast} />
-                <h2 className="sheet__h2">2025 Maryland estimate: satellite check</h2>
+                <h2 className="sheet__h2">Satellite cross-check, Maryland 2025</h2>
                 <Estimate2025Panel state={estimate} />
               </>
             )}

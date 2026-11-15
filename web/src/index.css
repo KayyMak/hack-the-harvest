@@ -2046,3 +2046,13 @@ a.ghost-btn { text-decoration: none; color: inherit; }
 @media (max-width: 900px) { .statecrop { position: relative; top: auto; left: auto; transform: none; } }
 .asof[hidden] { display: none !important; }
 @media (max-width: 1520px) and (min-width: 901px) { .views__btn { padding: 8px 9px; font-size: 14px; } .topbar { gap: 14px; } }
+
+/* ---------- judging pass: collapsed details, cross-check lead ---------- */
+.est__lead { margin: 8px 0 0; font-size: 14px; line-height: 1.5; }
+.est code, .banner code { font-size: 0.92em; overflow-wrap: anywhere; }
+details.more { margin: 12px 0 0; }
+details.more > summary { cursor: pointer; font-size: 13px; font-weight: 600; color: #a9b8b2; padding: 4px 0; }
+details.more > summary:hover { color: #e8eeeb; }
+details.more[open] > summary { margin-bottom: 4px; }
+:root[data-theme='glass'][data-mode='light'] details.more > summary { color: #44564f; }
+:root[data-theme='glass'][data-mode='light'] details.more > summary:hover { color: #13221d; }
