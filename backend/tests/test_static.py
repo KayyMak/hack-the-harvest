@@ -25,7 +25,11 @@ class StaticSnapshot(unittest.TestCase):
                 '2023,MARYLAND,"CORN, GRAIN - ACRES HARVESTED",456,COUNTY\n')
             with patch.dict(os.environ, {'QUICKSTATS_CSV': str(qs)}):
                 result = export(out)
-            self.assertFalse(result['skipped'])
+            # The satellite estimate is optional until baseline/outputs/estimate_2025/ is saved.
+            skipped = dict(result['skipped'])
+            if not (artifacts.OUTPUT_DIR / 'estimate_2025' / 'summary.json').is_file():
+                self.assertEqual(skipped.pop('/api/estimate_2025', None), 503)
+            self.assertFalse(skipped)
             server = make_server(out, 0)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()

@@ -32,6 +32,9 @@ def check(base: str) -> None:
     quickstats = json.loads(get('/api/quickstats?state=MARYLAND&year=2025&crop_use=silage&level=STATE'))
     assert quickstats and all(row['source'] == 'SURVEY' and row['value'] is not None for row in quickstats)
     assert json.loads(get('/api/baseline/asof'))['pooled']
+    forecast = json.loads(get('/api/forecast_2025'))
+    assert any(s['state'] == 'MARYLAND' for s in forecast['summary']['states'])
+    assert forecast['nass_2025'] and forecast['nass_2025']['maryland']['silage']
     estimate = json.loads(get('/api/estimate_2025'))['summary']
     assert estimate['year'] == 2025 and estimate[estimate['headline']]['silage_acres'] > 0
     row = rows[0]

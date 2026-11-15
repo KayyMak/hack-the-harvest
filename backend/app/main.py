@@ -7,11 +7,11 @@ from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
-    read_estimate_2025, read_observations,
+    read_estimate_2025, read_forecast_2025, read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Forecast2025, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -82,6 +82,15 @@ def estimate_2025() -> Estimate2025:
     """Saved 2025 Maryland silage/grain acre estimate from a sample of corn fields, next to
     NASS survey acres harvested. A model estimate, not a USDA/NASS release. 503 until saved."""
     return _serve(read_estimate_2025)
+
+
+# Optional keys the saved file does not carry are left out of the response, not sent as null.
+@app.get('/api/forecast_2025', response_model=Forecast2025, response_model_exclude_unset=True)
+def forecast_2025() -> Forecast2025:
+    """Saved 2025 harvested-acre forecast per state and for the US, from NASS reports published
+    before January 2026, with NASS 2025 Maryland/US acres for comparison (null if unreadable).
+    The graded output. 503 until forecast/outputs/summary.json is saved."""
+    return _serve(read_forecast_2025)
 
 
 @app.get('/api/fields.geojson')

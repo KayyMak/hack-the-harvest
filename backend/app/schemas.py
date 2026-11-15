@@ -300,3 +300,92 @@ class Estimate2025Summary(_Estimate):
 class Estimate2025(BaseModel):
     summary: Estimate2025Summary
     benchmark: dict | None
+
+
+class _Forecast(BaseModel):
+    """Saved forecast sections keep any extra fields the forecast writes."""
+    model_config = ConfigDict(extra='allow')
+
+
+class ForecastSource(_Forecast):
+    title: str
+    released: str | None
+    url: str
+
+
+class ForecastBacktest(_Forecast):
+    """Percent errors are already in percent (11.5 = 11.5%); coverage is a fraction."""
+    state_years: int = Field(ge=0)
+    median_abs_pct_error: float = Field(ge=0)
+    mean_abs_pct_error: float = Field(ge=0)
+    covered_by_95_interval: float = Field(ge=0, le=1)
+
+
+class ForecastBacktests(_Forecast):
+    silage: ForecastBacktest
+    grain: ForecastBacktest
+
+
+class ForecastUs(_Forecast):
+    silage: float = Field(ge=0)
+    silage_se: float = Field(ge=0)
+    silage_low: float = Field(ge=0)
+    silage_high: float = Field(ge=0)
+    grain: float = Field(ge=0)
+    grain_se: float = Field(ge=0)
+    grain_low: float | None = Field(default=None, ge=0)
+    grain_high: float | None = Field(default=None, ge=0)
+
+
+class ForecastState(_Forecast):
+    state: str
+    silage: float = Field(ge=0)
+    silage_low: float = Field(ge=0)
+    silage_high: float = Field(ge=0)
+    silage_se: float = Field(ge=0)
+    # null where NASS published no grain area for the state before January 2026
+    grain: float | None = Field(ge=0)
+    grain_low: float | None = Field(ge=0)
+    grain_high: float | None = Field(ge=0)
+    grain_se: float | None = Field(ge=0)
+
+
+class ForecastStep(_Forecast):
+    as_of: date
+    source: str
+
+
+class Forecast2025Summary(_Forecast):
+    """2025 harvested-acre forecast built from NASS reports published before January 2026."""
+    method: str
+    answer_key_excluded: str
+    sources: dict[str, ForecastSource]
+    backtest: ForecastBacktests
+    us: ForecastUs
+    states: list[ForecastState] = Field(min_length=1)
+    convergence: list[ForecastStep]
+
+    @model_validator(mode='after')
+    def one_row_per_state(self):
+        names = [s.state for s in self.states]
+        if len(names) != len(set(names)):
+            raise ValueError('Each state must appear once')
+        return self
+
+
+class NassAcres(BaseModel):
+    """NASS 2025 acres harvested; null when the reference row is missing or suppressed."""
+    silage: float | None
+    grain: float | None
+
+
+class Nass2025(BaseModel):
+    source: str
+    maryland: NassAcres
+    us: NassAcres
+
+
+class Forecast2025(BaseModel):
+    summary: Forecast2025Summary
+    # null when the NASS 2025 reference file cannot be read; the forecast itself is still served
+    nass_2025: Nass2025 | None
