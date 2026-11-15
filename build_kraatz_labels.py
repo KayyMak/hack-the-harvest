@@ -4,11 +4,11 @@ from pathlib import Path
 import geopandas as gpd
 import pandas as pd
 
-ROOT = Path(".")
-REC_ZIP = ROOT / "farm_database_annual_planting_harvesting_after_some_screening..zip"
-OUTLINE_ZIP = ROOT / "barc_field_outlines_for_study.zip"
-BARC = ROOT / "04_Evaluation" / "BARC_Corn.2021-2023.gpkg"
-OUT = ROOT / "04_Evaluation" / "kraatz_labels.csv"
+ROOT = Path(__file__).resolve().parent
+REC_ZIP = ROOT / "data" / "farm_database_annual_planting_harvesting_after_some_screening..zip"
+OUTLINE_ZIP = ROOT / "data" / "barc_field_outlines_for_study.zip"
+BARC = ROOT / "BARC_Corn.2021-2023.gpkg"
+OUT = ROOT / "kraatz_labels.csv"
 
 def corn_type(crop):
     crop = str(crop)
@@ -41,12 +41,13 @@ harv = (rec[rec.kind == "harvest"].groupby(["idn", "year"])
              harvest_date=("date", "min")).reset_index())
 plant = (rec[rec.kind == "planting"].groupby(["idn", "year"])
          .agg(plant_type=("harvest_type", lambda s: s.mode().iat[0]),
+              planting_n_types=("harvest_type", "nunique"),
               planting_date=("date", "min")).reset_index())
 lab = plant.merge(harv, on=["idn", "year"], how="outer")
 lab["label_source"] = lab["harvest_type"].notna().map(
     {True: "harvest_record", False: "planting_record"})
 lab["harvest_type"] = lab["harvest_type"].fillna(lab["plant_type"])
-lab["conflict"] = (lab["n_types"].fillna(1) > 1) | (
+lab["conflict"] = (lab["n_types"].fillna(1) > 1) | (lab["planting_n_types"].fillna(1) > 1) | (
     lab["plant_type"].notna() & (lab["plant_type"] != lab["harvest_type"]))
 lab["harvest_doy"] = lab["harvest_date"].dt.dayofyear
 print(lab.groupby(["year", "label_source", "harvest_type"]).size().unstack(fill_value=0))
@@ -73,6 +74,7 @@ print(f"Matched {lab.OBJECTID.notna().sum()} of {len(lab)} field-years to BARC p
 # 4. Check agreement with official BARC labels (2021 overlap)
 barc_long = barc.melt(id_vars=["OBJECTID"], value_vars=["Corn_2021", "Corn_2022", "Corn_2023"],
                       var_name="col", value_name="barc_label").dropna()
+barc_long = barc_long[barc_long.barc_label.isin(['Grain', 'Silage'])]
 barc_long["year"] = barc_long["col"].str[-4:].astype(int)
 chk = lab.merge(barc_long[["OBJECTID", "year", "barc_label"]], on=["OBJECTID", "year"])
 if len(chk):
