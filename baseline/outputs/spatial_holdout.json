@@ -1,0 +1,443 @@
+{
+  "protocol": "GroupKFold over k-means spatial blocks of field centroids (EPSG:32618); baseline pipeline; k in [4, 5, 6], all reported; seed 0",
+  "why_not_leave_one_farm_out": "Central Farm holds 11 of the 12 labeled silage field-years.",
+  "labeled_field_years_by_farm": {
+    "APU": {
+      "Grain": 4,
+      "Silage": 0
+    },
+    "Central Farm": {
+      "Grain": 14,
+      "Silage": 11
+    },
+    "East Farm": {
+      "Grain": 11,
+      "Silage": 1
+    },
+    "Linkage Farm": {
+      "Grain": 1,
+      "Silage": 0
+    },
+    "North Farm": {
+      "Grain": 2,
+      "Silage": 0
+    }
+  },
+  "field_held_out_reference": {
+    "n": 44,
+    "silage_precision": 0.875,
+    "silage_recall": 0.5833333333333334,
+    "silage_f1": 0.7,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.7760416666666667,
+    "brier_score": 0.08256721062853613,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "results": [
+    {
+      "k": 4,
+      "status": "ok",
+      "folds": [
+        {
+          "block": 2,
+          "test_field_years": 25,
+          "test_silage": 8,
+          "test_fields": [
+            1,
+            24,
+            230,
+            231,
+            238,
+            248,
+            251,
+            252,
+            254,
+            263,
+            278,
+            279,
+            280,
+            286,
+            288,
+            291,
+            292
+          ],
+          "min_gap_to_training_m": 307
+        },
+        {
+          "block": 0,
+          "test_field_years": 13,
+          "test_silage": 4,
+          "test_fields": [
+            301,
+            323,
+            327,
+            328,
+            347,
+            348,
+            382,
+            383,
+            394,
+            397,
+            429
+          ],
+          "min_gap_to_training_m": 307
+        },
+        {
+          "block": 3,
+          "test_field_years": 3,
+          "test_silage": 0,
+          "test_fields": [
+            511,
+            548,
+            571
+          ],
+          "min_gap_to_training_m": 1449
+        },
+        {
+          "block": 1,
+          "test_field_years": 3,
+          "test_silage": 0,
+          "test_fields": [
+            332,
+            334,
+            400
+          ],
+          "min_gap_to_training_m": 1064
+        }
+      ],
+      "logistic": {
+        "n": 44,
+        "silage_precision": 0.875,
+        "silage_recall": 0.5833333333333334,
+        "silage_f1": 0.7,
+        "false_positive_rate": 0.03125,
+        "balanced_accuracy": 0.7760416666666667,
+        "brier_score": 0.10864657150825476,
+        "confusion_matrix": [
+          [
+            31,
+            1
+          ],
+          [
+            5,
+            7
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "always_grain": {
+        "n": 44,
+        "silage_precision": 0.0,
+        "silage_recall": 0.0,
+        "silage_f1": 0.0,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.2727272727272727,
+        "confusion_matrix": [
+          [
+            32,
+            0
+          ],
+          [
+            12,
+            0
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    {
+      "k": 5,
+      "status": "ok",
+      "folds": [
+        {
+          "block": 4,
+          "test_field_years": 19,
+          "test_silage": 6,
+          "test_fields": [
+            230,
+            231,
+            238,
+            248,
+            251,
+            252,
+            254,
+            263,
+            278,
+            279,
+            280,
+            286,
+            288
+          ],
+          "min_gap_to_training_m": 518
+        },
+        {
+          "block": 3,
+          "test_field_years": 12,
+          "test_silage": 4,
+          "test_fields": [
+            323,
+            327,
+            328,
+            347,
+            348,
+            382,
+            383,
+            394,
+            397,
+            429
+          ],
+          "min_gap_to_training_m": 1064
+        },
+        {
+          "block": 1,
+          "test_field_years": 7,
+          "test_silage": 2,
+          "test_fields": [
+            1,
+            24,
+            291,
+            292,
+            301
+          ],
+          "min_gap_to_training_m": 518
+        },
+        {
+          "block": 2,
+          "test_field_years": 3,
+          "test_silage": 0,
+          "test_fields": [
+            511,
+            548,
+            571
+          ],
+          "min_gap_to_training_m": 1449
+        },
+        {
+          "block": 0,
+          "test_field_years": 3,
+          "test_silage": 0,
+          "test_fields": [
+            332,
+            334,
+            400
+          ],
+          "min_gap_to_training_m": 1064
+        }
+      ],
+      "logistic": {
+        "n": 44,
+        "silage_precision": 0.7777777777777778,
+        "silage_recall": 0.5833333333333334,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0625,
+        "balanced_accuracy": 0.7604166666666667,
+        "brier_score": 0.10802096449865041,
+        "confusion_matrix": [
+          [
+            30,
+            2
+          ],
+          [
+            5,
+            7
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "always_grain": {
+        "n": 44,
+        "silage_precision": 0.0,
+        "silage_recall": 0.0,
+        "silage_f1": 0.0,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.2727272727272727,
+        "confusion_matrix": [
+          [
+            32,
+            0
+          ],
+          [
+            12,
+            0
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    {
+      "k": 6,
+      "status": "ok",
+      "folds": [
+        {
+          "block": 2,
+          "test_field_years": 19,
+          "test_silage": 6,
+          "test_fields": [
+            230,
+            231,
+            238,
+            248,
+            251,
+            252,
+            254,
+            263,
+            278,
+            279,
+            280,
+            286,
+            288
+          ],
+          "min_gap_to_training_m": 518
+        },
+        {
+          "block": 4,
+          "test_field_years": 10,
+          "test_silage": 1,
+          "test_fields": [
+            332,
+            347,
+            348,
+            382,
+            383,
+            394,
+            397,
+            429
+          ],
+          "min_gap_to_training_m": 321
+        },
+        {
+          "block": 5,
+          "test_field_years": 6,
+          "test_silage": 1,
+          "test_fields": [
+            1,
+            24,
+            292,
+            301
+          ],
+          "min_gap_to_training_m": 798
+        },
+        {
+          "block": 0,
+          "test_field_years": 4,
+          "test_silage": 4,
+          "test_fields": [
+            291,
+            323,
+            327,
+            328
+          ],
+          "min_gap_to_training_m": 518
+        },
+        {
+          "block": 3,
+          "test_field_years": 3,
+          "test_silage": 0,
+          "test_fields": [
+            511,
+            548,
+            571
+          ],
+          "min_gap_to_training_m": 1449
+        },
+        {
+          "block": 1,
+          "test_field_years": 2,
+          "test_silage": 0,
+          "test_fields": [
+            334,
+            400
+          ],
+          "min_gap_to_training_m": 321
+        }
+      ],
+      "logistic": {
+        "n": 44,
+        "silage_precision": 0.7777777777777778,
+        "silage_recall": 0.5833333333333334,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0625,
+        "balanced_accuracy": 0.7604166666666667,
+        "brier_score": 0.11040470047234367,
+        "confusion_matrix": [
+          [
+            30,
+            2
+          ],
+          [
+            5,
+            7
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "always_grain": {
+        "n": 44,
+        "silage_precision": 0.0,
+        "silage_recall": 0.0,
+        "silage_f1": 0.0,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.5,
+        "brier_score": 0.2727272727272727,
+        "confusion_matrix": [
+          [
+            32,
+            0
+          ],
+          [
+            12,
+            0
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    }
+  ]
+}
