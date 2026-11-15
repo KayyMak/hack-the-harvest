@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "checked_utc": "2026-11-15T06:34:57+00:00",
+  "barc_reproduction": {
+    "field": 1,
+    "year": 2021,
+    "scenes_compared": 27,
+    "mismatched_scenes": [],
+    "max_abs_ndvi_difference": 0.0,
+    "passed": true
+  },
+  "field_2025": {
+    "field": "241623003938745",
+    "county": "Kent",
+    "acres": 57.32,
+    "candidate_scenes": 17,
+    "scene_read_errors": 0,
+    "processing_baseline_and_offsets": [
+      [
+        5.11,
+        -0.1,
+        -0.1
+      ]
+    ],
+    "summary": {
+      "OBJECTID": 241623003938745,
+      "year": 2025,
+      "label": null,
+      "valid_dates": 13,
+      "scene_observations": 17,
+      "rejected_cloud_or_nodata": 4,
+      "read_errors": 0,
+      "ndvi_07": 0.9075160920619965,
+      "ndvi_08": 0.8302894830703735,
+      "ndvi_09": 0.1852339804172516,
+      "ndvi_10": 0.46623705327510834,
+      "ndvi_11": 0.773600161075592,
+      "peak_ndvi": 0.9164223670959473,
+      "peak_doy": 184.0,
+      "late_ndvi": 0.46623705327510834,
+      "early_minus_late": 0.2912448048591614
+    },
+    "passed": true
+  }
+}
