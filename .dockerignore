@@ -12,7 +12,6 @@
 runs
 .review-prs
 .agents
-.codex
 .aws
 agent_runs
 baseline/cache

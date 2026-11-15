@@ -44,7 +44,7 @@ already-inspected data, twelve Silage rows.
 - [Original field-case investigation](../baseline/outputs/diagnostics/field_323_and_327/findings.md).
 - [Field 323 imagery](../baseline/outputs/diagnostics/imagery_323_327/field_323.png)
   and [field 327 imagery](../baseline/outputs/diagnostics/imagery_323_327/field_327.png).
-- [Claude lead-agent prompt](CLAUDE_TEAM_PROMPT.md).
+- [Work breakdown](WORK_BREAKDOWN.md).
 
 Create a Python 3.12 analysis environment using baseline/requirements-lock.txt.
 The offline suite makes no hosted model or satellite requests:

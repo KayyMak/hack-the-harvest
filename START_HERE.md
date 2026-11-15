@@ -1,8 +1,8 @@
 # Hack the Harvest: teammate setup
 
 Start here for the application scaffold. The original README, source notebooks,
-and data files are preserved. Read [AGENTS.md](AGENTS.md) before using an AI
-coding tool in this repository.
+and data files are preserved. Read [ENGINEERING.md](ENGINEERING.md) for the
+repository rules.
 
 ## What works now
 
@@ -29,7 +29,7 @@ baseline/                Satellite extraction, modeling, caches, results
 docs/                    Architecture and model review
 scripts/                 Local frontend/API integration smoke check
 .github/workflows/       Frontend build and backend test checks
-AGENTS.md                Instructions for AI coding assistants
+ENGINEERING.md           Engineering rules
 CONTRIBUTING.md          Team workflow and commit conventions
 ```
 
@@ -153,5 +153,5 @@ one-field pilot and the cached numerical-feature comparison on the saved folds.
 
 Read [docs/ML_EXPERIMENTS.md](docs/ML_EXPERIMENTS.md) for the published cached
 experiments, source provenance, judge-reference snapshot, and offline checks.
-Use [docs/CLAUDE_TEAM_PROMPT.md](docs/CLAUDE_TEAM_PROMPT.md) to start a bounded
-Claude Code lead/subagent workflow on the same evidence.
+See [docs/WORK_BREAKDOWN.md](docs/WORK_BREAKDOWN.md) for how the experiment work was split up
+and run on the same evidence.

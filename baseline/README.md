@@ -34,8 +34,7 @@ There are 83 valid, nonempty multipolygons, 83 unique `OBJECTID` values, and
 they are never converted to Grain or included in supervised training.
 Unexpected nonblank labels would stop the pipeline.
 
-`data_sources.md` supplies source and evaluation guidance. No `AGENTS.md` was
-found in this project or its inspected parent directories. The starter's
+`data_sources.md` supplies source and evaluation guidance. The starter's
 `field_aoi.geojson` is absent. No satellite rasters, numerical satellite cache,
 package environment, or dependency file was supplied. The GeoPackage provides
 the required boundaries and labels, so no extra boundary file or API key is

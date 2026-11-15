@@ -1,4 +1,4 @@
-# Instructions for coding assistants
+# Engineering rules
 
 Read `START_HERE.md`, `docs/ARCHITECTURE.md`, and the files relevant to the task
 before editing. The repository contains a small application scaffold plus a
@@ -46,6 +46,5 @@ working research baseline. Make the narrowest complete change for the request.
   signed asset URLs. Keep numerical caches and their provenance reproducible.
 - Use `type(scope): imperative summary` commits, e.g.
   `feat(frontend): add a year filter` or `fix(api): report missing predictions`.
-- Do not add AI signatures or co-author trailers to commits or documents.
 - Do not overwrite teammates' unrelated changes. Coordinate shared API changes
   and keep PRs scoped. Report checks run and material limitations.
