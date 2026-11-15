@@ -105,6 +105,17 @@ class CandidateTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             candidate.build_model().fit(table[candidate.FEATURES], (table.label == 'Silage').astype(int))
 
+    def test_l1_needs_scikit_learn_1_8(self):
+        """Before 1.8, l1_ratio=1.0 with liblinear silently fits L2."""
+        from unittest.mock import patch
+        import sklearn
+        self.assertEqual(ex.sklearn_version('1.10.0'), (1, 10))
+        self.assertGreaterEqual(ex.sklearn_version(), (1, 8))
+        with patch.object(sklearn, '__version__', '1.7.2'):
+            with self.assertRaises(RuntimeError):
+                ex.pipeline(candidate.SPEC)
+            ex.pipeline(ex.BY_NAME['A'])  # L2 candidates are unaffected
+
     def test_saved_candidate_predictions_match_experiment(self):
         path = ex.OUT / 'heldout_predictions_candidate.csv'
         saved = pd.read_csv(path)

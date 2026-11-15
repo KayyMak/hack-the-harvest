@@ -77,8 +77,20 @@ CANDIDATES = [
 BY_NAME = {s.name: s for s in CANDIDATES}
 
 
+def sklearn_version(text=None):
+    """(major, minor) of scikit-learn, compared as integers ('1.10' > '1.8')."""
+    import re
+    import sklearn
+    major, minor = re.match(r'(\d+)\.(\d+)', text or sklearn.__version__).groups()
+    return int(major), int(minor)
+
+
 def pipeline(spec, C=1.0):
     if spec.l1:
+        # Before scikit-learn 1.8, l1_ratio without penalty='elasticnet' was ignored: this would silently be L2.
+        if sklearn_version() < (1, 8):
+            raise RuntimeError('L1 candidates need scikit-learn >= 1.8 (l1_ratio=1.0 means L1 only from 1.8); '
+                               'install baseline/requirements-lock.txt')
         lr = LogisticRegression(C=C, l1_ratio=1.0, solver='liblinear', max_iter=2000,
                                 random_state=42, class_weight=spec.class_weight)
     else:
