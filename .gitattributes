@@ -1,7 +1,7 @@
 * text=auto eol=lf
 
 # Preserve source bytes: baseline/original_sha256.json checks these files.
-/README.md -text
+/docs/original/README.md -text
 /data_sources.md -text
 /field_aoi.geojson -text
 *.ipynb -text
