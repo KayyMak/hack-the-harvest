@@ -1,0 +1,148 @@
+{
+  "candidate": "H",
+  "description": "baseline 9 + 4 timing, L1, C by inner CV",
+  "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10",
+    "ndvi_11",
+    "peak_ndvi",
+    "peak_doy",
+    "late_ndvi",
+    "early_minus_late",
+    "decline_doy",
+    "drop_doy",
+    "drop_size",
+    "regrowth"
+  ],
+  "threshold": 0.5,
+  "seed": 42,
+  "C_by_fold": [
+    1.0,
+    1.0,
+    10.0,
+    1.0,
+    1.0
+  ],
+  "heldout_seed42": {
+    "n": 44,
+    "silage_precision": 0.9090909090909091,
+    "silage_recall": 0.8333333333333334,
+    "silage_f1": 0.8695652173913043,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.9010416666666667,
+    "brier_score": 0.06489516825521671,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        2,
+        10
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "baseline_seed42": {
+    "n": 44,
+    "silage_precision": 0.875,
+    "silage_recall": 0.5833333333333334,
+    "silage_f1": 0.7,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.7760416666666667,
+    "brier_score": 0.08256721062853613,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "full_fit": {
+    "C": 1.0,
+    "intercept": -1.3492109413701727,
+    "standardized": {
+      "ndvi_07": 0.0,
+      "ndvi_08": 0.0,
+      "ndvi_09": -0.4762659445190754,
+      "ndvi_10": 0.0,
+      "ndvi_11": 1.4532853963915011,
+      "peak_ndvi": 0.0,
+      "peak_doy": 0.0,
+      "late_ndvi": 0.0,
+      "early_minus_late": 0.0,
+      "decline_doy": 0.0,
+      "drop_doy": 0.0,
+      "drop_size": 1.215789877438464,
+      "regrowth": 0.0
+    }
+  },
+  "changed_calls_vs_baseline": [
+    {
+      "OBJECTID": 24,
+      "year": 2021,
+      "label": "Grain",
+      "baseline": "Silage",
+      "candidate": "Grain"
+    },
+    {
+      "OBJECTID": 291,
+      "year": 2021,
+      "label": "Silage",
+      "baseline": "Silage",
+      "candidate": "Grain"
+    },
+    {
+      "OBJECTID": 231,
+      "year": 2022,
+      "label": "Silage",
+      "baseline": "Grain",
+      "candidate": "Silage"
+    },
+    {
+      "OBJECTID": 252,
+      "year": 2022,
+      "label": "Silage",
+      "baseline": "Grain",
+      "candidate": "Silage"
+    },
+    {
+      "OBJECTID": 279,
+      "year": 2022,
+      "label": "Grain",
+      "baseline": "Grain",
+      "candidate": "Silage"
+    },
+    {
+      "OBJECTID": 254,
+      "year": 2023,
+      "label": "Silage",
+      "baseline": "Grain",
+      "candidate": "Silage"
+    },
+    {
+      "OBJECTID": 323,
+      "year": 2023,
+      "label": "Silage",
+      "baseline": "Grain",
+      "candidate": "Silage"
+    }
+  ]
+}
