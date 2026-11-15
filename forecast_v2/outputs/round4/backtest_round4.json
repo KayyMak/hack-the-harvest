@@ -1,0 +1,366 @@
+{
+ "preregistration": "forecast_v2/PREREGISTRATION_ROUND4.md (commit ab143f2, written before the yield data was downloaded and after round 2's 2025 score was seen)",
+ "inputs": {
+  "yield_csv": "forecast_v2/data/quickstats_corn_yield_2000_2025.csv (starts 2005; 2025 YEAR and 2026 rows removed)",
+  "yield_periods": {
+   "JUN": [],
+   "AUG": [
+    "YEAR - AUG FORECAST"
+   ],
+   "SEP": [
+    "YEAR - SEP FORECAST",
+    "YEAR - AUG FORECAST"
+   ],
+   "NOV": [
+    "YEAR - NOV FORECAST",
+    "YEAR - OCT FORECAST",
+    "YEAR - SEP FORECAST",
+    "YEAR - AUG FORECAST"
+   ]
+  }
+ },
+ "silage": {
+  "window": "2018-2024",
+  "methods": {
+   "R2": "MED5: (D' + PERSIST) / 2, D' shares = 5-year medians",
+   "Y1": "R2 x (1 + beta_t x a_state), clipped to [0.5, 1.5] x R2; a_state = latest in-season state yield / state 5-year mean final yield (t-5..t-1, >= 3 finals) - 1; no state anomaly -> R2",
+   "Y2": "R2 x (1 + beta_t x a_US), clipped to [0.5, 1.5] x R2; a_US = latest in-season US yield / US 5-year mean final yield - 1, the same for every state"
+  },
+  "pooled": {
+   "R2": {
+    "state_years": 336,
+    "acre_weighted_mape": 12.679,
+    "median_ape": 10.26,
+    "mean_ape": 15.78,
+    "within_10pct": 0.491
+   },
+   "Y1": {
+    "state_years": 336,
+    "acre_weighted_mape": 12.43,
+    "median_ape": 9.87,
+    "mean_ape": 15.88,
+    "within_10pct": 0.506
+   },
+   "Y2": {
+    "state_years": 336,
+    "acre_weighted_mape": 12.634,
+    "median_ape": 10.21,
+    "mean_ape": 15.74,
+    "within_10pct": 0.485
+   }
+  },
+  "per_year": {
+   "R2": {
+    "2018": {
+     "state_years": 48,
+     "acre_weighted_mape": 17.458,
+     "median_ape": 13.81,
+     "mean_ape": 18.77,
+     "within_10pct": 0.396,
+     "sum_of_states_pct_error": 3.59
+    },
+    "2019": {
+     "state_years": 48,
+     "acre_weighted_mape": 14.932,
+     "median_ape": 9.45,
+     "mean_ape": 14.22,
+     "within_10pct": 0.542,
+     "sum_of_states_pct_error": -4.09
+    },
+    "2020": {
+     "state_years": 48,
+     "acre_weighted_mape": 9.624,
+     "median_ape": 8.43,
+     "mean_ape": 13.06,
+     "within_10pct": 0.562,
+     "sum_of_states_pct_error": 1.55
+    },
+    "2021": {
+     "state_years": 48,
+     "acre_weighted_mape": 12.779,
+     "median_ape": 10.85,
+     "mean_ape": 16.43,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": 2.79
+    },
+    "2022": {
+     "state_years": 48,
+     "acre_weighted_mape": 14.184,
+     "median_ape": 12.45,
+     "mean_ape": 19.35,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": -6.62
+    },
+    "2023": {
+     "state_years": 48,
+     "acre_weighted_mape": 9.622,
+     "median_ape": 9.65,
+     "mean_ape": 12.3,
+     "within_10pct": 0.521,
+     "sum_of_states_pct_error": 2.96
+    },
+    "2024": {
+     "state_years": 48,
+     "acre_weighted_mape": 10.252,
+     "median_ape": 9.8,
+     "mean_ape": 16.28,
+     "within_10pct": 0.5,
+     "sum_of_states_pct_error": 4.04
+    }
+   },
+   "Y1": {
+    "2018": {
+     "state_years": 48,
+     "acre_weighted_mape": 16.391,
+     "median_ape": 13.71,
+     "mean_ape": 18.38,
+     "within_10pct": 0.417,
+     "sum_of_states_pct_error": 2.66
+    },
+    "2019": {
+     "state_years": 48,
+     "acre_weighted_mape": 14.458,
+     "median_ape": 9.82,
+     "mean_ape": 14.33,
+     "within_10pct": 0.521,
+     "sum_of_states_pct_error": -3.65
+    },
+    "2020": {
+     "state_years": 48,
+     "acre_weighted_mape": 10.519,
+     "median_ape": 8.43,
+     "mean_ape": 13.5,
+     "within_10pct": 0.562,
+     "sum_of_states_pct_error": 0.72
+    },
+    "2021": {
+     "state_years": 48,
+     "acre_weighted_mape": 11.237,
+     "median_ape": 9.76,
+     "mean_ape": 15.49,
+     "within_10pct": 0.542,
+     "sum_of_states_pct_error": 1.55
+    },
+    "2022": {
+     "state_years": 48,
+     "acre_weighted_mape": 13.671,
+     "median_ape": 11.64,
+     "mean_ape": 19.78,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": -6.21
+    },
+    "2023": {
+     "state_years": 48,
+     "acre_weighted_mape": 9.952,
+     "median_ape": 8.92,
+     "mean_ape": 11.74,
+     "within_10pct": 0.583,
+     "sum_of_states_pct_error": 2.19
+    },
+    "2024": {
+     "state_years": 48,
+     "acre_weighted_mape": 10.87,
+     "median_ape": 11.72,
+     "mean_ape": 17.97,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": 2.93
+    }
+   },
+   "Y2": {
+    "2018": {
+     "state_years": 48,
+     "acre_weighted_mape": 17.32,
+     "median_ape": 13.76,
+     "mean_ape": 18.71,
+     "within_10pct": 0.375,
+     "sum_of_states_pct_error": 3.28
+    },
+    "2019": {
+     "state_years": 48,
+     "acre_weighted_mape": 14.942,
+     "median_ape": 9.76,
+     "mean_ape": 14.32,
+     "within_10pct": 0.5,
+     "sum_of_states_pct_error": -3.82
+    },
+    "2020": {
+     "state_years": 48,
+     "acre_weighted_mape": 9.631,
+     "median_ape": 8.41,
+     "mean_ape": 13.07,
+     "within_10pct": 0.562,
+     "sum_of_states_pct_error": 1.38
+    },
+    "2021": {
+     "state_years": 48,
+     "acre_weighted_mape": 12.703,
+     "median_ape": 10.62,
+     "mean_ape": 16.33,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": 2.58
+    },
+    "2022": {
+     "state_years": 48,
+     "acre_weighted_mape": 14.185,
+     "median_ape": 12.54,
+     "mean_ape": 19.38,
+     "within_10pct": 0.458,
+     "sum_of_states_pct_error": -6.55
+    },
+    "2023": {
+     "state_years": 48,
+     "acre_weighted_mape": 9.583,
+     "median_ape": 9.64,
+     "mean_ape": 12.26,
+     "within_10pct": 0.521,
+     "sum_of_states_pct_error": 2.84
+    },
+    "2024": {
+     "state_years": 48,
+     "acre_weighted_mape": 10.163,
+     "median_ape": 9.48,
+     "mean_ape": 16.13,
+     "within_10pct": 0.521,
+     "sum_of_states_pct_error": 3.37
+    }
+   }
+  },
+  "us_rmse_pct_2018_2024": {
+   "R2": 3.941,
+   "Y1": 3.279,
+   "Y2": 3.708
+  },
+  "robustness_2013_2024": {
+   "R2": {
+    "state_years": 576,
+    "acre_weighted_mape": 14.032,
+    "median_ape": 10.8,
+    "mean_ape": 22.82,
+    "within_10pct": 0.462
+   },
+   "Y1": {
+    "state_years": 576,
+    "acre_weighted_mape": 13.829,
+    "median_ape": 10.77,
+    "mean_ape": 22.63,
+    "within_10pct": 0.47
+   },
+   "Y2": {
+    "state_years": 576,
+    "acre_weighted_mape": 15.476,
+    "median_ape": 12.86,
+    "mean_ape": 23.33,
+    "within_10pct": 0.424
+   }
+  },
+  "beta_by_year": {
+   "2013": {
+    "Y1": 0.0,
+    "Y1_state_years": 0,
+    "Y2": 0.0,
+    "Y2_state_years": 0
+   },
+   "2014": {
+    "Y1": -0.6596,
+    "Y1_state_years": 32,
+    "Y2": -1.8209,
+    "Y2_state_years": 48
+   },
+   "2015": {
+    "Y1": -0.3228,
+    "Y1_state_years": 64,
+    "Y2": -0.3895,
+    "Y2_state_years": 96
+   },
+   "2016": {
+    "Y1": -0.2646,
+    "Y1_state_years": 96,
+    "Y2": -0.306,
+    "Y2_state_years": 144
+   },
+   "2017": {
+    "Y1": -0.2498,
+    "Y1_state_years": 128,
+    "Y2": -0.1492,
+    "Y2_state_years": 192
+   },
+   "2018": {
+    "Y1": -0.1734,
+    "Y1_state_years": 160,
+    "Y2": -0.0553,
+    "Y2_state_years": 240
+   },
+   "2019": {
+    "Y1": -0.3001,
+    "Y1_state_years": 192,
+    "Y2": -0.0786,
+    "Y2_state_years": 288
+   },
+   "2020": {
+    "Y1": -0.3295,
+    "Y1_state_years": 224,
+    "Y2": -0.0924,
+    "Y2_state_years": 336
+   },
+   "2021": {
+    "Y1": -0.2912,
+    "Y1_state_years": 256,
+    "Y2": -0.0941,
+    "Y2_state_years": 384
+   },
+   "2022": {
+    "Y1": -0.3528,
+    "Y1_state_years": 288,
+    "Y2": -0.1016,
+    "Y2_state_years": 432
+   },
+   "2023": {
+    "Y1": -0.403,
+    "Y1_state_years": 320,
+    "Y2": -0.1084,
+    "Y2_state_years": 480
+   },
+   "2024": {
+    "Y1": -0.3839,
+    "Y1_state_years": 352,
+    "Y2": -0.1125,
+    "Y2_state_years": 528
+   },
+   "2025": {
+    "Y1": -0.3572,
+    "Y1_state_years": 383,
+    "Y2": -0.1342,
+    "Y2_state_years": 576
+   }
+  },
+  "rows_with_state_anomaly": 223,
+  "rows": 336,
+  "best_challenger": "Y1",
+  "gain_vs_incumbent_pp": 0.249,
+  "median_change_vs_incumbent_pp": -0.39,
+  "rule": {
+   "min_gain_pp": 0.5,
+   "median_slack_pp": 0.5,
+   "tie_pp": 0.2,
+   "simplicity": [
+    "Y2",
+    "Y1"
+   ]
+  },
+  "winner": "R2",
+  "interval": {
+   "in_sample": 0.952,
+   "leave_one_year_out": 0.946,
+   "z": 2.219,
+   "rel_rms_by_size_class": {
+    "0": 0.27408,
+    "1": 0.22037,
+    "2": 0.20176
+   },
+   "size_class_cuts": [
+    20000,
+    100000
+   ]
+  }
+ }
+}

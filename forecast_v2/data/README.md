@@ -27,3 +27,23 @@ periods remain (MAR ACREAGE, JUN ACREAGE, AUG FORECAST, SEP FORECAST).
 Coverage of in-season (pre-January) planted values: MAR ACREAGE 2012-2025; JUN ACREAGE 2018-2025; AUG ACREAGE
 2019; OCT ACREAGE 2018-2019; OCT FORECAST 2020-2024 (2020, 2021 and 2024 for most states); SEP FORECAST
 2021-2025; AUG FORECAST 2024-2025. Before 2018 the only pre-January planted value is the March intention.
+
+## quickstats_corn_yield_2000_2025.csv
+
+Corn for grain yield (bu/acre), USDA NASS Quick Stats export downloaded by Kyle on 2026-11-15 after round 4 was
+pre-registered (commit `ab143f2`; file `FF9CBFFA-9FA2-3666-A72E-38184AF9E205.csv` in Downloads). Data Item
+`CORN, GRAIN - YIELD, MEASURED IN BU / ACRE`; Geo Level `STATE` and `NATIONAL`; periods `YEAR`,
+`YEAR - AUG FORECAST`, `YEAR - SEP FORECAST`, `YEAR - OCT FORECAST`, `YEAR - NOV FORECAST`. The export starts in
+2005, not 2000 (the name follows the pre-registration), so 5-year mean finals exist from 2010 on.
+
+Rows removed before committing (read with `python -I`; kept rows rewritten in the export's quoting):
+
+- the 43 rows of 2025 `YEAR` (the January 2026 final yield, same release as the answer key);
+- every 2026 row (167 rows).
+
+For 2025 only `AUG FORECAST`, `SEP FORECAST` and `NOV FORECAST` remain (no 2025 `OCT FORECAST` was published).
+
+| file | rows | sha256 |
+|---|---|---|
+| original export (not committed) | 3,857 | `fae98058be07d370506ad3eeb3c0ab589f9f4ce6b45595cbc573adaed8a4e452` |
+| `quickstats_corn_yield_2000_2025.csv` (committed) | 3,647 | `da5573b2613c079a031088d54773e24164d4c0b3adf3cbe6325ee513a7f0af6f` |
