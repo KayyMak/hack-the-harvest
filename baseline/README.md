@@ -1,8 +1,10 @@
 # BARC logistic regression baseline
 
 New code, numerical caches, and outputs live in this directory. The original
-GeoPackage, notebooks, README, and data-source guide are unchanged. Their
-SHA-256 hashes are in `original_sha256.json` and checked before and after runs.
+GeoPackage, notebooks, and data-source guide are unchanged. The original root
+README is preserved byte for byte at `../docs/original/README.md`; the current
+root README documents the whole project. Source SHA-256 hashes are in
+`original_sha256.json` and checked before and after runs.
 
 ## What the supplied notebooks do
 
