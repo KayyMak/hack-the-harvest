@@ -1,6 +1,5 @@
 """Read saved analysis outputs without importing or running the analysis stack."""
 import csv
-from datetime import date
 import json
 import math
 import os
@@ -11,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -46,21 +45,10 @@ def read_predictions() -> list[Prediction]:
         raise ArtifactUnavailable('Saved baseline predictions are missing or invalid.') from exc
 
 
-def read_asof() -> dict:
+def read_asof() -> AsOfResults:
     """Saved mid-season calls, written once by `python -m harvest.export_asof` (never fitted here)."""
     try:
-        data = json.loads((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
-        if not data['dates'] or not data['pooled']:
-            raise ValueError('Empty as-of results')
-        for entry in data['dates']:
-            date.fromisoformat(entry['as_of'])
-            for row in entry['predictions']:
-                if row['predicted_label'] not in ('Grain', 'Silage') or row['reference_label'] not in ('Grain', 'Silage'):
-                    raise ValueError('Unexpected label')
-                if not 0 <= float(row['silage_probability']) <= 1:
-                    raise ValueError('Probability out of range')
-                int(row['field_id'])
-        return data
+        return AsOfResults.model_validate_json((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ArtifactUnavailable('Saved as-of results are missing or invalid; run python -m harvest.export_asof.') from exc
 

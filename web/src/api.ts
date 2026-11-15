@@ -95,8 +95,9 @@ export const api = {
       : Promise.all([
           getJson<SavedSummary>(`${API_URL}/api/baseline/summary`),
           // The season chart is optional: without saved as-of results the scores still show.
-          savedAsOf().then((data) => adaptConvergence(data, year)).catch(() => []),
-        ]).then(([summary, convergence]) => adaptSummary(summary, convergence)),
+          savedAsOf().then((data) => ({ points: adaptConvergence(data, year), error: undefined }))
+            .catch((error: unknown) => ({ points: [], error: error instanceof Error ? error.message : String(error) })),
+        ]).then(([summary, season]) => ({ ...adaptSummary(summary, season.points), convergence_error: season.error })),
 
   rollup: (year: number) =>
     STATIC

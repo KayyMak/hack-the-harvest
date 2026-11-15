@@ -9,6 +9,18 @@ const fields = artifact('fields.geojson')
 const metrics = artifact('metrics.json')
 const asof = artifact('asof.json')
 
+test('a missing as-of artifact is explicit while full-season summary remains usable', async (t) => {
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    if (url === '/api/baseline/summary') return Response.json(metrics)
+    assert.equal(url, '/api/baseline/asof')
+    return new Response('{}', { status: 503 })
+  })
+  const result = await api.evaluate('strict', 2022)
+  assert.equal(result.n_evaluated, 44)
+  assert.deepEqual(result.convergence, [])
+  assert.match(result.convergence_error, /503/)
+})
+
 test('real API polygons select reference labels by year, preserving unknown labels', () => {
   const a = adaptFields(fields, 2022)
   const b = adaptFields(fields, 2023)
@@ -57,6 +69,9 @@ test('the roll-up is labeled as BARC fields and compared with BARC labels, not t
   assert.equal(r.reference_name, 'BARC reference labels')
   assert.equal(r.census_acres, 74.44)
   assert.match(r.note, /not a Maryland statewide estimate/)
+  assert.match(r.note, /Full-season estimate as of November 30/)
+  const unknown = { ...saved, years: [{ ...saved.years[0], cv_percent: null }] }
+  assert.equal(adaptRollup(unknown, 2022).cv_pct, null, 'unknown uncertainty must not become 0%')
   assert.throws(() => adaptRollup(saved, 2021), /No saved roll-up/)
 })
 

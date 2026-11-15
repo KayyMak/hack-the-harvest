@@ -231,6 +231,38 @@ class ApiChecks(unittest.TestCase):
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/baseline/asof').status_code, 503)
 
+    def test_malformed_asof_artifacts_are_503_with_and_without_year_filter(self):
+        import copy
+        import json
+        original = self.client.get('/api/baseline/asof').json()
+        variants = []
+        missing_year = copy.deepcopy(original)
+        del missing_year['dates'][0]['year']
+        variants.append(missing_year)
+        bad_pooled = copy.deepcopy(original)
+        bad_pooled['pooled'] = 'invalid'
+        variants.append(bad_pooled)
+        wrong_year = copy.deepcopy(original)
+        wrong_year['dates'][0]['year'] = 2022
+        variants.append(wrong_year)
+        bad_probability = copy.deepcopy(original)
+        bad_probability['dates'][0]['predictions'][0]['silage_probability'] = 2
+        variants.append(bad_probability)
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'asof.json'
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                for data in variants:
+                    path.write_text(json.dumps(data), encoding='utf-8')
+                    for url in ['/api/baseline/asof', '/api/baseline/asof?year=2022']:
+                        self.assertEqual(self.client.get(url).status_code, 503, url)
+
+    def test_asof_contract_and_unavailable_year(self):
+        contract = self.client.get('/openapi.json').json()
+        response = contract['paths']['/api/baseline/asof']['get']['responses']['200']
+        self.assertEqual(response['content']['application/json']['schema']['$ref'],
+                         '#/components/schemas/AsOfResults')
+        self.assertEqual(self.client.get('/api/baseline/asof?year=2019').status_code, 404)
+
 
 if __name__ == '__main__':
     unittest.main()

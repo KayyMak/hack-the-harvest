@@ -19,6 +19,7 @@ export function RollupPanel({ data, error }: Props) {
   return (
     <div className="rollup">
       <div className="eyebrow">{data.region} · corn for silage · {data.year}</div>
+      {data.reference_name && <p className="muted small">Full-season results as of November 30, {data.year}. The selected mid-season date does not change this estimate.</p>}
       <div className="rollup__hero">
         <div>
           <div className="rollup__label">Our estimate</div>
@@ -26,7 +27,7 @@ export function RollupPanel({ data, error }: Props) {
             {acres(data.acres)} <span className="rollup__unit">acres</span>
           </div>
           <div className="rollup__ci">
-            95% CI {acres(lo)} – {acres(hi)} · CV {data.cv_pct.toFixed(1)}%
+            95% CI {acres(lo)} – {acres(hi)} · CV {data.cv_pct == null ? 'Unavailable' : `${data.cv_pct.toFixed(1)}%`}
           </div>
         </div>
         <div>

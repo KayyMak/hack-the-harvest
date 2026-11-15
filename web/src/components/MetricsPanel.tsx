@@ -36,6 +36,8 @@ export function MetricsPanel({ data, error, asOf }: Props) {
   const G = data.per_class.Grain
   return (
     <div className="metrics">
+      {data.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {data.convergence_error}</p>}
+      <p className="muted small">The scores and confusion matrix below use full-season predictions as of November 30, pooled over 2021–2023. Only the season chart follows the selected date.</p>
       <p className="finding">
         On field-years {data.split_label ?? 'held out by year'} the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
         <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.

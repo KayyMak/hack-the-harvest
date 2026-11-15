@@ -65,6 +65,7 @@ export interface EvaluateResponse {
   confusion: number[][]
   per_class: Record<Label, ClassMetrics>
   convergence: ConvergencePoint[]
+  convergence_error?: string
   abstained: number
   n_evaluated?: number
   /** plain-language validation design, e.g. "held out by field" */
@@ -93,7 +94,7 @@ export interface RollupResponse {
   region: string
   acres: number
   ci: [number, number]
-  cv_pct: number
+  cv_pct: number | null
   census_acres: number
   csv_url: string
   /** what `census_acres` is, when it is not the Census (e.g. BARC reference labels) */

@@ -63,14 +63,21 @@ export function adaptPredictions(data: SavedPrediction[], year: number, asOf: st
 
 /** GET /api/baseline/asof: calls saved once by `python -m harvest.export_asof`. */
 export interface SavedAsOf {
+  scope: string
+  method: string
+  years: number[]
+  month_days: string[]
   dates: {
     year: number
     as_of: string
     mode: string
+    features: string[]
     predictions: { field_id: number; predicted_label: Label; silage_probability: number; reference_label: Label }[]
     pending_field_ids: number[]
   }[]
-  pooled: { month_day: string; share_decided: number | null; accuracy_decided: number | null; balanced_accuracy: number | null }[]
+  pooled: { month_day: string; field_years: number; decided: number; share_decided: number | null;
+    accuracy_decided: number | null; balanced_accuracy: number | null; silage_recall: number | null;
+    confusion_matrix: number[][] | null }[]
 }
 
 /** One year's calls on one saved date. A date that was never saved is an error, never a guess. */
@@ -113,9 +120,9 @@ export function adaptRollup(data: SavedRollup, year: number): RollupResponse {
   if (!y) throw new Error(`No saved roll-up for ${year}.`)
   return {
     year, region: 'Labeled BARC fields', acres: y.expected_silage_acres, ci: y.expected_silage_acres_95ci,
-    cv_pct: y.cv_percent ?? 0, census_acres: y.reference_silage_acres, csv_url: 'api/baseline/rollup.csv',
+    cv_pct: y.cv_percent, census_acres: y.reference_silage_acres, csv_url: 'api/baseline/rollup.csv',
     reference_name: 'BARC reference labels',
-    note: 'Labeled BARC fields only, scored held out by field. This is not a Maryland statewide estimate and is not compared with the Census.',
+    note: `Full-season estimate as of November 30, ${year}; it does not change with the selected mid-season date. Labeled BARC fields only, scored held out by field. This is not a Maryland statewide estimate and is not compared with the Census.`,
   }
 }
 

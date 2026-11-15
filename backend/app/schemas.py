@@ -1,7 +1,8 @@
 """Public API response types. FastAPI publishes these at /openapi.json."""
+from datetime import date
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 HarvestType = Literal['Grain', 'Silage']
 
@@ -40,6 +41,48 @@ class Prediction(BaseModel):
     silage_probability: float = Field(ge=0, le=1)
     fold: int = Field(ge=1)
     valid_dates: int = Field(ge=0)
+
+
+class AsOfPrediction(BaseModel):
+    field_id: int
+    predicted_label: HarvestType
+    reference_label: HarvestType
+    silage_probability: float = Field(ge=0, le=1)
+
+
+class AsOfDate(BaseModel):
+    year: int
+    as_of: date
+    mode: str
+    features: list[str]
+    predictions: list[AsOfPrediction]
+    pending_field_ids: list[int]
+
+    @model_validator(mode='after')
+    def date_matches_year(self):
+        if self.as_of.year != self.year:
+            raise ValueError('As-of date must match its year')
+        return self
+
+
+class AsOfPooled(BaseModel):
+    month_day: str = Field(pattern=r'^\d{2}-\d{2}$')
+    field_years: int = Field(ge=0)
+    decided: int = Field(ge=0)
+    share_decided: float | None = Field(ge=0, le=1)
+    accuracy_decided: float | None = Field(ge=0, le=1)
+    balanced_accuracy: float | None = Field(ge=0, le=1)
+    silage_recall: float | None = Field(ge=0, le=1)
+    confusion_matrix: list[list[int]] | None
+
+
+class AsOfResults(BaseModel):
+    scope: str
+    method: str
+    years: list[int] = Field(min_length=1)
+    month_days: list[str] = Field(min_length=1)
+    dates: list[AsOfDate] = Field(min_length=1)
+    pooled: list[AsOfPooled] = Field(min_length=1)
 
 
 class BarcField(BaseModel):

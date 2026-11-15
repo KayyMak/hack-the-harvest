@@ -45,7 +45,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
       <section className="kpis" aria-label="Key figures">
         {rollup || !base ? (
           <article className="glass kpi">
-            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}</h2>
+            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}{rollup?.reference_name ? ' (Nov 30)' : ''}</h2>
             <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
             {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
             {rollup && <div className="kpi__foot">{rollup.reference_name ?? `Census ${rollup.year}`}: {acres(rollup.census_acres)}</div>}
@@ -73,7 +73,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
           </div>
         </article>
         <article className="glass kpi">
-          <h2 className="kpi__label">Silage recall, {seasonEnd ? '2021–2023' : 'held-out years'}</h2>
+          <h2 className="kpi__label">Silage recall, full season 2021–2023</h2>
           <div className="kpi__value">{S ? num(S.recall.value) : '—'}</div>
           {S && <div className="kpi__sub">95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
           {evaluation && (
@@ -92,6 +92,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
       </div>
 
       <aside className="glass rail" aria-label="Season and accuracy">
+        {evaluation?.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {evaluation.convergence_error}</p>}
         {evaluation && evaluation.convergence.length < 2 && base ? (
           <section>
             <h2 className="rail__title">Model vs always guessing grain</h2>
@@ -117,7 +118,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
               Model quality
             </button>
           </div>
-          {evaluation && <MiniConfusion data={evaluation} />}
+        {evaluation && <><p className="rail__note">Full-season results (November 30); independent of the selected date.</p><MiniConfusion data={evaluation} /></>}
         </section>
 
         <section>
