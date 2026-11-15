@@ -41,15 +41,15 @@ def read_decline_rule() -> DeclineRuleBaseline:
 
 
 def read_contributions() -> list[SignalContribution]:
-    """Per-field signal breakdown of the saved season-end calls (baseline/export_contributions.py)."""
+    """Per-field signal breakdown of the saved calls, season end and mid-season (baseline/export_contributions.py)."""
     try:
         with (OUTPUT_DIR / 'feature_contributions.csv').open(encoding='utf-8', newline='') as file:
             rows = list(csv.DictReader(file))
         if not rows:
             raise ValueError('Empty contributions file')
-        return [SignalContribution(field_id=r['OBJECTID'], year=r['year'], feature=r['feature'],
-            value=_num(r['value']), contribution=r['contribution'], intercept=r['intercept'], fold=r['fold'])
-            for r in rows if not (r.get('as_of') or '').strip()]
+        return [SignalContribution(field_id=r['OBJECTID'], year=r['year'], as_of=(r.get('as_of') or '').strip() or None,
+            feature=r['feature'], value=_num(r['value']), contribution=r['contribution'],
+            intercept=r['intercept'], fold=r['fold']) for r in rows]
     except (OSError, ValueError, KeyError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved signal breakdown (baseline/outputs/feature_contributions.csv) is missing '
             'or invalid; run python baseline/export_contributions.py.') from exc

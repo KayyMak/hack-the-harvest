@@ -48,6 +48,7 @@ class SignalContribution(BaseModel):
     Positive pushes toward Silage. intercept + sum(contribution) = the model's log-odds."""
     field_id: int
     year: int
+    as_of: str | None = None  # None = saved season-end model; else the as-of date of a saved mid-season call
     feature: str
     value: float | None
     contribution: float

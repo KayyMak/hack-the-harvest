@@ -270,12 +270,19 @@ class ApiChecks(unittest.TestCase):
                  for p in self.client.get('/api/baseline/predictions').json()}
         logodds, intercept = {}, {}
         for r in rows:
-            key = (r['field_id'], r['year'])
+            key = (r['field_id'], r['year'], r['as_of'])
             logodds[key] = logodds.get(key, 0.0) + r['contribution']
             intercept[key] = r['intercept']
-        self.assertEqual(set(logodds), set(preds))
+        self.assertEqual({k[:2] for k in logodds if k[2] is None}, set(preds))
         for key, p in preds.items():
-            self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[key] + logodds[key]))), p, places=4)
+            k = (*key, None)
+            self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[k] + logodds[k]))), p, places=4)
+        for d in self.client.get('/api/baseline/asof').json()['dates']:
+            for p in d['predictions']:
+                k = (p['field_id'], d['year'], d['as_of'])
+                if k in logodds:
+                    self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[k] + logodds[k]))), p['silage_probability'], places=4)
+        self.assertTrue(any(k[2] for k in logodds), 'mid-season breakdowns missing')
         with tempfile.TemporaryDirectory() as directory:
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/baseline/contributions').status_code, 503)

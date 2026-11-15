@@ -57,6 +57,8 @@ export function adaptFields(data: SavedFields, year: number): FieldsResponse {
 export interface SavedContribution {
   field_id: number
   year: number
+  /** null = saved season-end model; otherwise the as-of date of a saved mid-season call */
+  as_of: string | null
   feature: string
   value: number | null
   contribution: number
@@ -72,15 +74,22 @@ function topFeatures(rows: SavedContribution[] | undefined): string {
 export function adaptPredictions(data: SavedPrediction[], year: number, asOf: string,
   contributions: SavedContribution[] = []): Pred[] {
   if (asOf !== `${year}-11-30`) throw new Error('Only saved end-of-season predictions are available.')
-  const byField = new Map<string, SavedContribution[]>()
-  for (const c of contributions) {
-    const key = `${c.field_id}:${c.year}`
-    byField.set(key, [...(byField.get(key) ?? []), c])
-  }
+  const byField = groupContributions(contributions, null)
   return data.filter((p) => p.year === year).map((p) => ({
     OBJECTID: p.field_id, year: p.year, as_of: asOf, p_silage: p.silage_probability,
     class: p.predicted_label, abstain: false, top_features: topFeatures(byField.get(`${p.field_id}:${p.year}`)),
   }))
+}
+
+/** Contributions for one model (season end when asOf is null), keyed "field:year". */
+function groupContributions(contributions: SavedContribution[], asOf: string | null) {
+  const byField = new Map<string, SavedContribution[]>()
+  for (const c of contributions) {
+    if ((c.as_of ?? null) !== asOf) continue
+    const key = `${c.field_id}:${c.year}`
+    byField.set(key, [...(byField.get(key) ?? []), c])
+  }
+  return byField
 }
 
 /** GET /api/baseline/asof: calls saved once by `python -m harvest.export_asof`. */
@@ -103,13 +112,15 @@ export interface SavedAsOf {
 }
 
 /** One year's calls on one saved date. A date that was never saved is an error, never a guess. */
-export function adaptAsOfPredictions(data: SavedAsOf, year: number, asOf: string): Pred[] {
+export function adaptAsOfPredictions(data: SavedAsOf, year: number, asOf: string,
+  contributions: SavedContribution[] = []): Pred[] {
   const entry = data.dates.find((d) => d.year === year && d.as_of === asOf)
   if (!entry) throw new Error(`No saved calls for ${asOf}.`)
+  const byField = groupContributions(contributions, asOf)
   return [
     ...entry.predictions.map((p): Pred => ({
       OBJECTID: p.field_id, year, as_of: asOf, p_silage: p.silage_probability,
-      class: p.predicted_label, abstain: false, top_features: '[]',
+      class: p.predicted_label, abstain: false, top_features: topFeatures(byField.get(`${p.field_id}:${year}`)),
     })),
     ...entry.pending_field_ids.map((id): Pred => ({
       OBJECTID: id, year, as_of: asOf, p_silage: null, class: 'Pending', abstain: false, top_features: '[]',
