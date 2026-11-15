@@ -13,12 +13,14 @@ the judges' file and every 2025 YEAR value are never read.
 import csv
 import json
 import math
+import statistics
 import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import backtest as bt  # noqa: E402
-from common import FC1, GRAIN_METHODS, HERE, ROOT, SILAGE_METHODS, US, load_quickstats, silage_candidates  # noqa: E402
+from common import (FC1, GRAIN_METHODS, HERE, ROOT, ROUND2, ROUND2_METHODS, SILAGE_METHODS, US,  # noqa: E402
+                    load_quickstats, silage_candidates, yearly_shares)
 
 OUT = HERE / 'outputs'
 OLD_CSV = ROOT / 'forecast' / 'outputs' / 'state_estimates_2025.csv'
@@ -83,12 +85,32 @@ def estimate(hist, planted, grain, s_method, g_method, cal_s, cal_g):
     return res
 
 
-def main():
+def main(round2=False):
+    """round2=False: round 1 winner -> outputs/. round2=True: the round-2 pick, only if it qualified under the
+    pre-registered round-2 rule -> outputs/round2/ (round 1 files untouched)."""
     committed = json.loads((OUT / 'backtest.json').read_text(encoding='utf-8'))
     back, rows = bt.run()
     s_method, g_method = back['silage']['winner'], back['grain']['winner']
     assert (s_method, g_method) == (committed['silage']['winner'], committed['grain']['winner']), 'winner differs from the committed backtest'
     assert g_method == 'G1', 'only the pre-registered winner G1 is wired for 2025 grain'
+    out_dir, methods_text, rule = OUT, dict(SILAGE_METHODS), (
+        'lowest acre-weighted absolute % error over 2018-2024 state-years (simplest candidate within '
+        '0.20 pp); pre-registered in forecast_v2/PREREGISTRATION.md; 2025 answers never used')
+    if round2:
+        import backtest_round2 as bt2
+        r2c = json.loads((OUT / 'backtest_round2.json').read_text(encoding='utf-8'))
+        r2 = bt2.run()
+        assert r2['final_silage_method'] == r2c['final_silage_method'] != 'S5', 'no round-2 candidate qualified'
+        s_method = r2['final_silage_method']
+        f_, i_ = load_quickstats()
+        back['per_release'], rows['cals'] = bt.per_release(f_, i_, s_method, g_method)
+        back['silage'] = dict(back['silage'], winner=s_method, pooled={**back['silage']['pooled'], **r2['pooled']},
+                              per_year={**back['silage']['per_year'], **r2['per_year']}, interval=r2['interval'])
+        out_dir = OUT / 'round2'
+        methods_text.update(ROUND2_METHODS)
+        rule = ('ROUND 2 (run after round 1\'s 2025 score was seen): lowest 2018-2024 acre-weighted absolute % error among '
+                'R1-R3, replacing S5 only if >= 0.50 pp better and median APE not > 0.50 pp worse; pre-registered in '
+                'forecast_v2/PREREGISTRATION.md "Round 2"; 2025 answers never used to fit or choose')
     cals = rows['cals']   # per release (PREREGISTRATION.md amendment 1); NOV = the main backtest
     cal_s, cal_g = cals['NOV']['silage'], cals['NOV']['grain']
     z_s, z_g = cal_s['z'], cal_g['z']
@@ -132,7 +154,8 @@ def main():
                              round(e['grain'] + zg_ * e['grain_se']) if e['grain'] else ''])
         final = (est, us_sil, us_gr)
     est, us_sil, us_gr = final
-    with (OUT / 'convergence_by_state_2025.csv').open('w', newline='', encoding='utf-8') as f:
+    out_dir.mkdir(exist_ok=True)
+    with (out_dir / 'convergence_by_state_2025.csv').open('w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['release', 'as_of', 'state', 'silage', 'silage_low', 'silage_high', 'grain', 'grain_low', 'grain_high'])
         w.writerows(by_state)
@@ -150,8 +173,7 @@ def main():
         if v is None:
             raise RuntimeError(f'no 2025 value for {st} / {item}')
         out_rows.append([r['Year'], r['Geo Level'], st, item, r['Domain'], f'{round(v):,}'])
-    OUT.mkdir(exist_ok=True)
-    with (OUT / 'state_estimates_2025.csv').open('w', newline='', encoding='utf-8') as f:
+    with (out_dir / 'state_estimates_2025.csv').open('w', newline='', encoding='utf-8') as f:
         w = csv.writer(f)
         w.writerow(['Year', 'Geo Level', 'State', 'Data Item', 'Domain', 'Value'])
         w.writerows(out_rows)
@@ -159,6 +181,12 @@ def main():
     in_csv = {r['State'] for r in old if r['State'] != 'US TOTAL'}
     for st in sorted(in_csv):
         e = est[st]
+        if s_method in ROUND2:   # report the round-2 share (window aggregate, before any shrinkage) instead of D's
+            k_, how, _ = ROUND2[s_method]
+            a_ = [x[1] for x in yearly_shares(hist, st, range(2025 - k_, 2025))[0]]
+            if a_:
+                e = dict(e, share_mean=statistics.median(a_) if how == 'median' else statistics.mean(a_),
+                         share_sd=statistics.stdev(a_) if len(a_) > 1 else 0.0)
         g = e['grain'] if any(r['State'] == st and r['Data Item'] == GR_ITEM for r in old) else None
         states.append(dict(
             state=st, silage=round(e['silage']), silage_se=round(e['silage_se']),
@@ -193,9 +221,12 @@ def main():
     summary = dict(
         method=(f'forecast_v2 (pre-registered backtest winner). grain = latest pre-January NASS grain-area forecast '
                 f'(Nov 14 2025; Sep 12 2025 where November omits the state) as is ({GRAIN_METHODS[g_method]}). '
-                f'silage = {SILAGE_METHODS[s_method]}, i.e. the average of method D (forecast/estimate_2025.py, shares over '
-                '2022-2024) and last year\'s silage acres. Chosen by the lowest acre-weighted absolute % error over '
-                '2018-2024 state-years among 6 pre-registered candidates. SE = estimate x the backtest RMS relative '
+                + (f'silage = {SILAGE_METHODS[s_method]}, i.e. the average of method D (forecast/estimate_2025.py, shares over '
+                   '2022-2024) and last year\'s silage acres. Chosen by the lowest acre-weighted absolute % error over '
+                   '2018-2024 state-years among 6 pre-registered candidates. ' if not round2 else
+                   f'silage = {s_method}, {methods_text[s_method]}: the average of method D with 5-year median shares '
+                   '(2020-2024) and last year\'s silage acres. Selection: ' + rule + '. ')
+                + 'SE = estimate x the backtest RMS relative '
                 'error of its size class; 95% range = estimate +/- z SE with z the 95th percentile of backtest |error|/SE; '
                 'covered_by_95_interval is leave-one-year-out. US: SE = estimate x RMS of the backtest US relative '
                 'errors, 95% range = +/- t(0.975, n-1) SE. Each convergence date is re-estimated with only what was '
@@ -203,11 +234,9 @@ def main():
         answer_key_excluded=('Crop Production Annual Summary, January 2026 (cropan26), the judges\' file and every 2025 '
                              'YEAR value are never read; the planted export\'s 2025 YEAR rows were removed before commit.'),
         sources={k_: dict(title=v['title'], released=v['released'], url=v['url']) for k_, v in FC1.SOURCES['reports'].items()},
-        silage_method=dict(chosen=s_method, description=SILAGE_METHODS[s_method],
+        silage_method=dict(chosen=s_method, description=methods_text[s_method],
                            backtest_acre_weighted_abs_pct_error={m: round(v['acre_weighted_mape'], 2) for m, v in back['silage']['pooled'].items()},
-                           candidates=SILAGE_METHODS,
-                           rule=('lowest acre-weighted absolute % error over 2018-2024 state-years (simplest candidate within '
-                                 '0.20 pp); pre-registered in forecast_v2/PREREGISTRATION.md; 2025 answers never used')),
+                           candidates=methods_text, rule=rule),
         grain_revision_rel_sd=round(math.sqrt(sum(x * x for x in rel_g) / len(rel_g)), 4),
         interval_z=dict(silage=round(z_s, 2), grain=round(z_g, 2)),
         backtest=dict(silage=bt_summary('silage'), grain=bt_summary('grain')),
@@ -217,10 +246,10 @@ def main():
                 grain=round(us_gr), grain_se=round(us_gr * us_rel_g), grain_cv_pct=round(100 * us_rel_g, 2),
                 grain_low=round(us_gr * (1 - us_t_g * us_rel_g)), grain_high=round(us_gr * (1 + us_t_g * us_rel_g))),
         convergence=by_date, states=states)
-    (OUT / 'summary.json').write_text(json.dumps(summary, indent=1), encoding='utf-8', newline='\n')
+    (out_dir / 'summary.json').write_text(json.dumps(summary, indent=1), encoding='utf-8', newline='\n')
     md = next(s for s in states if s['state'] == 'MARYLAND')
     print(json.dumps(dict(us=summary['us'], maryland=md, interval_z=summary['interval_z']), indent=1))
 
 
 if __name__ == '__main__':
-    main()
+    main(round2='--round2' in sys.argv)
