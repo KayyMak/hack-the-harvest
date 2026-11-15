@@ -2326,3 +2326,6 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 .shell .map-home a { width: 36px !important; height: 36px !important; display: flex !important; align-items: center; justify-content: center; }
 /* the four headline tiles are the same size on the 2025 and BARC tabs */
 @media (min-width: 901px) { .lead .kpis .kpi { min-height: 136px; box-sizing: border-box; } }
+/* before/after images: trimmed PNGs shown whole on a dark backing (no white bands, no cropping of the title) */
+.shell .chip img { object-fit: contain !important; background: #0d1715; image-rendering: auto; }
+:root[data-mode='light'] .shell .chip img { background: #e9eeec; }

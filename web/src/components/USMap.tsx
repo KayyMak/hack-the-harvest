@@ -106,11 +106,16 @@ function FitUS({ layoutKey }: { layoutKey: string }) {
       })
     }
     const raf = requestAnimationFrame(fit)
+    // the tiles, side panel and fonts settle after the first frame: frame again so opening looks like Home
+    const settle = [250, 800, 1600].map((ms) => window.setTimeout(fit, ms))
     // re-frame when the window changes size (a page loaded in a smaller window would otherwise stay zoomed in)
     let timer = 0
     const onResize = () => { window.clearTimeout(timer); timer = window.setTimeout(fit, 200) }
     window.addEventListener('resize', onResize)
-    return () => { cancelAnimationFrame(raf); window.clearTimeout(timer); window.removeEventListener('resize', onResize) }
+    return () => {
+      cancelAnimationFrame(raf); settle.forEach((s) => window.clearTimeout(s)); window.clearTimeout(timer)
+      window.removeEventListener('resize', onResize)
+    }
   }, [map, layoutKey])
   return null
 }
