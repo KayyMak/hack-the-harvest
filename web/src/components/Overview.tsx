@@ -1,8 +1,9 @@
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { EvaluateResponse, Pred, RollupResponse } from '../api'
+import type { EvaluateResponse, Pred, RollupResponse, UnlabeledYearView } from '../api'
 import { acres, num, pct, shortDate } from '../format'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps } from './charts'
+import { Pending } from './Pending'
 
 export interface ReviewItem {
   id: number
@@ -16,6 +17,9 @@ interface Props {
   asOf: string
   counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number }
   rollup: RollupResponse | null
+  /** season-end model calls on blank-label fields that CDL marks as corn */
+  unlabeled?: UnlabeledYearView | null
+  unlabeledError?: Error | null
   evaluation: EvaluateResponse | null
   review: ReviewItem[]
   onSelect: (id: number) => void
@@ -28,7 +32,7 @@ interface Props {
 const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
+export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
   const chart = useTheme().chart
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
@@ -119,6 +123,13 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
             </button>
           </div>
         {evaluation && <><p className="rail__note">Full-season results (November 30); independent of the selected date.</p><MiniConfusion data={evaluation} /></>}
+        </section>
+
+        <section>
+          <h2 className="rail__title">Unlabeled corn fields, {year}</h2>
+          {unlabeled ? <UnlabeledNote data={unlabeled} /> : unlabeledError ? (
+            <Pending title="Calls on unlabeled fields">{unlabeledError.message}</Pending>
+          ) : <p className="rail__note">Loading…</p>}
         </section>
 
         <section>
@@ -234,5 +245,23 @@ function BaselineBars({ data }: { data: EvaluateResponse }) {
         <span><i className="bb__key--base" />Always grain</span>
       </div>
     </div>
+  )
+}
+
+/** Season-end model calls on fields with no BARC label. Kept apart from the scored, labeled results. */
+function UnlabeledNote({ data }: { data: UnlabeledYearView }) {
+  return (
+    <>
+      <p className="unl" title={data.caveat}>
+        <span className="unl__tag">Model call, no label</span>
+        {' '}{data.corn_field_years} unlabeled corn field-year{data.corn_field_years === 1 ? '' : 's'}, {acres(data.acres)} ac.
+        {' '}Called {data.silage} silage ({acres(data.silage_acres)} ac), {data.grain} grain.
+        {data.called > 0 && <> Expected silage {acres(data.expected_silage_acres)} ac (95% range {acres(data.ci[0])}–{acres(data.ci[1])}).</>}
+        {data.no_usable_dates > 0 && <> {data.no_usable_dates} without clear satellite dates, not called.</>}
+      </p>
+      <p className="rail__note">
+        No reference label exists to check these. Corn status comes from the Cropland Data Layer; the range covers only the model's own uncertainty.
+      </p>
+    </>
   )
 }

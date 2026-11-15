@@ -177,3 +177,29 @@ export interface ConvergenceAcres {
   method: string
   years: { year: number; points: ConvergenceAcresPoint[] }[]
 }
+
+/** One model call on a field-year with no BARC label (CDL says it was corn). Not a reference label. */
+export interface UnlabeledCallView {
+  OBJECTID: number
+  label: Label
+  p_silage: number
+  acres: number | null
+  corn_share: number
+}
+
+/** GET /api/unlabeled, narrowed to one year for display. */
+export interface UnlabeledYearView {
+  year: number
+  /** blank-label field-years that CDL marks as corn this year, called or not */
+  corn_field_years: number
+  called: number
+  acres: number
+  silage: number
+  grain: number
+  silage_acres: number
+  expected_silage_acres: number
+  ci: [number, number]
+  no_usable_dates: number
+  caveat: string
+  calls: UnlabeledCallView[]
+}

@@ -13,6 +13,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
+  baseline/outputs/unlabeled/                -> unlabeled.json (model calls on blank-label corn fields)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -287,6 +288,19 @@ def main() -> None:
         has_acres_convergence = True
     except Exception as exc:  # explicit, never a silent substitute
         print(f'convergence_acres.json NOT written: {exc}')
+
+    # ---- model calls on blank-label fields CDL marks as corn (same reader as GET /api/unlabeled) ----
+    try:
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app import artifacts
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE
+            write('unlabeled', json.loads(artifacts.read_unlabeled().model_dump_json()))
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
+    except Exception as exc:  # explicit, never a silent substitute; the dashboard shows Pending
+        print(f'unlabeled.json NOT written: {exc}')
 
     # ---- optional: before/after chips ----
     has_chips = False

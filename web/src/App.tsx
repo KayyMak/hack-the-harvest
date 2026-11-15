@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
-import type { Pred } from './api'
+import type { Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
@@ -81,6 +81,8 @@ export default function App() {
   const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
   const acresConv = useAsync(() => api.convergenceAcres(), [])
+  const unlabeled = useAsync(() => api.unlabeled(year), [year])
+  const unlabeledMap = useMemo(() => new Map<number, UnlabeledCallView>((unlabeled.data?.calls ?? []).map((c) => [c.OBJECTID, c])), [unlabeled.data])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
@@ -128,7 +130,7 @@ export default function App() {
   }, [panelsOpen])
 
   const downloadCsv = () => {
-    const csv = rowsToCsv(buildRows(fields.data, predMap), year, asOf)
+    const csv = rowsToCsv(buildRows(fields.data, predMap, unlabeledMap), year, asOf)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     const a = document.createElement('a')
     a.href = url
@@ -157,7 +159,7 @@ export default function App() {
       <div ref={shellRef} className={`shell shell--${view}`}>
         {meta.error && <p className="map-card map-error" role="alert">Snapshot metadata unavailable: {meta.error.message}</p>}
         {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
-        <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
+        <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
         <header className="glass topbar">
           <div className="brand">
@@ -226,6 +228,8 @@ export default function App() {
             asOf={asOf}
             counts={counts}
             rollup={rollup.data}
+            unlabeled={unlabeled.data}
+            unlabeledError={unlabeled.error}
             evaluation={evaluation.data}
             review={review}
             onSelect={select}
@@ -240,8 +244,8 @@ export default function App() {
             {view === 'fields' && (
               <>
                 <h1 className="sheet__title">Fields</h1>
-                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.</p>
-                <FieldsTable fields={fields.data} preds={predMap} onSelect={select} selectedId={selectedId} />
+                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.{unlabeled.data && unlabeled.data.called > 0 ? ` Rows marked "no label" are season-end model calls on fields BARC did not label but the Cropland Data Layer shows as corn; there is nothing to check them against.` : ''}</p>
+                <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} onSelect={select} selectedId={selectedId} />
               </>
             )}
             {view === 'quality' && (
@@ -284,7 +288,7 @@ export default function App() {
                 <path d="M2 2l10 10M12 2L2 12" />
               </svg>
             </button>
-            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={meta.data ? meta.data.has_chips !== false : true} />
+            <FieldPanel field={selected} pred={predMap.get(selected.properties.OBJECTID)} year={year} asOf={asOf} stub={false} showChips={meta.data ? meta.data.has_chips !== false : true} unlabeledCall={unlabeledMap.get(selected.properties.OBJECTID)} />
           </aside>
         )}
 
@@ -292,6 +296,7 @@ export default function App() {
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
           <span><i className="k k--pending" />{seasonEnd ? 'No BARC label, not scored' : 'Not yet decided'}</span>
+          {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label (season end)</span>}
           {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
           <span className="mapkey__note">Fill is the model's call, outline is the BARC label</span>
           <span className="mapkey__fine">
