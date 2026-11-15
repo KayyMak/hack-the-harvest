@@ -40,8 +40,10 @@ from harvest import tools as harvest_tools  # noqa: E402
 DEFAULT_MODEL = 'nvidia/nemotron-3.5-lightning-30b-a3b'
 DEFAULT_BASE = 'https://integrate.api.nvidia.com/v1'
 MAX_TOOL_ROUNDS = 6
+MAX_CALLS_PER_ROUND = 8  # tool calls run per model turn; any beyond this are skipped with a note
 MAX_VERIFY_ROUNDS = 1
 AGENT_TOOLS = [t for t in harvest_tools.TOOLS if t.name != 'write_report']  # the writer node saves the report
+AGENT_TOOL_NAMES = {t.name for t in AGENT_TOOLS}
 NUM = re.compile(r'\d[\d,]*(?:\.\d+)?')
 
 SYSTEM = """You are the analyst agent for a hackathon project that predicts whether corn fields at the BARC
@@ -131,6 +133,18 @@ def tool_specs() -> list[dict]:
     return [convert_to_openai_tool(t) for t in AGENT_TOOLS]
 
 
+def _args(tc: dict) -> tuple[dict, str | None]:
+    """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object."""
+    raw = tc.get('function', {}).get('arguments') or '{}'
+    try:
+        args = raw if isinstance(raw, dict) else json.loads(raw)
+    except (ValueError, TypeError):
+        return {}, 'tool arguments are not valid JSON; send a JSON object'
+    if not isinstance(args, dict):
+        return {}, 'tool arguments must be a JSON object'
+    return args, None
+
+
 def _summary(out: dict) -> str:
     if 'error' in out:
         return f"error: {out['error']}"
@@ -148,15 +162,16 @@ def analyst(state: AgentState) -> AgentState:
     rounds = state.get('tool_rounds', 0)
     msg = chat(state['messages'], tool_specs() if rounds < MAX_TOOL_ROUNDS else None)
     calls = msg.get('tool_calls') or []
+    if rounds >= MAX_TOOL_ROUNDS:
+        calls = []  # no tools were offered this round: a call the model makes anyway is not run
     if calls:
+        if len(calls) > MAX_CALLS_PER_ROUND:
+            log_step(run_id, node='analyst', type='plan',
+                     summary=f'only the first {MAX_CALLS_PER_ROUND} of {len(calls)} tool calls in this round are run')
+            calls = calls[:MAX_CALLS_PER_ROUND]  # every call kept in the assistant message gets a tool reply
         state['messages'].append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': calls})
         for tc in calls:
-            fn = tc.get('function', {})
-            try:
-                args = json.loads(fn.get('arguments') or '{}')
-            except ValueError:
-                args = {}
-            log_step(run_id, node='analyst', type='tool_call', tool=fn.get('name'), args=args)
+            log_step(run_id, node='analyst', type='tool_call', tool=tc.get('function', {}).get('name'), args=_args(tc)[0])
         state['pending'] = calls
         state['tool_rounds'] = rounds + 1
     else:
@@ -168,14 +183,15 @@ def analyst(state: AgentState) -> AgentState:
 def run_tools(state: AgentState) -> AgentState:
     run_id = state['run_id']
     for tc in state.get('pending', []):
-        fn = tc.get('function', {})
-        name = fn.get('name', '')
-        try:
-            args = json.loads(fn.get('arguments') or '{}')
-        except ValueError:
-            args = {}
+        name = tc.get('function', {}).get('name', '')
+        args, bad = _args(tc)
         args = {k: v for k, v in args.items() if v is not None}
-        out = harvest_tools.call(name, args)
+        if name not in AGENT_TOOL_NAMES:  # only tools offered to the model run (not write_report: it takes a run_id)
+            out = {'error': f'unknown tool {name!r}; available: {sorted(AGENT_TOOL_NAMES)}'}
+        elif bad:
+            out = {'error': bad}
+        else:
+            out = harvest_tools.call(name, args)
         text = json.dumps(out, default=str)
         state.setdefault('results', []).append(text)
         state['messages'].append({'role': 'tool', 'tool_call_id': tc.get('id', name), 'name': name, 'content': text})

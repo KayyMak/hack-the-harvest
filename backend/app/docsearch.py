@@ -28,6 +28,10 @@ CORPUS = [
     'market/README.md',
 ]
 FORECAST_SUMMARY = 'forecast/outputs/summary.json'  # its method text is indexed as one passage
+# Methods and data-source documents with no evaluation results or reference labels: the only ones an
+# in-season report may search (every other document reports results computed from BARC labels).
+# Checked by reading each whole; add a document here only after doing the same.
+IN_SEASON_SAFE = ('data_sources.md', 'market/README.md')
 CHUNK, OVERLAP = 800, 150
 TOKEN = re.compile(r'[a-z0-9]+')
 STOP = set('the a an and or of to in for on at by with from is are was were be as it its this that these those '
@@ -85,8 +89,9 @@ def _index() -> dict:
     return _cache
 
 
-def search(query: str, k: int = 4) -> list[dict]:
-    """Top-k passages by BM25. Returns [] when nothing matches (never invented text)."""
+def search(query: str, k: int = 4, sources: tuple[str, ...] | None = None) -> list[dict]:
+    """Top-k passages by BM25, only from `sources` when given (filtered before ranking, so the top k
+    come from those documents). Returns [] when nothing matches (never invented text)."""
     idx = _index()
     n, q = len(idx['chunks']), set(_tokens(query))
     if not n or not q:
@@ -94,6 +99,8 @@ def search(query: str, k: int = 4) -> list[dict]:
     k1, b = 1.5, 0.75
     scored = []
     for c in idx['chunks']:
+        if sources is not None and c['source'] not in sources:
+            continue
         s = 0.0
         for t in q:
             f = c['tf'].get(t)
@@ -106,5 +113,5 @@ def search(query: str, k: int = 4) -> list[dict]:
     return [{'id': c['id'], 'source': c['source'], 'text': c['text']} for _, c in scored[:k]]
 
 
-def corpus_files() -> list[str]:
-    return [rel for rel, _ in _sources()]
+def corpus_files(sources: tuple[str, ...] | None = None) -> list[str]:
+    return [rel for rel, _ in _sources() if sources is None or rel in sources]

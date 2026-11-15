@@ -15,6 +15,7 @@ from app.main import app
 
 FAKE_KEY = 'nvapi-test-not-a-real-key'
 VERIFIED = {'content': '{"results": []}'}  # verifier pass: nothing rejected
+IN_SEASON_DOCS = {'data_sources.md', 'market/README.md'}  # methods/data-source docs: no results, no labels
 
 
 def tool_call(i, name, **args):
@@ -57,10 +58,11 @@ class MarketChecks(unittest.TestCase):
     def configure(self):
         self.env.write_text(f'NVIDIA_API_KEY={FAKE_KEY}\nNEMOTRON_MODEL=nvidia/test-model\n')
 
-    def report(self, script):
+    def report(self, script, as_of=None):
         with patch.object(market, '_post', script):
-            # 2023 season as of its last model call (2023-11-30): official 2022 NASS figures are known by then.
-            return self.client.post('/api/market/report', json={'year': 2023})
+            # Default: 2023 season as of its last model call (2023-11-30, in-season): official 2022 NASS figures
+            # are known by then. as_of='2023-12-31' is a post-season report.
+            return self.client.post('/api/market/report', json={'year': 2023, **({'as_of': as_of} if as_of else {})})
 
     # ---- configuration
 
@@ -122,6 +124,71 @@ class MarketChecks(unittest.TestCase):
             self.assertEqual([h['year'] for h in outlook['maryland_actual_nass']], [2020, 2021])  # 2021 out Feb 2022
         finally:
             market._AS_OF.reset(token)
+
+    def test_in_season_doc_search_cannot_return_results_or_labels(self):
+        # docs/MODEL_REVIEW.md#2 lists true labels for 231/2022 and 252/2022 and per-year results; with as-of
+        # 2022-09-12 it used to come back. In-season, only methods/data-source documents may be searched.
+        for d in (date(2022, 9, 12), date(2023, 11, 30), date(2025, 9, 12)):
+            with self.subTest(as_of=d):
+                token = market._AS_OF.set(d)
+                try:
+                    for q in market.FALLBACK_QUERIES + ('true labels 231 2022 252 2022 per-year results',
+                                                        'balanced accuracy recall confusion matrix held-out',
+                                                        'MODEL_REVIEW model review experiments verified source labels'):
+                        out = market.run_tool('search_project_docs', {'query': q})
+                        self.assertEqual({p['source'] for p in out['passages']} - IN_SEASON_DOCS, set(), q)
+                        self.assertNotIn('MODEL_REVIEW', json.dumps(out['passages']))
+                        self.assertIn('project results are hidden for in-season runs', out['hidden'].lower())
+                finally:
+                    market._AS_OF.reset(token)
+
+    def test_in_season_barc_predictions_withhold_accuracy(self):
+        # Accuracy figures are computed from the 2021-2023 labels: unknown on any in-season date, even for a
+        # season whose own labels are already known (2022, as of 2023-11-30).
+        for d, year in ((date(2022, 9, 12), 2022), (date(2023, 11, 30), 2022), (date(2023, 11, 30), 2023)):
+            with self.subTest(as_of=d, year=year):
+                token = market._AS_OF.set(d)
+                try:
+                    out = market.run_tool('barc_predictions', {'year': year})
+                finally:
+                    market._AS_OF.reset(token)
+                text = json.dumps(out).lower()
+                for k in ('model_reliability_all_years', 'balanced_accuracy', 'recall', 'precision', 'caught', 'missed'):
+                    self.assertNotIn(k, text)
+                self.assertIn('withheld until after harvest', out['model_reliability'])
+                self.assertIn('model_expected_silage_acres', out)
+
+    def test_post_season_runs_keep_results_and_accuracy(self):
+        for d in (None, date(2023, 12, 31)):
+            with self.subTest(as_of=d):
+                token = market._AS_OF.set(d)
+                try:
+                    docs = market.search_project_docs('true labels 231 2022 252 2022 per-year results')
+                    barc = market.barc_predictions(2023)
+                finally:
+                    market._AS_OF.reset(token)
+                self.assertIn('docs/MODEL_REVIEW.md', {p['source'] for p in docs['passages']})
+                self.assertNotIn('hidden', docs)
+                self.assertIn('balanced_accuracy', barc['model_reliability_all_years'])
+                self.assertIn('reference_silage_acres_from_barc_labels', barc)
+
+    def test_in_season_report_only_retrieves_and_lists_methods_documents(self):
+        self.configure()
+        script = ScriptedNvidia([http_error(400, '{"detail":"tools are not supported for this model"}'),
+                                 {'content': '## Bottom line\nMaryland: 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        body = self.report(script).json()  # 2023-11-30: in-season
+        context = script.requests[-2][1]['messages'][-1]['content']  # pre-fetched tool results sent to the model
+        for doc in ('MODEL_REVIEW', 'ML_EXPERIMENTS', 'baseline/README.md', 'results.md', 'balanced_accuracy'):
+            self.assertNotIn(doc, context)
+        self.assertIn('withheld until after harvest', context)
+        docs_line = next(s for s in body['sources'] if s.startswith('Project documents: '))
+        self.assertEqual(set(docs_line.removeprefix('Project documents: ').split(', ')), IN_SEASON_DOCS)
+
+    def test_missing_field_acres_is_an_error_not_zero(self):
+        fields = [f for f in market.artifacts.read_fields() if f.field_id != 279]
+        with patch.object(market.artifacts, 'read_fields', lambda: fields):
+            out = market.run_tool('model_field_calls', {'year': 2022, 'month_day': '10-12'})
+        self.assertIn('279', out['error'])
 
     def test_model_inference_tool_reads_saved_held_out_calls(self):
         out = market.model_field_calls(2022, '10-12')
@@ -263,8 +330,35 @@ class MarketChecks(unittest.TestCase):
         self.assertEqual(json.loads(tool_msgs['price_effect'])['cite_as'], '[price_effect.one_point_of_maryland_silage_share]')
         self.assertIn('#', json.loads(tool_msgs['search_project_docs'])['passages'][0]['id'])
 
+    def test_tool_arguments_that_are_not_an_object_are_a_tool_error_not_a_crash(self):
+        self.configure()
+        bad = {'id': 'c1', 'type': 'function', 'function': {'name': 'maryland_supply', 'arguments': '[2022]'}}
+        script = ScriptedNvidia([
+            {'content': None, 'tool_calls': [bad, tool_call(2, 'maryland_supply', year=2022)]},
+            {'content': '## Bottom line\nMaryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        r = self.report(script)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([c['ok'] for c in r.json()['tool_calls']], [False, True])
+        tool_msgs = [m for m in script.requests[1][1]['messages'] if m['role'] == 'tool']
+        self.assertIn('JSON object', json.loads(tool_msgs[0]['content'])['error'])
+
+    def test_tool_calls_per_round_are_capped_with_a_note(self):
+        self.configure()
+        many = [tool_call(i, 'maryland_supply', year=2022) for i in range(market.MAX_CALLS_PER_ROUND + 4)]
+        script = ScriptedNvidia([
+            {'content': None, 'tool_calls': many},
+            {'content': '## Bottom line\nMaryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        body = self.report(script).json()
+        self.assertEqual(len(body['tool_calls']), market.MAX_CALLS_PER_ROUND)
+        sent = script.requests[1][1]['messages']
+        self.assertEqual(len(sent[2]['tool_calls']), market.MAX_CALLS_PER_ROUND)  # each kept call has a reply
+        self.assertEqual(sum(m['role'] == 'tool' for m in sent), market.MAX_CALLS_PER_ROUND)
+        self.assertIn('4 more were skipped', sent[-1]['content'])
+
     def test_doc_passages_are_citable_and_unretrieved_ones_are_not(self):
         self.configure()
+        # Post-season report: the full document set (results included) is searchable.
+        self.assertIsNone(market._AS_OF.get())
         hit = market.search_project_docs('model limitations single site')['passages'][0]
         script = ScriptedNvidia([
             {'content': None, 'tool_calls': [tool_call(1, 'search_project_docs', query='model limitations single site')]},
@@ -274,7 +368,7 @@ class MarketChecks(unittest.TestCase):
             {'content': f'## How much to trust this\nThe team documents its limits [{hit["id"]}].'},
             VERIFIED,
         ])
-        body = self.report(script).json()
+        body = self.report(script, as_of='2023-12-31').json()
         self.assertEqual(body['grounding']['ungrounded'], [])
         self.assertEqual(body['citations'][0], {**body['citations'][0], 'kind': 'doc', 'id': hit['id']})
         rewrite = script.requests[3][1]['messages'][-1]['content']
