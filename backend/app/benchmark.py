@@ -269,9 +269,21 @@ def fingerprint(path) -> dict:
             'matches_recorded': None if recorded is None else recorded == digest}
 
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
+
+def display_path(path) -> str:
+    """Repository-relative POSIX path for reports (no local user or drive); the file name if outside the repo."""
+    resolved = Path(path).resolve()
+    try:
+        return resolved.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return resolved.name
+
+
 def score_files(reference_path, predictions_path) -> dict:
     """Read both CSV files and return the comparison report."""
     report = compare(read_rows(reference_path, 'reference'), read_rows(predictions_path, 'predictions'))
-    report['reference'] = {'path': str(reference_path), **fingerprint(reference_path), **report['reference']}
-    report['predictions'] = {'path': str(predictions_path), **report['predictions']}
+    report['reference'] = {'path': display_path(reference_path), **fingerprint(reference_path), **report['reference']}
+    report['predictions'] = {'path': display_path(predictions_path), **report['predictions']}
     return report

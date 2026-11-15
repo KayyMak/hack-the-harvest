@@ -8,7 +8,7 @@
   },
   "matching": "year, geography kind (NATIONAL, STATE, OTHER STATES), geography name and crop use; kinds are never combined and states are never summed into a national figure",
   "reference": {
-    "path": "C:\\Users\\KyleR\\hth-estimate\\data\\reference\\quickstats_2025_judges.csv",
+    "path": "data/reference/quickstats_2025_judges.csv",
     "sha256": "78db6757cf3e90d03468134595b04144c74a23f5d294a8cf48250c3386576972",
     "recorded_sha256": "78db6757cf3e90d03468134595b04144c74a23f5d294a8cf48250c3386576972",
     "matches_recorded": true,
@@ -18,7 +18,7 @@
     "rejected": []
   },
   "predictions": {
-    "path": "C:\\Users\\KyleR\\hth-estimate\\baseline\\outputs\\estimate_2025\\state_estimates.csv",
+    "path": "baseline/outputs/estimate_2025/state_estimates.csv",
     "rows_read": 2,
     "rows_accepted": 2,
     "rows_rejected": 0,

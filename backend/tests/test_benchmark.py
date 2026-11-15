@@ -69,6 +69,11 @@ class BenchmarkAdapter(unittest.TestCase):
         self.assertTrue(all(row['program'] == 'SURVEY' and row['cv_percent'] is None for row in table_['rows']))
         self.assertTrue(benchmark.fingerprint(JUDGES)['matches_recorded'])
 
+    def test_report_paths_are_repo_relative_or_bare_names(self):
+        report = benchmark.score_files(JUDGES, self.write('synthetic_empty.csv', HEADER + '\n'))
+        self.assertEqual(report['reference']['path'], 'data/reference/quickstats_2025_judges.csv')
+        self.assertEqual(report['predictions']['path'], 'synthetic_empty.csv')  # outside the repo: name only
+
     def test_no_predictions_means_every_reference_row_is_missing_not_zero(self):
         report = benchmark.score_files(JUDGES, self.write('synthetic_empty.csv', HEADER + '\n'))
         self.assertEqual(report['status_counts'], {'scored': 0, 'missing_prediction': 92,
