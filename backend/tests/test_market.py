@@ -184,6 +184,12 @@ class MarketChecks(unittest.TestCase):
         docs_line = next(s for s in body['sources'] if s.startswith('Project documents: '))
         self.assertEqual(set(docs_line.removeprefix('Project documents: ').split(', ')), IN_SEASON_DOCS)
 
+    def test_missing_field_acres_is_an_error_not_zero(self):
+        fields = [f for f in market.artifacts.read_fields() if f.field_id != 279]
+        with patch.object(market.artifacts, 'read_fields', lambda: fields):
+            out = market.run_tool('model_field_calls', {'year': 2022, 'month_day': '10-12'})
+        self.assertIn('279', out['error'])
+
     def test_model_inference_tool_reads_saved_held_out_calls(self):
         out = market.model_field_calls(2022, '10-12')
         self.assertEqual(out['fields_called'], 7)
@@ -323,6 +329,31 @@ class MarketChecks(unittest.TestCase):
         self.assertIn('40,000', tool_msgs['maryland_supply'])  # the model saw real tool output
         self.assertEqual(json.loads(tool_msgs['price_effect'])['cite_as'], '[price_effect.one_point_of_maryland_silage_share]')
         self.assertIn('#', json.loads(tool_msgs['search_project_docs'])['passages'][0]['id'])
+
+    def test_tool_arguments_that_are_not_an_object_are_a_tool_error_not_a_crash(self):
+        self.configure()
+        bad = {'id': 'c1', 'type': 'function', 'function': {'name': 'maryland_supply', 'arguments': '[2022]'}}
+        script = ScriptedNvidia([
+            {'content': None, 'tool_calls': [bad, tool_call(2, 'maryland_supply', year=2022)]},
+            {'content': '## Bottom line\nMaryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        r = self.report(script)
+        self.assertEqual(r.status_code, 200, r.text)
+        self.assertEqual([c['ok'] for c in r.json()['tool_calls']], [False, True])
+        tool_msgs = [m for m in script.requests[1][1]['messages'] if m['role'] == 'tool']
+        self.assertIn('JSON object', json.loads(tool_msgs[0]['content'])['error'])
+
+    def test_tool_calls_per_round_are_capped_with_a_note(self):
+        self.configure()
+        many = [tool_call(i, 'maryland_supply', year=2022) for i in range(market.MAX_CALLS_PER_ROUND + 4)]
+        script = ScriptedNvidia([
+            {'content': None, 'tool_calls': many},
+            {'content': '## Bottom line\nMaryland harvested 40,000 silage acres [maryland_supply].'}, VERIFIED])
+        body = self.report(script).json()
+        self.assertEqual(len(body['tool_calls']), market.MAX_CALLS_PER_ROUND)
+        sent = script.requests[1][1]['messages']
+        self.assertEqual(len(sent[2]['tool_calls']), market.MAX_CALLS_PER_ROUND)  # each kept call has a reply
+        self.assertEqual(sum(m['role'] == 'tool' for m in sent), market.MAX_CALLS_PER_ROUND)
+        self.assertIn('4 more were skipped', sent[-1]['content'])
 
     def test_doc_passages_are_citable_and_unretrieved_ones_are_not(self):
         self.configure()
