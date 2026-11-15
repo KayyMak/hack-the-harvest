@@ -32,7 +32,9 @@ class SnapshotSourceChecks(unittest.TestCase):
             calls = json.loads((output / 'predict_2022_2022-10-12.json').read_text(encoding='utf-8'))
             self.assertTrue(calls)
             self.assertTrue(all(p['p_silage'] == 0 for p in calls))
-            convergence = json.loads((output / 'convergence_acres.json').read_text(encoding='utf-8'))
+            convergence_path = output / 'convergence_acres.json'
+            self.assertTrue(convergence_path.is_file(), result.stdout + result.stderr)
+            convergence = json.loads(convergence_path.read_text(encoding='utf-8'))
             self.assertTrue(convergence['years'])
             self.assertTrue(all(p['expected_silage_acres'] == 0 for y in convergence['years'] for p in y['points']))
 

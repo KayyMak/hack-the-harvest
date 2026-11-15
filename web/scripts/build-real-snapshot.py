@@ -299,7 +299,6 @@ def main() -> None:
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:
-        import sys
         sys.path.insert(0, str(ROOT / 'backend'))
         from app.artifacts import compute_rollup  # same code as GET /api/baseline/rollup
         write('barc_rollup', compute_rollup().model_dump())
