@@ -13,6 +13,9 @@ import type {
   ConvergenceAcres,
   EvaluateResponse,
   FieldsResponse,
+  MarketOutlook,
+  MarketReport,
+  MarketStatus,
   Pred,
   RollupResponse,
   SeriesResponse,
@@ -55,6 +58,25 @@ async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   return (await res.json()) as T
 }
 
+
+/** Like getJson, but surfaces the backend's `detail` message (e.g. how to add the NVIDIA key). */
+async function getWithDetail<T>(url: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(url, init)
+  if (!res.ok) {
+    let detail = `${init?.method ?? 'GET'} ${url} → ${res.status}`
+    try {
+      const body = (await res.json()) as { detail?: unknown }
+      if (typeof body.detail === 'string') detail = body.detail
+    } catch {
+      /* not JSON */
+    }
+    throw new ApiError(detail, res.status)
+  }
+  return (await res.json()) as T
+}
+
+const MARKET_STATIC = 'Market reports need the live backend; this is a static snapshot.'
+
 const fromSnapshot = <T>(name: string) => getJson<T>(`${SNAPSHOT_BASE}${name}.json`)
 
 const post = <T>(path: string, body: unknown) =>
@@ -70,6 +92,22 @@ const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
 const savedAsOf = () => getJson<SavedAsOf>(`${API_URL}/api/baseline/asof`)
 
 export const api = {
+  /** Market report (optional feature). Live backend only; the NVIDIA key stays on the server. */
+  marketStatus: (): Promise<MarketStatus> =>
+    STATIC ? Promise.reject(new ApiError(MARKET_STATIC, 501)) : getWithDetail<MarketStatus>(`${API_URL}/api/market/status`),
+  marketOutlook: (season: number, asOf: string | null): Promise<MarketOutlook> =>
+    STATIC
+      ? Promise.reject(new ApiError(MARKET_STATIC, 501))
+      : getWithDetail<MarketOutlook>(`${API_URL}/api/market/outlook?season=${season}${asOf ? `&as_of=${asOf}` : ''}`),
+  marketReport: (year: number, asOf: string | null): Promise<MarketReport> =>
+    STATIC
+      ? Promise.reject(new ApiError(MARKET_STATIC, 501))
+      : getWithDetail<MarketReport>(`${API_URL}/api/market/report`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ year, as_of: asOf }),
+        }),
+
   /** Static mode only: describes the snapshot (stub or real, which years / dates exist). */
   meta: (): Promise<SnapshotMeta | null> =>
     STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()) : Promise.resolve({

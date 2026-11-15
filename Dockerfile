@@ -16,6 +16,18 @@ COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv base
 COPY baseline/outputs/decline_rule/metrics.json ./baseline/outputs/decline_rule/metrics.json
 COPY data/reference/quickstats_2025_judges.csv ./data/reference/quickstats_2025_judges.csv
 ENV QUICKSTATS_CSV=/app/data/reference/quickstats_2025_judges.csv
+COPY market/data/nass_market.csv market/data/nass_sources.json market/data/market_timeline.json ./market/data/
+COPY forecast/outputs/summary.json ./forecast/outputs/summary.json
+# Project documents the market report retrieves from (backend/app/docsearch.py CORPUS).
+COPY data_sources.md ./
+COPY data/README.md ./data/README.md
+COPY docs/MODEL_REVIEW.md docs/ML_EXPERIMENTS.md ./docs/
+COPY baseline/README.md baseline/NEMOTRON_COMPARISON.md baseline/SCENE_FILTER_EXPERIMENT.md ./baseline/
+COPY baseline/outputs/results.md ./baseline/outputs/results.md
+COPY baseline/outputs/decline_rule/results.md ./baseline/outputs/decline_rule/results.md
+COPY baseline/outputs/experiments/no_scene_cloud_filter/results.md ./baseline/outputs/experiments/no_scene_cloud_filter/results.md
+COPY baseline/outputs/diagnostics/field_323_and_327/findings.md ./baseline/outputs/diagnostics/field_323_and_327/findings.md
+COPY market/README.md ./market/README.md
 COPY BARC_Corn.2021-2023.gpkg ./
 COPY --from=frontend /build/dist/ ./web/dist/
 USER harvest

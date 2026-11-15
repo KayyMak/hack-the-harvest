@@ -1,5 +1,6 @@
 """Run from backend/: python -m uvicorn app.main:app --reload."""
 import sys
+from datetime import date
 from uuid import uuid4
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
@@ -9,9 +10,10 @@ from pydantic import BaseModel
 from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
     read_predictions, read_quickstats, read_summary)
-from . import tools
+from . import market, tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import (AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, MarketOutlook, MarketReport,
+    MarketStatus, Observation, Prediction, QuickStatsRow, Rollup)
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -101,6 +103,39 @@ def quickstats(state: str = 'MARYLAND', year: int | None = None, crop_use: str |
                level: str | None = None) -> list[QuickStatsRow]:
     """Lab QuickStats rows (domain TOTAL). Filter by year, crop_use (grain|silage), level (STATE|COUNTY)."""
     return _serve(read_quickstats, state, year, crop_use, level)
+
+
+
+class MarketReportRequest(BaseModel):
+    year: int
+    as_of: date | None = None
+
+
+@app.get('/api/market/status', response_model=MarketStatus)
+def market_status() -> MarketStatus:
+    """Whether an NVIDIA key is configured on the server (the key itself is never returned)."""
+    return MarketStatus(**market.status())
+
+
+@app.get('/api/market/outlook', response_model=MarketOutlook)
+def market_outlook(season: int, as_of: date | None = None) -> MarketOutlook:
+    """Month-by-month outlook for a season known on `as_of` (default: latest), from saved forecasts,
+    model calls and NASS data. No LLM. Seasons: 2025 (statewide/US outlook), 2021-2023 (BARC model)."""
+    try:
+        return MarketOutlook(**_serve(market.outlook, season, as_of))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@app.post('/api/market/report', response_model=MarketReport)
+def market_report(request: MarketReportRequest) -> MarketReport:
+    """Nemotron calls the market tools and writes a sample outlook as of a date; 503 with instructions when no key is set."""
+    try:
+        return MarketReport(**market.generate_report(request.year, request.as_of))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except (market.MarketUnavailable, ArtifactUnavailable) as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
 class AgentRequest(BaseModel):

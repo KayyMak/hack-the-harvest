@@ -1,6 +1,6 @@
 """Public API response types. FastAPI publishes these at /openapi.json."""
-from datetime import date
-from typing import Literal
+from datetime import date, datetime
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -189,3 +189,61 @@ class Convergence(BaseModel):
     scope: str
     method: str
     years: list[ConvergenceYear]
+
+
+class MarketStatus(BaseModel):
+    configured: bool
+    model: str
+    how_to_configure: str
+
+
+class MarketOutlook(BaseModel):
+    """Season timeline known on `as_of`, from saved forecasts, model calls and NASS data. Values are display
+    strings except `timeline.series`, which carries numbers for the chart."""
+    season: int
+    as_of: date
+    dates: list[str]
+    sources: dict[str, str]
+    timeline: dict[str, Any]
+
+
+class MarketToolCall(BaseModel):
+    name: str
+    args: dict[str, Any]
+    ok: bool
+    summary: str
+
+
+class MarketCitation(BaseModel):
+    id: str
+    kind: Literal['tool', 'doc']
+    label: str
+    excerpt: str
+
+
+class MarketUngroundedClaim(BaseModel):
+    text: str
+    kind: Literal['uncited', 'unsupported', 'miscited', 'verifier']
+    reason: str
+    removed: bool = False
+
+
+class MarketGrounding(BaseModel):
+    """Every sentence must cite a retrieved tool result or document passage, and its numbers must appear there."""
+    claims_checked: int
+    ungrounded: list[MarketUngroundedClaim]
+    verifier: Literal['nemotron', 'unavailable']
+
+
+class MarketReport(BaseModel):
+    year: int
+    as_of: date
+    model: str
+    generated_at: datetime
+    mode: Literal['tools', 'context']
+    markdown: str
+    tool_calls: list[MarketToolCall]
+    citations: list[MarketCitation]
+    grounding: MarketGrounding
+    disclaimer: str
+    sources: list[str]

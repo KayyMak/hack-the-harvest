@@ -1,0 +1,91 @@
+year,geo,item,value,unit,preliminary,release,raw
+2020,Maryland,grain_area_harvested,430.0,1000 acres,False,cropan23,430
+2020,Maryland,grain_price,5.6,$/bu,False,cpvl0223,5.60
+2020,Maryland,grain_production,66650.0,1000 bu,False,cropan23,66650
+2020,Maryland,grain_value_of_production,373240.0,1000 $,False,cpvl0223,373240
+2020,Maryland,grain_yield,155.0,bu/acre,False,cropan23,155.0
+2020,Maryland,planted_all_purposes,480.0,1000 acres,False,cropan23,480
+2020,Maryland,silage_area_harvested,40.0,1000 acres,False,cropan23,40
+2020,Maryland,silage_production,680.0,1000 tons,False,cropan23,680
+2020,Maryland,silage_yield,17.0,tons/acre,False,cropan23,17.0
+2020,United States,grain_area_harvested,82313.0,1000 acres,False,cropan23,82313
+2020,United States,grain_price,4.53,$/bu,False,cpvl0223,4.53
+2020,United States,grain_production,14111449.0,1000 bu,False,cropan23,14111449
+2020,United States,grain_value_of_production,64313524.0,1000 $,False,cpvl0223,64313524
+2020,United States,grain_yield,171.4,bu/acre,False,cropan23,171.4
+2020,United States,planted_all_purposes,90652.0,1000 acres,False,cropan23,90652
+2020,United States,silage_area_harvested,6711.0,1000 acres,False,cropan23,6711
+2020,United States,silage_production,137675.0,1000 tons,False,cropan23,137675
+2020,United States,silage_yield,20.5,tons/acre,False,cropan23,20.5
+2021,Maryland,grain_area_harvested,415.0,1000 acres,False,cropan24,415
+2021,Maryland,grain_price,6.39,$/bu,False,cpvl0224,6.39
+2021,Maryland,grain_production,72625.0,1000 bu,False,cropan24,72625
+2021,Maryland,grain_value_of_production,464074.0,1000 $,False,cpvl0224,464074
+2021,Maryland,grain_yield,175.0,bu/acre,False,cropan24,175.0
+2021,Maryland,planted_all_purposes,460.0,1000 acres,False,cropan24,460
+2021,Maryland,silage_area_harvested,35.0,1000 acres,False,cropan24,35
+2021,Maryland,silage_production,700.0,1000 tons,False,cropan24,700
+2021,Maryland,silage_yield,20.0,tons/acre,False,cropan24,20.0
+2021,United States,grain_area_harvested,84988.0,1000 acres,False,cropan24,84988
+2021,United States,grain_price,6.0,$/bu,False,cpvl0224,6.00
+2021,United States,grain_production,15017788.0,1000 bu,False,cropan24,15017788
+2021,United States,grain_value_of_production,90264369.0,1000 $,False,cpvl0224,90264369
+2021,United States,grain_yield,176.7,bu/acre,False,cropan24,176.7
+2021,United States,planted_all_purposes,92901.0,1000 acres,False,cropan24,92901
+2021,United States,silage_area_harvested,6451.0,1000 acres,False,cropan24,6451
+2021,United States,silage_production,129537.0,1000 tons,False,cropan24,129537
+2021,United States,silage_yield,20.1,tons/acre,False,cropan24,20.1
+2022,Maryland,grain_area_harvested,360.0,1000 acres,False,cropan25,360
+2022,Maryland,grain_price,6.53,$/bu,False,cpvl0225,6.53
+2022,Maryland,grain_production,59400.0,1000 bu,False,cropan25,59400
+2022,Maryland,grain_value_of_production,387882.0,1000 $,False,cpvl0225,387882
+2022,Maryland,grain_yield,165.0,bu/acre,False,cropan25,165.0
+2022,Maryland,planted_all_purposes,420.0,1000 acres,False,cropan25,420
+2022,Maryland,silage_area_harvested,40.0,1000 acres,False,cropan25,40
+2022,Maryland,silage_production,760.0,1000 tons,False,cropan25,760
+2022,Maryland,silage_yield,19.0,tons/acre,False,cropan25,19.0
+2022,United States,grain_area_harvested,78705.0,1000 acres,False,cropan25,78705
+2022,United States,grain_price,6.54,$/bu,False,cpvl0225,6.54
+2022,United States,grain_production,13650531.0,1000 bu,False,cropan25,13650531
+2022,United States,grain_value_of_production,89452876.0,1000 $,False,cpvl0225,89452876
+2022,United States,grain_yield,173.4,bu/acre,False,cropan25,173.4
+2022,United States,planted_all_purposes,88162.0,1000 acres,False,cropan25,88162
+2022,United States,silage_area_harvested,6851.0,1000 acres,False,cropan25,6851
+2022,United States,silage_production,128287.0,1000 tons,False,cropan25,128287
+2022,United States,silage_yield,18.7,tons/acre,False,cropan25,18.7
+2023,Maryland,grain_area_harvested,440.0,1000 acres,False,cropan25,440
+2023,Maryland,grain_price,4.58,$/bu,False,cpvl0225,4.58
+2023,Maryland,grain_production,72600.0,1000 bu,False,cropan25,72600
+2023,Maryland,grain_value_of_production,332508.0,1000 $,False,cpvl0225,332508
+2023,Maryland,grain_yield,165.0,bu/acre,False,cropan25,165.0
+2023,Maryland,planted_all_purposes,480.0,1000 acres,False,cropan25,480
+2023,Maryland,silage_area_harvested,30.0,1000 acres,False,cropan25,30
+2023,Maryland,silage_production,510.0,1000 tons,False,cropan25,510
+2023,Maryland,silage_yield,17.0,tons/acre,False,cropan25,17.0
+2023,United States,grain_area_harvested,86506.0,1000 acres,False,cropan25,86506
+2023,United States,grain_price,4.55,$/bu,False,cpvl0225,4.55
+2023,United States,grain_production,15340520.0,1000 bu,False,cropan25,15340520
+2023,United States,grain_value_of_production,70085591.0,1000 $,False,cpvl0225,70085591
+2023,United States,grain_yield,177.3,bu/acre,False,cropan25,177.3
+2023,United States,planted_all_purposes,94641.0,1000 acres,False,cropan25,94641
+2023,United States,silage_area_harvested,6461.0,1000 acres,False,cropan25,6461
+2023,United States,silage_production,129854.0,1000 tons,False,cropan25,129854
+2023,United States,silage_yield,20.1,tons/acre,False,cropan25,20.1
+2024,Maryland,grain_area_harvested,390.0,1000 acres,False,cropan25,390
+2024,Maryland,grain_price,4.4,$/bu,True,cpvl0225,4.40
+2024,Maryland,grain_production,55770.0,1000 bu,False,cropan25,55770
+2024,Maryland,grain_value_of_production,245388.0,1000 $,True,cpvl0225,245388
+2024,Maryland,grain_yield,143.0,bu/acre,False,cropan25,143.0
+2024,Maryland,planted_all_purposes,440.0,1000 acres,False,cropan25,440
+2024,Maryland,silage_area_harvested,35.0,1000 acres,False,cropan25,35
+2024,Maryland,silage_production,560.0,1000 tons,False,cropan25,560
+2024,Maryland,silage_yield,16.0,tons/acre,False,cropan25,16.0
+2024,United States,grain_area_harvested,82896.0,1000 acres,False,cropan25,82896
+2024,United States,grain_price,4.35,$/bu,True,cpvl0225,4.35
+2024,United States,grain_production,14866744.0,1000 bu,False,cropan25,14866744
+2024,United States,grain_value_of_production,64672613.0,1000 $,True,cpvl0225,64672613
+2024,United States,grain_yield,179.3,bu/acre,False,cropan25,179.3
+2024,United States,planted_all_purposes,90594.0,1000 acres,False,cropan25,90594
+2024,United States,silage_area_harvested,6100.0,1000 acres,False,cropan25,6100
+2024,United States,silage_production,123093.0,1000 tons,False,cropan25,123093
+2024,United States,silage_yield,20.2,tons/acre,False,cropan25,20.2
