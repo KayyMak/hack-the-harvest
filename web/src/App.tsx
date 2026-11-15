@@ -9,6 +9,9 @@ import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
 import { MapView } from './components/MapView'
+import { ForecastKey, ForecastPanels } from './components/Forecast'
+import type { Crop, Forecast } from './components/forecastTypes'
+import { USMap } from './components/USMap'
 import { MarketPanel } from './components/MarketPanel'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
@@ -22,6 +25,7 @@ import type { Mode } from './theme'
 
 const VIEWS = [
   { id: 'overview', label: 'Overview' },
+  { id: 'states', label: '2025 by state' },
   { id: 'fields', label: 'Fields' },
   { id: 'quality', label: 'Model quality' },
   { id: 'agent', label: 'Agent' },
@@ -61,6 +65,16 @@ export default function App() {
   const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [view, setView] = useState<ViewId>('overview')
+  const [crop, setCrop] = useState<Crop>('silage')
+  const [usState, setUsState] = useState<string | null>(null)
+  const [stateTable, setStateTable] = useState(false)
+  const byState = useAsync(async () => {
+    const r = await fetch(`${import.meta.env.BASE_URL ?? '/'}forecast_2025.json`)
+    if (!r.ok) throw new Error(`forecast_2025.json → ${r.status}`)
+    return (await r.json()) as Forecast
+  }, [])
+  const usShapes = useAsync(async () => (await fetch(`${import.meta.env.BASE_URL ?? '/'}us-states.geojson`)).json(), [])
+  const byStateRows = useMemo(() => new Map((byState.data?.states ?? []).map((r) => [r.state, r])), [byState.data])
 
   useEffect(() => {
     applyTheme(theme, mode)
@@ -157,7 +171,10 @@ export default function App() {
       if (n >= 1 && n <= VIEWS.length) setView(VIEWS[n - 1].id)
       if (e.key === 'ArrowRight') setAsOfIdx((i) => Math.min(i + 1, asOfDates.length - 1))
       if (e.key === 'ArrowLeft') setAsOfIdx((i) => Math.max(i - 1, 0))
-      if (e.key === 'Escape') setSelectedId(null)
+      if (e.key === 'Escape') {
+        setSelectedId(null)
+        setUsState(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -168,7 +185,21 @@ export default function App() {
       <div ref={shellRef} className={`shell shell--${view}`}>
         {meta.error && <p className="map-card map-error" role="alert">Snapshot metadata unavailable: {meta.error.message}</p>}
         {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
-        <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
+        {view === 'states' ? (
+          <USMap shapes={usShapes.data} rows={byStateRows} crop={crop} selected={usState} onSelect={setUsState} dark={mode === 'dark'} layoutKey={`${usState ?? ''}-${stateTable}-${!!byState.data}`} />
+        ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
+        {view === 'states' && byState.data && (
+          <>
+            <div className="glass statecrop seg" role="group" aria-label="Crop">
+              {(['silage', 'grain'] as Crop[]).map((c) => (
+                <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}>{c === 'silage' ? 'Silage' : 'Grain'}</button>
+              ))}
+            </div>
+            <ForecastPanels data={byState.data} crop={crop} selected={usState} onSelect={setUsState} showTable={stateTable} onTable={setStateTable} />
+            <ForecastKey crop={crop} />
+          </>
+        )}
+        {view === 'states' && byState.error && <p className="map-card map-error" role="alert">2025 by-state estimate unavailable: {byState.error.message}</p>}
 
         <header className="glass topbar">
           <div className="brand">
@@ -186,7 +217,7 @@ export default function App() {
             ))}
           </nav>
           <div className="topbar__spacer" />
-          <div className="asof" role="group" aria-label="As-of date">
+          <div className="asof" role="group" aria-label="As-of date" hidden={view === 'states'}>
             <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
             {seasonEnd ? (
               <span className="season-pill" title="Mid-season calls are pending">End of season {year}</span>
@@ -250,7 +281,7 @@ export default function App() {
           />
         )}
 
-        {view !== 'overview' && (
+        {view !== 'overview' && view !== 'states' && (
           <section className="glass sheet" aria-label={VIEWS.find((v) => v.id === view)?.label}>
             {view === 'fields' && (
               <>
@@ -302,7 +333,7 @@ export default function App() {
           </section>
         )}
 
-        {selected && (
+        {view !== 'states' && selected && (
           <aside className="glass drawer" aria-label={`Field ${selected.properties.OBJECTID}`}>
             <button className="drawer__close" aria-label="Close field" onClick={() => setSelectedId(null)}>
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2">
@@ -313,7 +344,7 @@ export default function App() {
           </aside>
         )}
 
-        <div className="glass mapkey">
+        {view !== 'states' && <div className="glass mapkey">
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
           <span><i className="k k--pending" />{seasonEnd ? 'No BARC label, not scored' : 'Not yet decided'}</span>
@@ -323,7 +354,7 @@ export default function App() {
           <span className="mapkey__fine">
             Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Prototype, not a USDA or NASS release.
           </span>
-        </div>
+        </div>}
       </div>
     </ThemeContext.Provider>
   )

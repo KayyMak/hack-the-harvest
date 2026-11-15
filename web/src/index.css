@@ -1959,3 +1959,60 @@ textarea {
 :root[data-theme='glass'][data-mode='light'] .kpi__err { color: #13221d; }
 :root[data-theme='glass'][data-mode='light'] .est a { color: #1c5d86; }
 :root[data-theme='glass'][data-mode='light'] .est__partial { border-left-color: #b07814; background: rgba(226, 164, 58, 0.16); }
+/* 2025 by-state view */
+
+.kpi--button { text-align: left; font: inherit; cursor: pointer; }
+.kpi--button:hover { border-color: rgba(143, 205, 242, 0.45); }
+.errtag { display: inline-block; margin-left: 6px; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 600; }
+.errtag.is-good { background: rgba(92, 191, 122, 0.18); color: #a6e3b7; }
+.errtag.is-off { background: rgba(240, 160, 90, 0.18); color: #f4c08e; }
+
+.sheet__headrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.ftable__range { font-size: 11px; color: #93a59e; }
+.ftable__flag { display: inline-grid; place-items: center; width: 16px; height: 16px; margin-left: 6px; border-radius: 50%; background: rgba(255, 155, 138, 0.2); color: #ffb3a6; font-size: 11px; font-weight: 700; }
+
+.statgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 16px; margin: 12px 0 8px; }
+.statgrid dt { font-size: 12px; color: #a9b8b2; }
+.statgrid dd { margin: 2px 0 0; font-size: 18px; font-weight: 600; }
+
+.rangebar { position: relative; height: 46px; margin-top: 8px; }
+.rangebar__track { position: absolute; left: 0; right: 0; top: 14px; height: 4px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); }
+.rangebar__band { position: absolute; top: 10px; height: 12px; border-radius: 6px; background: rgba(143, 205, 242, 0.35); }
+.rangebar__est { position: absolute; top: 6px; width: 3px; height: 20px; margin-left: -1.5px; border-radius: 2px; background: #8fcdf2; }
+.rangebar__nass { position: absolute; top: 9px; width: 12px; height: 12px; margin-left: -6px; transform: rotate(45deg); background: #f0eee6; border: 2px solid #0d1715; }
+.rangebar__labels { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; font-size: 11px; color: #93a59e; }
+
+.mapkey__title { font-weight: 600; color: #e8eeeb; }
+.errkey { display: inline-flex; align-items: center; gap: 2px; }
+.errkey i { width: 18px; height: 12px; display: inline-block; }
+.errkey i:first-child { border-radius: 3px 0 0 3px; }
+.errkey i:last-child { border-radius: 0 3px 3px 0; }
+.errkey b { font-size: 11px; font-weight: 600; color: #a9b8b2; padding: 0 4px; }
+
+.shell--forecast .leaflet-tile-pane { filter: none; }
+
+/* light mode */
+:root[data-theme='glass'][data-mode='light'] .statgrid dt,
+:root[data-theme='glass'][data-mode='light'] .ftable__range,
+:root[data-theme='glass'][data-mode='light'] .rangebar__labels,
+:root[data-theme='glass'][data-mode='light'] .errkey b { color: #55655e; }
+:root[data-theme='glass'][data-mode='light'] .errtag.is-good { background: rgba(46, 125, 50, 0.14); color: #1b6b34; }
+:root[data-theme='glass'][data-mode='light'] .errtag.is-off { background: rgba(196, 98, 26, 0.14); color: #9a4a12; }
+:root[data-theme='glass'][data-mode='light'] .mapkey__title { color: #13221d; }
+:root[data-theme='glass'][data-mode='light'] .rangebar__track { background: rgba(20, 45, 38, 0.12); }
+:root[data-theme='glass'][data-mode='light'] .rangebar__band { background: rgba(28, 93, 134, 0.25); }
+:root[data-theme='glass'][data-mode='light'] .rangebar__est { background: #1c5d86; }
+:root[data-theme='glass'][data-mode='light'] .rangebar__nass { background: #13221d; border-color: #ffffff; }
+
+@media (max-width: 900px) {
+  .statgrid { grid-template-columns: 1fr 1fr; }
+}
+.rail .rail__note--keep { display: block !important; }
+a.ghost-btn { text-decoration: none; color: inherit; }
+.rail .rail__note--keep { display: block !important; }
+.statecrop { position: absolute; z-index: 995; top: 84px; left: 50%; transform: translateX(-50%); padding: 4px; border-radius: 12px; }
+.shell--states .lead { top: 136px; }
+.shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: 136px; }
+@media (max-width: 900px) { .statecrop { position: relative; top: auto; left: auto; transform: none; } }
+.asof[hidden] { display: none !important; }
+@media (max-width: 1520px) and (min-width: 901px) { .views__btn { padding: 8px 9px; font-size: 14px; } .topbar { gap: 14px; } }
