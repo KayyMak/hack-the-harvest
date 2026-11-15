@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / 'baseline' / 'outputs'
 FIELDS_GPKG = ROOT / 'BARC_Corn.2021-2023.gpkg'
 FIELDS_TABLE = 'barc_silage_grain_corn20212023'
-FORECAST_SUMMARY = ROOT / 'forecast' / 'outputs' / 'summary.json'
+FORECAST_SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 NASS_2025_CSV = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
 
 
