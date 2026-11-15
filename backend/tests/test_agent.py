@@ -350,12 +350,12 @@ class Reliability(AgentChecks):
                          {'year': 2022, 'field_ids': [231, 252], 'q': 'none of it'})
 
     # ---- 4. verifier
-    def test_verifier_accepts_percent_rounding_interval_levels_years_and_count_arithmetic(self):
+    def test_verifier_accepts_percent_rounding_and_interval_levels(self):
         ev = json.dumps(agent.harvest_tools.call('evaluate', {'year': 2022}))
         agg = json.dumps(agent.harvest_tools.call('aggregate', {'year': 2022}))
         counts = json.dumps({'n_fields': 19, 'n_pending': 4, 'tpr': 0.782, 'share': 0.503})
         ok = ('In 2022, 95% interval 32.3 to 104.8 acres; the Wilson 95% CI; a 90% range. TPR 78.2% and 50.3 percent; '
-              '19 fields, 4 pending, so 15 decided and 23 in all. Balanced accuracy 0.83, CV 27%.')
+              '19 fields, 4 pending. Balanced accuracy 0.83, CV 27%.')
         self.assertEqual(agent.unsupported_numbers(ok, [ev, agg, counts], ''), [])
 
     def test_verifier_still_rejects_invented_numbers(self):
@@ -366,6 +366,12 @@ class Reliability(AgentChecks):
         # A real classify result is full of field ids: they must not make arbitrary integers reachable.
         cls = json.dumps(agent.harvest_tools.call('classify', {'year': 2022}), default=str)
         self.assertEqual(agent.unsupported_numbers('Fields 347 and 500 total 612 acres.', [cls], ''), ['347', '500', '612'])
+
+    def test_verifier_rejects_derived_counts_and_free_years(self):
+        # Derived counts are not accepted: a wrong "5 of 7 correct" could be built from 1 + 4 in a confusion matrix.
+        counts = json.dumps({'n': 7, 'confusion_matrix': [[2, 1], [0, 4]]})
+        self.assertEqual(agent.unsupported_numbers('5 of 7 correct; 2031 acres.', [counts], ''), ['5', '2031'])
+        self.assertEqual(agent.unsupported_numbers('In 2022, 7 field-years.', [counts], 'Score 2022'), [])
 
     # ---- 5. report format
     def test_long_floats_are_rounded_and_prompt_has_the_report_rules(self):
@@ -386,3 +392,25 @@ class Reliability(AgentChecks):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ModelCallLimits(unittest.TestCase):
+    """One model call is bounded in total time and never waits forever for a busy slot."""
+
+    def test_busy_slot_times_out_with_a_clear_error(self):
+        import urllib.request
+        from app import llm_guard
+        with patch.object(llm_guard, 'SLOT_WAIT', 0.05), patch.object(llm_guard, 'MODEL_SLOTS', llm_guard.threading.BoundedSemaphore(1)) as slots:
+            slots.acquire()
+            try:
+                with self.assertRaisesRegex(TimeoutError, 'busy'):
+                    llm_guard.post_json(urllib.request.Request('http://127.0.0.1:9/never'), 1)
+            finally:
+                slots.release()
+
+    def test_total_deadline_stops_retrying(self):
+        import urllib.request
+        from app import llm_guard
+        with patch.object(llm_guard, 'RETRY_DEADLINE', 0.0):
+            with self.assertRaisesRegex(TimeoutError, 'within'):
+                llm_guard.post_json(urllib.request.Request('http://127.0.0.1:9/never'), 1)

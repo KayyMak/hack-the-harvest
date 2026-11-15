@@ -321,27 +321,6 @@ PERCENT_AFTER = re.compile(r'\s*(?:%|percent\b)', re.I)
 _NOT_COUNTS = re.compile(r'(?:^|_)(?:ids?|year|fold|step|pending)$|^\d{4}$', re.I)  # ids, years: not quantities
 
 
-def _int_leaves(results: list[str]) -> set[int]:
-    """Integer values in the tool results that are counts or quantities (not ids, years or folds): the only
-    numbers whose sums and differences the verifier accepts."""
-    out: set[int] = set()
-
-    def walk(o, key: str) -> None:
-        if isinstance(o, dict):
-            for k, v in o.items():
-                walk(v, str(k))
-        elif isinstance(o, list):
-            for v in o:
-                walk(v, key)
-        elif isinstance(o, int) and not isinstance(o, bool) and not _NOT_COUNTS.search(key):
-            out.add(o)
-
-    for r in results:
-        try:
-            walk(json.loads(r), '')
-        except (ValueError, TypeError):
-            continue
-    return out
 
 
 def unsupported_numbers(draft: str, results: list[str], query: str) -> list[str]:
@@ -349,14 +328,12 @@ def unsupported_numbers(draft: str, results: list[str], query: str) -> list[str]
       * the tool value itself, or rounded to the draft's decimals (0.833 from 0.8333..., 40 from 40.13);
       * a percent of a tool fraction, at the shown decimals, when followed by % or "percent" (0.782 -> 78.2%);
       * 95 or 90 as the level of an interval / CI / range ("95% interval", "Wilson 95%");
-      * a year (2000-2035, no decimals or commas);
-      * an integer equal to the sum or difference of two integer counts in the results (19 - 4 = 15).
+    Years and counts must appear in a tool result (or the request) as written: derived sums or differences are
+    not accepted, because a wrong count ("5 of 7 correct") can always be built from two small integers.
     Invented or altered figures fail."""
     source = ' '.join(results) + ' ' + query
     exact = {_norm(n) for n in NUM.findall(source)}
     values = [float(_norm(n)) for n in NUM.findall(source)]
-    ints = sorted(_int_leaves(results))
-    combos = {a + b for a in ints for b in ints} | {abs(a - b) for a in ints for b in ints}
     text = re.sub(r'\[[^\]]*\]', ' ', draft)  # ignore [tool] tags
 
     def supported(m: re.Match) -> bool:
@@ -372,8 +349,6 @@ def unsupported_numbers(draft: str, results: list[str], query: str) -> list[str]
         if PERCENT_AFTER.match(after) and any(abs(round(v * 100, k) - d) < 1e-9 for v in values):
             return True
         if t in ('95', '90') and (INTERVAL_AFTER.match(after) or INTERVAL_BEFORE.search(before)):
-            return True
-        if k == 0 and ',' not in n and (2000 <= d <= 2035 or int(d) in combos):
             return True
         return False
 

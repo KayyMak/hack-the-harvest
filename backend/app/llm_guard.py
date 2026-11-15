@@ -23,6 +23,8 @@ from email.utils import parsedate_to_datetime
 
 RETRY_ATTEMPTS = 7          # total tries per model call (NVIDIA's free tier limits requests per minute)
 RETRY_MAX_WAIT = 75.0       # seconds of backoff in total, Retry-After included; spans a per-minute window
+RETRY_DEADLINE = 180.0      # seconds for one model call in total: requests, waits and queueing included
+SLOT_WAIT = 90.0            # seconds to wait for a free model slot before giving up
 RETRY_BASE = 2.0            # first backoff; doubles each retry (capped at 20 s), plus up to 50% jitter
 MODEL_SLOTS = threading.BoundedSemaphore(max(1, int(os.environ.get('NEMOTRON_CONCURRENCY', '1') or 1)))
 _sleep = time.sleep         # tests replace this
@@ -64,18 +66,26 @@ def post_json(req: urllib.request.Request, timeout: float, on_retry=None,
     Anything else (401, 403, 400, ...) and the last failure are re-raised unchanged (HTTPError body unread).
     on_retry(attempt, wait_seconds, reason) is called before each wait; the reason never holds headers or keys."""
     waited = 0.0
+    deadline = time.monotonic() + RETRY_DEADLINE
     for attempt in range(1, attempts + 1):
-        try:
-            with MODEL_SLOTS:  # held only for the call itself, never while backing off
-                with urllib.request.urlopen(req, timeout=timeout) as r:
+        left = deadline - time.monotonic()
+        if left <= 0:
+            raise TimeoutError(f'no reply from the model within {RETRY_DEADLINE:.0f} s, retries included')
+        if not MODEL_SLOTS.acquire(timeout=min(SLOT_WAIT, left)):
+            raise TimeoutError('the model is busy with other requests; try again in a minute')
+        try:  # the slot is held only for the call itself, never while backing off
+            try:
+                with urllib.request.urlopen(req, timeout=min(timeout, max(1.0, left))) as r:
                     return json.load(r)
+            finally:
+                MODEL_SLOTS.release()
         except Exception as exc:  # noqa: BLE001 - classified below; non-retryable errors re-raise as-is
             reason = _retryable(exc)
             if reason is None or attempt == attempts:
                 raise
             backoff = min(20.0, RETRY_BASE * 2 ** (attempt - 1)) * (1 + random.random() * 0.5)
             hint = _retry_after(exc) if isinstance(exc, urllib.error.HTTPError) else None
-            wait = min(max(backoff, hint or 0.0), max_wait - waited)
+            wait = min(max(backoff, hint or 0.0), max_wait - waited, deadline - time.monotonic())
             if wait <= 0:
                 raise
             if on_retry is not None:
