@@ -27,8 +27,6 @@ COPY docs/MODEL_REVIEW.md docs/ML_EXPERIMENTS.md ./docs/
 COPY baseline/README.md baseline/NEMOTRON_COMPARISON.md baseline/SCENE_FILTER_EXPERIMENT.md ./baseline/
 COPY baseline/outputs/results.md ./baseline/outputs/results.md
 COPY baseline/outputs/decline_rule/results.md ./baseline/outputs/decline_rule/results.md
-COPY baseline/outputs/experiments/no_scene_cloud_filter/results.md ./baseline/outputs/experiments/no_scene_cloud_filter/results.md
-COPY baseline/outputs/diagnostics/field_323_and_327/findings.md ./baseline/outputs/diagnostics/field_323_and_327/findings.md
 COPY market/README.md ./market/README.md
 COPY BARC_Corn.2021-2023.gpkg ./
 COPY --from=frontend /build/dist/ ./web/dist/
