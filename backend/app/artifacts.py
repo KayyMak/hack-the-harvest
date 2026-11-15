@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +29,15 @@ def read_summary() -> BaselineSummary:
             (OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved baseline metrics are missing or invalid.') from exc
+
+
+def read_decline_rule() -> DeclineRuleBaseline:
+    try:
+        return DeclineRuleBaseline.model_validate_json(
+            (OUTPUT_DIR / 'decline_rule' / 'metrics.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved decline-rule baseline (baseline/outputs/decline_rule/metrics.json) '
+            'is missing or invalid.') from exc
 
 
 def read_predictions() -> list[Prediction]:
@@ -51,6 +60,37 @@ def read_asof() -> AsOfResults:
         return AsOfResults.model_validate_json((OUTPUT_DIR / 'asof.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, KeyError, TypeError) as exc:
         raise ArtifactUnavailable('Saved as-of results are missing or invalid; run python -m harvest.export_asof.') from exc
+
+
+def compute_convergence() -> Convergence:
+    """Silage-acre estimate at each saved as-of date, per year, next to BARC reference acres.
+
+    Same arithmetic as compute_rollup, applied to the saved as-of calls: expected = sum(p * acres),
+    95% interval from independent Bernoulli variance. The interval reflects the model's own
+    probabilities only; it does not include error in the probabilities themselves.
+    """
+    acres = {f.field_id: f.acres for f in read_fields()}
+    results = read_asof()
+    by_year: dict[int, list[ConvergencePoint]] = {}
+    for d in sorted(results.dates, key=lambda x: (x.year, x.as_of)):
+        known = [(p, acres[p.field_id]) for p in d.predictions if acres.get(p.field_id) is not None]
+        if not known:
+            raise ArtifactUnavailable(f'No scored fields with known acreage for {d.as_of}; '
+                                      'the silage-acre estimate is unavailable.')
+        expected = sum(p.silage_probability * a for p, a in known)
+        sd = math.sqrt(sum(a * a * p.silage_probability * (1 - p.silage_probability) for p, a in known))
+        by_year.setdefault(d.year, []).append(ConvergencePoint(as_of=d.as_of, mode=d.mode,
+            field_years=len(d.predictions), expected_silage_acres=round(expected, 2),
+            expected_silage_acres_95ci=(round(max(0.0, expected - 1.96 * sd), 2), round(expected + 1.96 * sd, 2)),
+            cv_percent=round(100 * sd / expected, 1) if expected else None,
+            predicted_silage_acres=round(sum(a for p, a in known if p.predicted_label == 'Silage'), 2),
+            reference_silage_acres=round(sum(a for p, a in known if p.reference_label == 'Silage'), 2),
+            total_acres=round(sum(a for _, a in known), 2),
+            missing_acres_field_years=len(d.predictions) - len(known)))
+    return Convergence(scope='Labeled BARC field-years only; not a Maryland statewide estimate',
+        method=('expected = sum(p_silage * acres) from the saved as-of calls; 95% interval and CV% from '
+                'independent Bernoulli variance, as in /api/baseline/rollup'),
+        years=[ConvergenceYear(year=y, points=pts) for y, pts in sorted(by_year.items())])
 
 
 def _num(value: str | None) -> float | None:
@@ -203,7 +243,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
     total_only keeps domain TOTAL rows (drops irrigated and other breakdowns)."""
     path = os.environ.get('QUICKSTATS_CSV')
     if not path:
-        raise ArtifactUnavailable('QUICKSTATS_CSV is not set.')
+        raise ArtifactUnavailable('QUICKSTATS_CSV is not set. Point it at a NASS QuickStats CSV, for example '
+            'data/reference/quickstats_2025_judges.csv (2025 judge totals).')
     try:
         with open(path, encoding='utf-8-sig', newline='') as file:
             reader = csv.DictReader(file)
@@ -212,8 +253,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
             c_state, c_year = pick('state_name', 'state'), pick('year')
             c_item = pick('short_description', 'short_desc', 'data item')
             c_value, c_cv = pick('value'), pick('cv_percent', 'cv (%)')
-            c_county, c_level = pick('county_name', 'county'), pick('aggregation_level', 'agg_level_desc')
-            c_use, c_source = pick('crop_use', 'util_practice_desc'), pick('source', 'source_desc')
+            c_county, c_level = pick('county_name', 'county'), pick('aggregation_level', 'agg_level_desc', 'geo level')
+            c_use, c_source = pick('crop_use', 'util_practice_desc'), pick('source', 'source_desc', 'program')
             c_domain = pick('domain', 'domain_desc')
             if c_value is None:
                 raise ValueError('No value column')
