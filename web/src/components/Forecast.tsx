@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../theme'
-import type { Cell, Crop, Forecast, StateRow } from './forecastTypes'
+import { xTitle, yTitle } from './charts'
+import type { Cell, Crop, Forecast, Reliability, StateRow } from './forecastTypes'
 import { ERROR_STEPS, fmtAcres, fmtFull, fmtPct, releaseDate, titleCase } from './forecastFormat'
+import { ScoreUpload } from './ScoreUpload'
 
-const CROP_LABEL: Record<Crop, string> = { silage: 'corn for silage', grain: 'corn for grain' }
+const NASS_RELEASE_TIP = '2025 NASS releases: Jun 30 Acreage; Aug 12, Sep 12, Nov 14 Crop Production (no October report in 2025)'
+const CROP_SHORT: Record<Crop, string> = { silage: 'silage', grain: 'grain' }
 
 interface Props {
   data: Forecast
@@ -17,16 +20,22 @@ interface Props {
 
 /** The graded view: 2025 acres by state vs NASS. Map, headline numbers, convergence, misses, and state detail. */
 export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTable }: Props) {
+  const t = useTheme().chart
   const md = data.states.find((s) => s.state === 'MARYLAND')
   const sel = data.states.find((s) => s.state === selected) ?? null
+  const fsa = fsaBacktest(data)
   return (
     <>
       <div className="lead">
+        <p className="glass banner" role="note">
+          <span>This is our submitted 2025 answer, made only from NASS reports released before January 2026 — <code>forecast_v2/outputs/state_estimates_2025.csv</code> (QuickStats format)</span>
+          <a className="ghost-btn banner__dl" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">Download 2025 CSV</a>
+        </p>
         <section className="kpis" aria-label="2025 headline numbers">
-          <UsCard crop="silage" cell={data.us.silage} />
-          <UsCard crop="grain" cell={data.us.grain} />
+          <UsCard crop="silage" cell={data.us.silage} rel={data.reliability?.silage ?? null} />
+          <UsCard crop="grain" cell={data.us.grain} rel={data.reliability?.grain ?? null} />
           <article className="glass kpi">
-            <h2 className="kpi__label">States within 10% of NASS</h2>
+            <h2 className="kpi__label">States within 10%</h2>
             <div className="kpi__value">
               {data.scores.grain.within_10pct}
               <span className="kpi__of">/{data.scores.grain.states} grain</span>
@@ -35,12 +44,12 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               {data.scores.silage.within_10pct}/{data.scores.silage.states} silage
             </div>
             <div className="kpi__foot">
-              Acre-weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
+              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
             </div>
           </article>
           {md && (
             <button className="glass kpi kpi--button" onClick={() => onSelect('MARYLAND')}>
-              <h2 className="kpi__label">Maryland, {CROP_LABEL[crop]}</h2>
+              <h2 className="kpi__label">Maryland {CROP_SHORT[crop]} acres</h2>
               <div className="kpi__value">{fmtAcres(md[crop]?.est)}</div>
               <div className="kpi__sub">
                 NASS {fmtAcres(md[crop]?.nass)} <ErrTag err={md[crop]?.err ?? null} />
@@ -54,13 +63,17 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
       {!showTable && (
         <aside className="glass rail" aria-label="How the estimate was built">
           <section>
-            <h2 className="rail__title">US silage estimate through the season</h2>
-            <p className="rail__note">Re-estimated at each 2025 NASS release. Band = 95% range; dashed = NASS final.</p>
-            <ConvergenceChart data={data} />
+            <h2 className="rail__title" title={NASS_RELEASE_TIP}>US silage estimate by NASS release</h2>
+            <div title={NASS_RELEASE_TIP}><ConvergenceChart data={data} /></div>
+            <div className="linekey">
+              <span><i style={{ background: t.share }} />Our estimate</span>
+              <span><i style={{ background: t.share, opacity: 0.35, height: 8 }} />95% range</span>
+              <span><i className="linekey__dash" style={{ borderColor: t.accuracy }} />NASS final</span>
+            </div>
           </section>
           <section>
             <div className="rail__head">
-              <h2 className="rail__title">Biggest misses, {crop}</h2>
+              <h2 className="rail__title">Biggest misses, {crop} (acres, ours vs NASS)</h2>
               <button className="link" onClick={() => onTable(true)}>All states</button>
             </div>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
@@ -68,11 +81,42 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           <section>
             <h2 className="rail__title">How it works</h2>
             <p className="rail__note rail__note--keep">
-              Grain: NASS's Nov 14, 2025 forecast. Silage: each state's usual share of non-grain corn, 2022–2024. Chosen by backtest
-              on 2023–2024 (US silage {fmtPct(data.backtest.silage.us_total['2023'].pct_error / 100)} and {fmtPct(data.backtest.silage.us_total['2024'].pct_error / 100)}).
-              No January 2026 data used.
+              Grain: NASS's Nov 14, 2025 forecast. Silage: half from each state's 5-year median silage shares applied to its 2025 planted and grain acres, half from last year's silage acres.
             </p>
+            {fsa ? (
+              <p className="rail__note rail__note--keep">
+                FSA intended-use acres lost the silage backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% error), so aren't used; nor is RMA data.
+              </p>
+            ) : (
+              <p className="rail__note rail__note--keep">
+                FSA intended-use acres were tried in the team's first forecast and lost its backtest, so aren't used; nor is RMA data.
+              </p>
+            )}
+            <details className="more">
+              <summary>Details</summary>
+              <p className="rail__note rail__note--keep">
+                Silage method chosen by a rule written down before scoring: lowest acre-weighted error when each year 2018–2024 is forecast with only what was known then
+                {backtestPair(data) ? ` (${backtestPair(data)})` : ''}. 2025 NASS numbers were never used to choose it.
+                No January 2026 data used (data cutoff {data.data_cutoff}). Click a state on the map for its numbers, or open All states for the table.
+              </p>
+              <table className="mini-table backtest">
+                <caption>Backtest on earlier state-years, forecast the same way</caption>
+                <thead><tr><th>Crop</th><th className="num">State-years</th><th className="num">Median error</th><th className="num">Mean error</th><th className="num">In 95% range</th></tr></thead>
+                <tbody>
+                  {(['silage', 'grain'] as const).map((c) => {
+                    const b = data.backtest[c]
+                    return (
+                      <tr key={c}>
+                        <td>{c === 'silage' ? 'Silage' : 'Grain'}</td><td className="num">{b.state_years}</td><td className="num">{b.median_abs_pct_error.toFixed(1)}%</td>
+                        <td className="num">{b.mean_abs_pct_error.toFixed(1)}%</td><td className="num">{Math.round(b.covered_by_95_interval * 100)}%</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </details>
           </section>
+          <ScoreUpload data={data} crop={crop} />
         </aside>
       )}
 
@@ -92,14 +136,32 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
   )
 }
 
-function UsCard({ crop, cell }: { crop: Crop; cell: Cell }) {
+/** Backtest error of the FSA-based silage candidate next to the chosen method, from forecast_2025.json. */
+function fsaBacktest(data: Forecast): { fsa: number; chosen: number } | null {
+  const m = data.silage_method
+  const err = m?.backtest_acre_weighted_abs_pct_error ?? {}
+  const key = Object.entries(m?.candidates ?? {}).find(([, text]) => text.startsWith('FSA'))?.[0]
+  const fsa = key ? err[key] : undefined
+  const chosen = m ? err[m.chosen] : undefined
+  return fsa != null && chosen != null ? { fsa, chosen } : null
+}
+
+function UsCard({ crop, cell, rel }: { crop: Crop; cell: Cell; rel: Reliability | null }) {
   return (
     <article className="glass kpi">
-      <h2 className="kpi__label">US {CROP_LABEL[crop]}, 2025</h2>
+      <h2 className="kpi__label">US {CROP_SHORT[crop]} acres</h2>
       <div className="kpi__value">{fmtAcres(cell.est)}</div>
       <div className="kpi__sub">
         NASS {fmtAcres(cell.nass)} <ErrTag err={cell.err} />
       </div>
+      {rel && (
+        <div
+          className="kpi__foot"
+          title={`NASS reliability format, from the ${rel.years} backtest (${rel.n} years, each forecast with only what was known then): root-mean-square error ${rel.rmse_pct}%; 9 times in 10 the miss is no more than ±${rel.margin90_pct}% (Student t ${rel.t} × RMSE). Largest miss: ${rel.max_abs_pct}%.`}
+        >
+          Margin of error ±{rel.margin90_pct}% (90%) · RMSE {rel.rmse_pct}%
+        </div>
+      )}
       <div className="kpi__foot">
         95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
       </div>
@@ -128,10 +190,10 @@ function ConvergenceChart({ data }: { data: Forecast }) {
   return (
     <div className="conv">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: -6 }}>
+        <ComposedChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={t.grid} vertical={false} />
-          <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 10, right: 10 }} />
-          <YAxis domain={[Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={44} />
+          <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 10, right: 10 }} height={34} label={xTitle('NASS release, 2025', t.muted)} />
+          <YAxis domain={[Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Acres', t.muted)} />
           <Area dataKey="band" stroke="none" fill={t.share} fillOpacity={0.14} isAnimationActive={false} />
           <Line dataKey="high" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line dataKey="low" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
@@ -158,7 +220,7 @@ function ConvergenceChart({ data }: { data: Forecast }) {
 
 function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSelect: (s: string) => void }) {
   const misses = useMemo(
-    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 4),
+    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 6),
     [rows, crop],
   )
   return (
@@ -169,7 +231,7 @@ function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSe
           <li key={r.state}>
             <button className="review__row" onClick={() => onSelect(r.state)}>
               <span className="review__id">{titleCase(r.state)}</span>
-              <span className="review__why">ours {fmtAcres(c.est)} vs NASS {fmtAcres(c.nass)}</span>
+              <span className="review__why">{fmtAcres(c.est)} vs NASS {fmtAcres(c.nass)}</span>
               <span className="review__val"><ErrTag err={c.err} /></span>
             </button>
           </li>
@@ -301,4 +363,14 @@ export function ForecastKey({ crop }: { crop: Crop }) {
       <span className="mapkey__fine">Estimate uses only reports released by Dec 1, 2025. Prototype, not a USDA or NASS release.</span>
     </div>
   )
+}
+
+/** "12.7% vs 13.8% for the first forecast's method", from the saved backtest; null when not recorded. */
+function backtestPair(data: { silage_method?: unknown }): string | null {
+  const m = data.silage_method as { chosen?: string; backtest_acre_weighted_abs_pct_error?: Record<string, number> } | undefined
+  const err = m?.backtest_acre_weighted_abs_pct_error
+  const chosen = m?.chosen && err ? err[m.chosen] : undefined
+  const first = err ? err['S1'] : undefined
+  if (chosen == null) return null
+  return first != null ? `${chosen.toFixed(1)}% vs ${first.toFixed(1)}% for the first forecast's method` : `${chosen.toFixed(1)}%`
 }

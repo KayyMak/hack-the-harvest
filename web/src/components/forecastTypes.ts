@@ -46,7 +46,18 @@ export interface BacktestCrop {
   us_total: Record<string, { est: number; truth: number; pct_error: number }>
 }
 
+/** NASS "Reliability" format from the US backtest: RMSE and the 90% margin (Student t x RMSE). */
+export interface Reliability {
+  years: string
+  n: number
+  rmse_pct: number
+  t: number
+  margin90_pct: number
+  max_abs_pct: number
+}
+
 export interface Forecast {
+  reliability?: { silage: Reliability | null; grain: Reliability | null }
   title: string
   data_cutoff: string
   estimate_note: string

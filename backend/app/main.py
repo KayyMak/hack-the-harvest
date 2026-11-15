@@ -11,12 +11,12 @@ from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_contributions, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_estimate_2025, read_forecast_2025, read_observations,
-    read_predictions, read_quickstats, read_summary, read_unlabeled)
+    read_landcover, read_predictions, read_quickstats, read_summary, read_unlabeled)
 from . import market, tools
 from .frontend import mount_first_build
 from .schemas import (AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Forecast2025,
     MarketOutlook, MarketReport, MarketStatus, Observation, Prediction, QuickStatsRow, Rollup, SignalContribution,
-    UnlabeledCalls)
+    UnlabeledCalls, FieldLandcover)
 
 CHIP_NAME = re.compile(r'\d{1,6}_20\d{2}_(pre|post)\.png')
 
@@ -115,6 +115,13 @@ def forecast_2025() -> Forecast2025:
     before January 2026, with NASS 2025 Maryland/US acres for comparison (null if unreadable).
     The graded output. 503 until forecast/outputs/summary.json is saved."""
     return _serve(read_forecast_2025)
+
+
+@app.get('/api/fields/landcover', response_model=list[FieldLandcover])
+def fields_landcover(year: int | None = None) -> list[FieldLandcover]:
+    """USDA Cropland Data Layer cover inside each BARC field-year (most common class, its share, corn share,
+    likely_corn / mixed / not_corn). Land cover only: never a BARC label or a model call. 503 if the file is missing."""
+    return _serve(read_landcover, year)
 
 
 @app.get('/api/unlabeled', response_model=UnlabeledCalls)

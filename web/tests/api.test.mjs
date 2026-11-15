@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey, adaptUnlabeled, unlabeledCallsAt } from '../src/adapter.ts'
-import { api } from '../src/api.ts'
+import { api, keyMissing, recordedAgentRun, traceStatus } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
 const fields = artifact('fields.geojson')
@@ -189,7 +189,7 @@ test('a missing or incomplete 2025 estimate rejects instead of showing numbers',
   assert.throws(() => adaptEstimate2025({ summary: noRange, benchmark: null }), /incomplete/)
 })
 
-const forecast = JSON.parse(readFileSync(new URL('../../forecast/outputs/summary.json', import.meta.url), 'utf8'))
+const forecast = JSON.parse(readFileSync(new URL('../../forecast_v2/outputs/summary.json', import.meta.url), 'utf8'))
 // Synthetic reference values for shape checks only; real NASS values are read by the backend.
 const nassFixture = { source: 'synthetic', maryland: { silage: 50000, grain: 400000 }, us: { silage: 6000000, grain: null } }
 
@@ -208,7 +208,7 @@ test('2025 forecast comes from /api/forecast_2025 and picks the Maryland and US 
   assert.equal(result.maryland.silage.relative_error, (md.silage - 50000) / 50000)
   assert.equal(result.maryland.grain.value, md.grain)
   assert.equal(result.us.silage.value, forecast.us.silage)
-  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [null, null, null], 'no US grain range or NASS: nothing invented')
+  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [forecast.us.grain_low ?? null, forecast.us.grain_high ?? null, null], 'US grain range only when the forecast saves one; no NASS fixture value: no error')
   assert.deepEqual(result.backtest_years, Object.keys(forecast.backtest.silage.us_total).sort())
 })
 
@@ -273,4 +273,66 @@ test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-
 test('field acres are rounded to one decimal for display', () => {
   const f = adaptFields(fields, 2022).features.find((x) => x.properties.OBJECTID === 231)
   assert.equal(f.properties.ACRES, 9.8)
+})
+
+test('an agent run that ends with an error before its report is shown as an error, not done', async (t) => {
+  const traces = {
+    'r-key': [
+      { step: 1, node: 'analyst', type: 'plan', summary: 'request: anything' },
+      { step: 2, node: 'writer', type: 'error', summary: 'NVIDIA_API_KEY is not set (environment or the repo-root .env).' },
+      { step: 3, node: 'writer', type: 'report', summary: 'The agent stopped before finishing: NVIDIA_API_KEY is not set' },
+    ],
+    'r-ok': [
+      { step: 1, node: 'analyst', type: 'plan', summary: 'request: score 2022' },
+      { step: 2, node: 'tools', type: 'tool_result', summary: 'n=7' },
+      { step: 3, node: 'verifier', type: 'check', summary: 'every number in the draft appears in a tool result' },
+      { step: 4, node: 'writer', type: 'report', summary: '## Answer' },
+    ],
+    'r-fallback': [
+      { step: 1, node: 'writer', type: 'error', summary: 'Could not get a reply from the NVIDIA API' },
+      { step: 2, node: 'writer', type: 'plan', summary: 'still no usable report: writing a summary of the tool results' },
+      { step: 3, node: 'writer', type: 'report', summary: '## Summary of tool results' },
+    ],
+    'r-live': [{ step: 1, node: 'analyst', type: 'plan', summary: 'request: anything' }],
+  }
+  t.mock.method(globalThis, 'fetch', async (url) => Response.json(traces[url.split('/').at(-1)]))
+  assert.equal((await api.agentTrace('r-key')).status, 'error')
+  assert.equal((await api.agentTrace('r-ok')).status, 'done')
+  assert.equal((await api.agentTrace('r-fallback')).status, 'done', 'a fallback summary is still a finished report')
+  assert.equal((await api.agentTrace('r-live')).status, 'running')
+  assert.equal(traceStatus([]), 'running')
+})
+
+test('Cropland Data Layer cover comes from /api/fields/landcover for the asked year only', async (t) => {
+  const rows = [
+    { field_id: 4, year: 2022, crop: 'Soybeans', crop_share: 0.8, corn_share: 0, category: 'not_corn' },
+    { field_id: 4, year: 2023, crop: 'Corn', crop_share: 0.9, corn_share: 0.9, category: 'likely_corn' },
+  ]
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, '/api/fields/landcover?year=2022')
+    return Response.json(rows)
+  })
+  assert.deepEqual(await api.landcover(2022), [rows[0]])
+})
+
+test('the recorded agent run loads from the static file, ends in a report and is never live', async (t) => {
+  const file = readFileSync(new URL('../public/agent_recorded_run.json', import.meta.url), 'utf8')
+  assert.doesNotMatch(file, /nvapi-|api[_-]?key|authorization|bearer|[A-Z]:\\|\/Users\/|\/home\//i, 'no key, header or local path in the recording')
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, '/agent_recorded_run.json')
+    return new Response(file, { headers: { 'Content-Type': 'application/json' } })
+  })
+  const run = await recordedAgentRun()
+  assert.equal(run.status, 'done')
+  assert.equal(run.lines.at(-1).type, 'report')
+  assert.ok(run.lines.every((l) => Number.isInteger(l.step)))
+  assert.match(run.query, /2022/)
+  assert.match(run.recorded_at, /^\d{4}-\d{2}-\d{2}T/)
+})
+
+test('a missing NVIDIA key is recognised so the recorded run can stand in', () => {
+  assert.ok(keyMissing('NVIDIA_API_KEY is not set (environment or the repo-root .env).'))
+  assert.ok(keyMissing('The agent stopped before finishing: NVIDIA_API_KEY is not set'))
+  assert.ok(!keyMissing('NVIDIA API error (HTTP 500)'))
+  assert.ok(!keyMissing(null))
 })

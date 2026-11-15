@@ -70,7 +70,7 @@ function DotWhisker({ data }: { data: RollupResponse }) {
   const x = (v: number) => L + ((v - a) / (b - a)) * (W - L - R)
   const ticks = niceTicks(a, b, 4)
   return (
-    <svg className="dotwhisker" viewBox={`0 0 ${W} 132`} role="img" aria-label={`Our estimate with 95% interval compared with ${data.reference_name ?? 'the Census value'}`}>
+    <svg className="dotwhisker" viewBox={`0 0 ${W} 150`} role="img" aria-label={`Our estimate with 95% interval compared with ${data.reference_name ?? 'the Census value'}`}>
       {ticks.map((v) => (
         <g key={v}>
           <line x1={x(v)} x2={x(v)} y1={14} y2={104} stroke={t.grid} />
@@ -79,6 +79,7 @@ function DotWhisker({ data }: { data: RollupResponse }) {
           </text>
         </g>
       ))}
+      <text x={(L + W - R) / 2} y={146} textAnchor="middle" fontSize={12} fill={t.muted}>Silage acres</text>
       <text x={0} y={44} fontSize={15} fill={t.ink} fontWeight={600}>Our estimate</text>
       <line x1={x(lo)} x2={x(hi)} y1={40} y2={40} stroke={t.ink} strokeWidth={2} />
       <line x1={x(lo)} x2={x(lo)} y1={32} y2={48} stroke={t.ink} strokeWidth={2} />

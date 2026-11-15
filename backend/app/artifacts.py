@@ -10,13 +10,13 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Estimate2025, Forecast2025, Nass2025, Observation, Prediction, QuickStatsRow, Rollup, YearRollup, UnlabeledCall, UnlabeledCalls, SignalContribution)
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Estimate2025, FieldLandcover, Forecast2025, Nass2025, Observation, Prediction, QuickStatsRow, Rollup, YearRollup, UnlabeledCall, UnlabeledCalls, SignalContribution)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / 'baseline' / 'outputs'
 FIELDS_GPKG = ROOT / 'BARC_Corn.2021-2023.gpkg'
 FIELDS_TABLE = 'barc_silage_grain_corn20212023'
-FORECAST_SUMMARY = ROOT / 'forecast' / 'outputs' / 'summary.json'
+FORECAST_SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 NASS_2025_CSV = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
 
 
@@ -150,6 +150,21 @@ def read_forecast_2025() -> Forecast2025:
     except (OSError, ValueError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved 2025 forecast is missing or invalid; '
             'expected forecast/outputs/summary.json.') from exc
+
+
+def read_landcover(year: int | None = None) -> list[FieldLandcover]:
+    """USDA Cropland Data Layer cover for every BARC field-year, from baseline/outputs/unlabeled/corn_check.csv
+    (written offline by the unlabeled-field corn check). Land cover only: not a BARC label, not a model call."""
+    path = OUTPUT_DIR / 'unlabeled' / 'corn_check.csv'
+    try:
+        with path.open(encoding='utf-8', newline='') as file:
+            rows = [FieldLandcover(field_id=r['field_id'], year=r['year'], crop=r['top_class_name'],
+                                   crop_share=r['top_class_share'], corn_share=r['corn_share'],
+                                   category=r['category']) for r in csv.DictReader(file)]
+    except (OSError, ValueError, KeyError, TypeError, ValidationError) as exc:
+        raise ArtifactUnavailable('Cropland Data Layer cover per field (baseline/outputs/unlabeled/corn_check.csv) '
+                                  'is missing or invalid.') from exc
+    return [r for r in rows if year is None or r.year == year]
 
 
 def read_unlabeled() -> UnlabeledCalls:
@@ -371,11 +386,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
                     uses = set(re.findall(r'\b(grain|silage)\b', get(r, c_item), flags=re.IGNORECASE))
                     uses = {u.lower() for u in uses}
                     use = uses.pop() if len(uses) == 1 else ''
-                if crop_use:
-                    if not use:
-                        raise ValueError('Cannot identify crop use for the requested filter')
-                    if use != crop_use.lower():
-                        continue
+                if crop_use and use != crop_use.lower():
+                    continue  # other uses, and rows for all corn (e.g. acres planted), are not this crop use
                 raw, cv = get(r, c_value), get(r, c_cv)
                 out.append(QuickStatsRow(year=int(y) if y.isdigit() else None,
                     state=get(r, c_state) or None, county=get(r, c_county) or None,

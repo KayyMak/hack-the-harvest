@@ -24,18 +24,28 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
   const reasons = Object.entries(s.sample.skipped_reasons)
   const { batches_used: used, batches_drawn: drawn } = s.sample
   const partial = used != null && drawn != null && used.length < drawn
+  // Why this is a cross-check: the model learned from BARC, which is far more silage-heavy than Maryland.
+  const barcSilage = s.model.training_silage_field_years
+  const barcShare = barcSilage != null && s.model.training_field_years > 0 ? barcSilage / s.model.training_field_years : null
+  const mdCorn = silage.nass_acres + grain.nass_acres
+  const mdShare = mdCorn > 0 ? silage.nass_acres / mdCorn : null
+  const silageMiss = calibrated ? silage.relative_error : silage.raw.relative_error
   return (
     <div className="est">
+      <p className="est__lead">
+        <b>A cross-check, not a second answer.</b> The satellite model learned from BARC fields
+        {barcShare != null && <>, which are {pct(barcShare)} silage ({barcSilage} of {s.model.training_field_years} labeled field-years)</>}
+        {mdShare != null && <>, against {pct(mdShare)} of Maryland corn acres harvested (NASS 2025)</>}, so statewide it {silageMiss > 0 ? 'over-calls' : 'misjudges'} silage
+        ({signedPct(silageMiss)} vs NASS).
+      </p>
       <p className="muted small">
-        A model estimate from a sample of Maryland corn fields, compared with NASS survey acres harvested. It is not a USDA or NASS release.
-        Saved {s.generated_utc.slice(0, 10)}.
+        The graded submission is <code>forecast_v2/outputs/state_estimates_2025.csv</code> (the 2025 by state tab), not this estimate.
       </p>
       {partial && (
         <p className="est__partial" role="note">
           {used.length} of {drawn} sample batches processed. The estimate uses only the finished batches.
         </p>
       )}
-      <p className="est__text">{s.method}</p>
 
       <section className="block">
         <div className="block__head">
@@ -68,6 +78,8 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
             </tbody>
           </table>
         </div>
+        <details className="more">
+          <summary>How the calibration works</summary>
         {s.calibrated ? (
           <p className="muted small">
             Calibrated rows are the headline. {s.calibrated.method}
@@ -79,7 +91,16 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
           <p className="muted small">Calibration is unavailable for this run, so the raw (uncalibrated) estimate is the headline.</p>
         )}
         <p className="muted small">NASS 2025: {s.nass_2025.source}</p>
+        </details>
       </section>
+
+      <details className="more">
+        <summary>Details: method, sampled fields and limitations</summary>
+      <p className="muted small">
+        A model estimate from a sample of Maryland corn fields, compared with NASS survey acres harvested. It is not a USDA or NASS release.
+        Saved {s.generated_utc.slice(0, 10)}.
+      </p>
+      <p className="est__text">{s.method}</p>
 
       <section className="block">
         <div className="block__head">
@@ -154,18 +175,7 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
         </ul>
       </section>
 
-      <section className="block">
-        <div className="block__head">
-          <h3>Sources</h3>
-        </div>
-        <ul className="est__list">
-          {s.sources.map((src) => (
-            <li key={`${src.name}-${src.url}`}>
-              <a href={src.url} target="_blank" rel="noreferrer">{src.name}</a> <span className="muted">accessed {src.accessed}</span>
-            </li>
-          ))}
-        </ul>
-      </section>
+      </details>
     </div>
   )
 }

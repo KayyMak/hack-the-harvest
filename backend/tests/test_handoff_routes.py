@@ -113,3 +113,36 @@ class ConvergenceRoute(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class LandcoverRoute(unittest.TestCase):
+    """GET /api/fields/landcover: USDA Cropland Data Layer cover per BARC field-year, never a label or call."""
+    CSV = ROOT / 'baseline' / 'outputs' / 'unlabeled' / 'corn_check.csv'
+
+    def setUp(self):
+        self.client = TestClient(app)
+
+    def test_every_field_year_has_its_cdl_cover(self):
+        import csv
+        with self.CSV.open(encoding='utf-8', newline='') as file:
+            saved = [r for r in csv.DictReader(file) if r['year'] == '2022']
+        response = self.client.get('/api/fields/landcover?year=2022')
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertEqual(len(body), len(saved))
+        self.assertEqual(set(body[0]), {'field_id', 'year', 'crop', 'crop_share', 'corn_share', 'category'})
+        first = next(r for r in body if r['field_id'] == int(saved[0]['field_id']))
+        self.assertEqual(first['crop'], saved[0]['top_class_name'])
+        self.assertEqual(first['category'], saved[0]['category'])
+        self.assertEqual({r['year'] for r in body}, {2022})
+        self.assertEqual(len(self.client.get('/api/fields/landcover').json()), sum(1 for _ in self.CSV.open(encoding='utf-8')) - 1)
+
+    def test_dockerfile_copies_the_file(self):
+        self.assertIn('baseline/outputs/unlabeled/corn_check.csv', (ROOT / 'Dockerfile').read_text(encoding='utf-8'))
+
+    def test_missing_file_is_503_not_empty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                response = self.client.get('/api/fields/landcover?year=2022')
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('corn_check.csv', response.json()['detail'])

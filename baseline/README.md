@@ -231,7 +231,20 @@ baseline/.runtime/python.exe baseline/unlabeled_calls.py corn
 baseline/.runtime/python.exe baseline/unlabeled_calls.py pilot --field 235 --year 2021
 baseline/.runtime/python.exe baseline/unlabeled_calls.py extract
 baseline/.runtime/python.exe baseline/unlabeled_calls.py predict
+baseline/.runtime/python.exe baseline/unlabeled_calls.py extract-all
+baseline/.runtime/python.exe baseline/export_unlabeled_imagery.py observations
+baseline/.runtime/python.exe baseline/export_unlabeled_imagery.py chips
 ```
+
+`extract-all` runs the same extraction for every blank field-year, including the
+not-corn and mixed ones, so the field panel has a greenness series and before/after
+chips for all 249 field-years. Failed scene reads are retried with backoff and any
+that still fail stay `read_error` records. These field-years get no model call:
+`predict` still calls only the likely-corn blanks. `export_unlabeled_imagery.py`
+writes `outputs/unlabeled/observations.csv` (with `observations_coverage.json`
+listing any field-year without a cache, without a usable look, or with failed reads)
+and `outputs/chips/index_unlabeled.json` (with field-years that have fewer than two
+usable looks listed, not drawn).
 
 Outputs are in `outputs/unlabeled/`: `corn_check.csv`/`.json` (CDL corn share for all
 249 field-years, including the CDL rule checked on the 44 labeled ones),

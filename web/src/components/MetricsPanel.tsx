@@ -15,7 +15,7 @@ import {
 import type { EvaluateResponse, Label } from '../api'
 import { num, pct, shortDate } from '../format'
 import { DATA, useTheme } from '../theme'
-import { ChartTip, type TipProps } from './charts'
+import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
 
 interface Props {
   data: EvaluateResponse | null
@@ -27,63 +27,69 @@ export function MetricsPanel({ data, error, asOf }: Props) {
   if (error) return <p className="inline-error">Metrics unavailable: {error.message}</p>
   if (!data) return <div className="skeleton skeleton--panel" />
   const total = data.confusion.flat().reduce((a, b) => a + b, 0)
-  const correct = data.labels.reduce((a, _, i) => a + (data.confusion[i]?.[i] ?? 0), 0)
   const si = data.labels.indexOf('Silage')
-  const gi = data.labels.indexOf('Grain')
   const sHit = data.confusion[si]?.[si] ?? 0
   const sN = data.confusion[si]?.reduce((a, b) => a + b, 0) ?? 0
   const S = data.per_class.Silage
   const G = data.per_class.Grain
+  const n = data.n_evaluated ?? total
+  const bal = data.convergence.some((c) => c.bal_acc != null)
+  const early = data.convergence.map((c) => `${shortDate(c.as_of)} ${num(bal ? (c.bal_acc ?? null) : c.acc_decided)}`).join(' · ')
   return (
     <div className="metrics">
       {data.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {data.convergence_error}</p>}
-      <p className="muted small">The scores and confusion matrix below use full-season predictions as of November 30, pooled over 2021–2023. Only the season chart follows the selected date.</p>
-      {data.model_version === 'v2' && data.selection && <ModelV2Note data={data} />}
-      <p className="finding">
-        On field-years {data.split_label ?? 'held out by year'} the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
-        <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.
-      </p>
-      <section className="reliability" aria-label="Reliability of these scores">
-        <h3>Reliability of these scores</h3>
-        <p>
-          Wilson 95% intervals for these held-out results are <b>{num(S.recall.lo)}</b> to <b>{num(S.recall.hi)}</b> for silage recall and{' '}
-          <b>{num(S.precision.lo)}</b> to <b>{num(S.precision.hi)}</b> for silage precision. These intervals do not establish accuracy on new regions or account for repeated years of the same field.
-        </p>
-        <p className="muted small">
-          Based on {data.n_evaluated ?? total} labeled field-years scored out of fold. With few silage examples the ranges are wide; read overlapping ranges as "not yet distinguishable".
-        </p>
-      </section>
-      <div className="tiles">
-        <Tile kicker="Evaluated field-years" value={String(data.n_evaluated ?? total)} />
-        <Tile kicker="Correct" value={`${correct} / ${total}`} sub={pct(total ? correct / total : null)} />
-        <Tile kicker="Abstained" value={String(data.abstained)} sub="too few clear looks" />
-        <Tile kicker="Balanced accuracy" value={data.balanced_accuracy != null ? num(data.balanced_accuracy) : '—'} sub={data.baseline ? `${data.baseline.name ?? 'Baseline'}: ${num(data.baseline.balanced_accuracy)}` : (data.split_label ?? '')} />
-      </div>
+      <p className="muted small">{n} labeled BARC field-years, 2021–2023, {data.split_label ?? 'held out by field'}; full-season (Nov 30) calls.</p>
+      <dl className="facts" aria-label="Held-out accuracy">
+        <div><dt>Balanced accuracy</dt><dd>{num(data.balanced_accuracy ?? null)}</dd><span>{data.baseline ? `${data.baseline.name ?? 'Always grain'}: ${num(data.baseline.balanced_accuracy)}` : ''}</span></div>
+        <div><dt>Silage recall</dt><dd>{num(S.recall.value)}</dd><span>95% {num(S.recall.lo)}–{num(S.recall.hi)}; {sHit} of {sN} found</span></div>
+        <div><dt>Silage precision</dt><dd>{num(S.precision.value)}</dd><span>95% {num(S.precision.lo)}–{num(S.precision.hi)}</span></div>
+        <div><dt>Grain recall</dt><dd>{num(G.recall.value)}</dd><span>95% {num(G.recall.lo)}–{num(G.recall.hi)}</span></div>
+      </dl>
 
       <section className="block">
         <div className="block__head">
-          <h3>Confusion matrix</h3>
+          <h3>Confusion matrix, 2021–2023 pooled</h3>
           <span className="block__note">rows = BARC label · columns = predicted</span>
         </div>
         <Confusion data={data} />
       </section>
 
-      <section className="block">
-        <div className="block__head">
-          <h3>Precision and recall</h3>
-          <span className="block__note">bars = estimate · whiskers = 95% CI</span>
-        </div>
-        <PrecisionRecall data={data} />
-      </section>
-
       {data.convergence.length > 1 && <section className="block">
         <div className="block__head">
-          <h3>Convergence through the season</h3>
-          <span className="block__note">as-of {shortDate(asOf)} marked</span>
+          <h3>How early the call is reliable</h3>
+          <span className="block__note">{shortDate(asOf)} checkpoint marked</span>
         </div>
+        <p className="facts__line">{bal ? 'Balanced accuracy' : 'Accuracy on decided fields'} by satellite checkpoint: {early}</p>
         <Convergence data={data} asOf={asOf} />
       </section>}
+
+      <section className="block">
+        <div className="block__head"><h3>Key limits</h3></div>
+        <ul className="limits">
+          <li><b>One research farm.</b> All {n} labeled field-years ({sN} silage) come from BARC, Beltsville MD; not tested on other farms or states.</li>
+          <li><b>Farm hold-out.</b> Holding out Central Farm, which has nearly all the silage, finds none of its silage.</li>
+          <li><b>Mid-season dates use v1.</b> Before Nov 30 each date refits the v1 model on the months available; v2 needs the full season.</li>
+        </ul>
+      </section>
+
+      <h2 className="sheet__h2">Details</h2>
+      <details className="more section">
+        <summary>Precision and recall with 95% ranges</summary>
+        <PrecisionRecall data={data} />
+        <p className="muted small">Wilson 95% intervals; they do not establish accuracy on new regions or account for repeated years of the same field. Abstained: {data.abstained}.</p>
+      </details>
     </div>
+  )
+}
+
+/** The model v2 note as its own collapsed section (placed by the Model quality tab). */
+export function ModelV2Section({ data }: { data: EvaluateResponse | null }) {
+  if (data?.model_version !== 'v2' || !data.selection) return null
+  return (
+    <details className="more section">
+      <summary>Model v2: what changed and how far to trust the gain</summary>
+      <ModelV2Note data={data} />
+    </details>
   )
 }
 
@@ -100,24 +106,18 @@ function ModelV2Note({ data }: { data: EvaluateResponse }) {
     <section className="reliability" aria-label="About model v2">
       <h3>Model v2</h3>
       <p>
-        {data.model_name}: the nine NDVI features plus four harvest-timing features (when greenness falls, how sharply, and whether it regrows), chosen from eight candidates in a comparison written down before any was scored.
-        {v1 && <> On this split it recovers <b>{silage(data.confusion)}</b> silage field-years (balanced accuracy <b>{num(data.balanced_accuracy ?? null)}</b>); the v1 model recovered <b>{silage(v1.confusion_matrix)}</b> (<b>{num(v1.balanced_accuracy)}</b>).</>}
+        NDVI plus harvest-timing features.{v1 && <> Recovers <b>{silage(data.confusion)}</b> silage field-years (balanced accuracy <b>{num(data.balanced_accuracy ?? null)}</b>) vs <b>{silage(v1.confusion_matrix)}</b> (<b>{num(v1.balanced_accuracy)}</b>) for v1; optimistic, since this split was seen when v2 was picked.</>}
       </p>
-      <p>
-        This split was already seen when v2 was picked, so those numbers are optimistic. Repeating the selection inside each training fold gives about <b>{num(sel.nested_selection_mean_balanced_accuracy)}</b> balanced accuracy against <b>{num(sel.v1_mean_balanced_accuracy_same_seeds)}</b> for v1, and a 95% bootstrap range for the gain of <b>{num(lo, 3)}</b> to <b>{num(hi, 3)}</b>, which touches zero. The gain rests on three or four silage field-years.
-      </p>
-      <p className="muted small">Details: {sel.details}. Mid-season dates still use the v1 model, refit on the months available by each date.</p>
+      <div>
+        <p>
+          {data.model_name}: the nine NDVI features plus four harvest-timing features (when greenness falls, how sharply, and whether it regrows), chosen from eight candidates in a comparison written down before any was scored.
+        </p>
+        <p>
+          Repeating the selection inside each training fold gives about <b>{num(sel.nested_selection_mean_balanced_accuracy)}</b> balanced accuracy against <b>{num(sel.v1_mean_balanced_accuracy_same_seeds)}</b> for v1, and a 95% bootstrap range for the gain of <b>{num(lo, 3)}</b> to <b>{num(hi, 3)}</b>, which touches zero. The gain rests on three or four silage field-years.
+        </p>
+        <p className="muted small">Details: {sel.details}. Mid-season dates still use the v1 model, refit on the months available by each date.</p>
+      </div>
     </section>
-  )
-}
-
-function Tile({ kicker, value, sub }: { kicker: string; value: string; sub?: string }) {
-  return (
-    <div className="tile">
-      <div className="tile__kicker">{kicker}</div>
-      <div className="tile__value">{value}</div>
-      {sub && <div className="tile__sub">{sub}</div>}
-    </div>
   )
 }
 
@@ -174,12 +174,12 @@ function PrecisionRecall({ data }: { data: EvaluateResponse }) {
   return (
     <>
       <ResponsiveContainer width="100%" height={230}>
-        <BarChart data={rows} margin={{ top: 12, right: 12, bottom: 0, left: -12 }} barGap={6} barCategoryGap="28%">
+        <BarChart data={rows} margin={{ top: 12, right: 12, bottom: 0, left: 0 }} barGap={6} barCategoryGap="28%">
           <CartesianGrid stroke={t.grid} vertical={false} />
-          <XAxis dataKey="metric" stroke={t.axis} tick={{ fill: t.ink, fontSize: 15 }} tickLine={false} />
-          <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 14 }} />
+          <XAxis dataKey="metric" stroke={t.axis} tick={{ fill: t.ink, fontSize: 13 }} tickLine={false} height={36} label={xTitle('Held-out score, pooled 2021–2023', t.muted)} />
+          <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Score (0–1)', t.muted)} />
           <Tooltip cursor={{ fill: t.grid, fillOpacity: 0.4 }} content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => l} value={(v) => v.toFixed(2)} />} />
-          <Legend verticalAlign="top" height={30} iconType="square" wrapperStyle={{ fontSize: 14, color: t.ink }} />
+          <Legend verticalAlign="top" height={30} iconType="square" wrapperStyle={{ fontSize: 13, color: t.ink }} />
           <Bar dataKey="Grain" fill={DATA.grain} radius={[4, 4, 0, 0]} isAnimationActive={false}>
             <ErrorBar dataKey="gErr" width={10} strokeWidth={2} stroke={t.ink} />
           </Bar>
@@ -227,13 +227,13 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
   const current = rows.find((r) => r.as_of === asOf)
   return (
     <ResponsiveContainer width="100%" height={240}>
-      <LineChart data={rows} margin={{ top: 12, right: 24, bottom: 0, left: -12 }}>
+      <LineChart data={rows} margin={{ top: 12, right: 24, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
-        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.ink, fontSize: 14 }} tickLine={false} padding={{ left: 16, right: 16 }} />
-        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 14 }} />
+        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.ink, fontSize: 13 }} tickLine={false} padding={{ left: 16, right: 16 }} height={36} label={xTitle('Satellite checkpoint', t.muted)} />
+        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Percent', t.muted)} />
         {current && <ReferenceLine x={current.label} stroke={t.muted} strokeDasharray="4 4" />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
-        <Legend verticalAlign="top" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
+        <Legend verticalAlign="top" height={30} iconType="plainline" wrapperStyle={{ fontSize: 13, color: t.ink }} />
         <Line dataKey="share_decided" name="Share of fields decided" stroke={t.share} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: t.surface }} activeDot={{ r: 6 }} isAnimationActive={false} />
         <Line dataKey={rows.some((r) => r.bal_acc != null) ? 'bal_acc' : 'acc_decided'} name={rows.some((r) => r.bal_acc != null) ? 'Balanced accuracy (pooled 2021–2023)' : 'Accuracy on decided'} stroke={t.accuracy} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: t.surface }} activeDot={{ r: 6 }} isAnimationActive={false} />
       </LineChart>

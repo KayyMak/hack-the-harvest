@@ -12,11 +12,11 @@ import {
   YAxis,
 } from 'recharts'
 import { api, parseTopFeatures } from '../api'
-import type { FieldFeature, Pred, UnlabeledCallView } from '../api'
-import { classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
+import type { FieldFeature, FieldLandcover, Pred, UnlabeledCallView } from '../api'
+import { cdlText, classColor, featureName, noCallReason, monthOf, num, shortDate, toTime } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
-import { ChartTip, type TipProps } from './charts'
+import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
 import { Pending } from './Pending'
 
 export interface Shortcut {
@@ -36,9 +36,11 @@ interface Props {
   showChips?: boolean
   /** season-end model call on a field with no BARC label (CDL corn); shown apart from the prediction */
   unlabeledCall?: UnlabeledCallView
+  /** USDA Cropland Data Layer cover for this field-year: land cover, never a BARC label */
+  cover?: FieldLandcover
 }
 
-export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect, unlabeledCall }: Props) {
+export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect, unlabeledCall, cover }: Props) {
   if (!field) {
     return (
       <div className="empty">
@@ -65,10 +67,10 @@ export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, sh
       </div>
     )
   }
-  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} unlabeledCall={unlabeledCall} />
+  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} unlabeledCall={unlabeledCall} cover={cover} />
 }
 
-function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }: Props & { field: FieldFeature }) {
+function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, cover }: Props & { field: FieldFeature }) {
   // Chips are picked from the full season; before Nov 30 they could show the future.
   const seasonEnd = asOf === `${year}-11-30`
   const id = field.properties.OBJECTID
@@ -76,6 +78,10 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
   const series = useAsync(() => api.series(id, year), [id, year])
   const decided = pred?.class === 'Grain' || pred?.class === 'Silage'
   const verdict = !label || !decided ? null : pred?.class === label
+  // No label, no held-out prediction and no season-end call: say why from the Cropland Data Layer.
+  const noCall = !label && !pred && !unlabeledCall
+  const reason = noCall ? noCallReason(cover, seasonEnd) : null
+  const missingLooks = `No clear satellite looks saved for this field in ${year}.`
 
   return (
     <div className="field">
@@ -89,13 +95,28 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
         </div>
         <div className="field__badges">
           <Badge kicker="BARC label" text={label ?? 'Unlabeled'} color={label ? classColor(label) : undefined} outline />
-          <Badge kicker={`Predicted · ${shortDate(asOf)}`} text={pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? '—')} color={decided ? classColor(pred?.class) : undefined} />
+          <Badge kicker={`Model · ${shortDate(asOf)}`} text={pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? (unlabeledCall && !label ? `${unlabeledCall.label} (no label)` : 'No call'))} color={decided ? classColor(pred?.class) : unlabeledCall && !label && !pred ? classColor(unlabeledCall.label) : undefined} />
           {verdict != null && <span className={`verdict ${verdict ? 'verdict--ok' : 'verdict--bad'}`}>{verdict ? '✓ Match' : '✗ Mismatch'}</span>}
         </div>
       </header>
 
+      {reason ? (
+        <section className="pbar pbar--empty nocall" aria-label="No model call">
+          <div className="pbar__value">No call</div>
+          <p>
+            <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label or a model call">USDA Cropland Data Layer {year}</span> {reason.text}
+          </p>
+          <p className="muted small">BARC has no label for this field-year. The Cropland Data Layer is satellite land cover, not a BARC label or a model call.</p>
+        </section>
+      ) : (
+        cover && (
+          <p className="block__note cdl-note">
+            <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">USDA Cropland Data Layer</span> {cdlText(cover)}
+          </p>
+        )
+      )}
       {/* An unlabeled call replaces the "no model call" bar: it is a call, just not a scored one. */}
-      {!(unlabeledCall && !label && !pred) && <ProbabilityBar pred={pred} />}
+      {!(unlabeledCall && !label && !pred) && !reason && <ProbabilityBar pred={pred} />}
       {unlabeledCall && !label && !pred && (
         <p className="block__note">
           <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, season end {year}.
@@ -113,8 +134,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
           )}
         </div>
         {series.loading && <div className="skeleton skeleton--chart" />}
-        {series.error && <p className="inline-error">Series unavailable: {series.error.message}</p>}
-        {series.data && <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} />}
+        {series.error && <p className="muted small">{missingLooks}</p>}
+        {series.data && (series.data.points.some((p) => p.ndvi != null) ? <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} /> : <p className="muted small">{missingLooks}</p>)}
       </section>
 
       {!showChips && (
@@ -124,7 +145,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
       )}
       {showChips && !seasonEnd && (
         <section className="block">
-          <Pending title="Before and after images">These cutouts are chosen from the whole season, so they can show imagery taken after {shortDate(asOf)}. They are shown on Nov 30.</Pending>
+          <div className="block__head"><h3>Before and after</h3></div>
+          <p className="muted small">Shown on Nov 30: the images are picked from the whole season, so on {shortDate(asOf)} they could show later imagery.</p>
         </section>
       )}
       {showChips && seasonEnd && (
@@ -134,8 +156,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
           {stub && <span className="tag tag--warn">Stub imagery</span>}
         </div>
         <div className="chips">
-          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the season’s largest greenness drop" />
-          <Chip src={api.chipUrl(id, year, 'post')} caption="After that drop" />
+          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the season’s largest greenness drop" missing={missingLooks} />
+          <Chip src={api.chipUrl(id, year, 'post')} caption="After that drop" missing={missingLooks} />
         </div>
       </section>
       )}
@@ -143,11 +165,14 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }
       <section className="block">
         <div className="block__head">
           <h3>Why the model decided</h3>
-          {parseTopFeatures(pred?.top_features).length > 0 && <span className="block__note">
-            <span className="txt-grain">◀ toward Grain</span> · <span className="txt-silage">toward Silage ▶</span>
-          </span>}
         </div>
-        <Contributions raw={pred?.top_features} />
+        {pred ? (
+          <Contributions raw={pred.top_features} />
+        ) : (
+          <p className="muted small">
+            {reason ? reason.na : unlabeledCall && !label ? 'Signal breakdowns are saved for labeled field-years only.' : 'Not applicable: no model call for this field-year.'}
+          </p>
+        )}
       </section>
     </div>
   )
@@ -222,8 +247,8 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
   const asOfT = toTime(asOf)
   const lastT = data[data.length - 1].t
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={data} margin={{ top: 22, right: 18, bottom: 0, left: -12 }}>
+    <ResponsiveContainer width="100%" height={270}>
+      <LineChart data={data} margin={{ top: 22, right: 18, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
         <XAxis
           dataKey="t"
@@ -233,9 +258,11 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
           ticks={ticks}
           tickFormatter={monthOf}
           stroke={t.axis}
-          tick={{ fill: t.muted, fontSize: 14 }}
+          tick={{ fill: t.muted, fontSize: 12 }}
+          height={36}
+          label={xTitle(`Satellite date, ${new Date(data[0].t).getUTCFullYear()}`, t.muted)}
         />
-        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 14 }} />
+        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Index (0–1)', t.muted)} />
         {asOfT < lastT && (
           <ReferenceArea x1={asOfT} x2={lastT} fill={t.muted} fillOpacity={0.1} ifOverflow="hidden" label={{ value: 'after as-of', position: 'insideTopRight', fill: t.muted, fontSize: 13 }} />
         )}
@@ -250,7 +277,7 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
         <Tooltip
           content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => shortDate(new Date(Number(l)).toISOString())} value={(v) => v.toFixed(2)} />}
         />
-        <Legend verticalAlign="bottom" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
+        <Legend verticalAlign="top" height={28} iconType="plainline" wrapperStyle={{ fontSize: 13, color: t.ink, paddingBottom: 4 }} />
         <Line dataKey="ndvi" name="NDVI (greenness)" stroke={t.ndvi} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
         {data.some((p) => p.ndti != null) && <Line dataKey="ndti" name="NDTI (residue)" stroke={DATA.ndti} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />}
       </LineChart>
@@ -258,11 +285,11 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
   )
 }
 
-function Chip({ src, caption }: { src: string; caption: string }) {
+function Chip({ src, caption, missing }: { src: string; caption: string; missing: string }) {
   const [failed, setFailed] = useState(false)
   return (
     <figure className="chip">
-      {failed ? <div className="chip__missing">No image chip</div> : <img src={src} alt={caption} onError={() => setFailed(true)} />}
+      {failed ? <div className="chip__missing">{missing}</div> : <img src={src} alt={caption} onError={() => setFailed(true)} />}
       <figcaption>{caption}</figcaption>
     </figure>
   )
@@ -276,8 +303,7 @@ function Contributions({ raw }: { raw: string | undefined }) {
         .sort((a, b) => Math.abs(b.contrib) - Math.abs(a.contrib)),
     [raw],
   )
-  if (!rows.length)
-    return <Pending title="Signal breakdown for this field">Which signals pushed this field toward grain or silage, from the model's per-field breakdown.</Pending>
+  if (!rows.length) return <p className="muted small">No signal breakdown is saved for this call.</p>
   const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
   return (
     <div className="contrib" role="table" aria-label="Feature contributions; negative pushes toward grain, positive toward silage">
@@ -301,6 +327,15 @@ function Contributions({ raw }: { raw: string | undefined }) {
           </div>
         )
       })}
+      <div className="contrib__row contrib__dir" aria-hidden="true">
+        <span />
+        <span className="contrib__ends">
+          <span className="txt-grain">◀ Grain</span>
+          <span className="contrib__zero">0</span>
+          <span className="txt-silage">Silage ▶</span>
+        </span>
+        <span />
+      </div>
     </div>
   )
 }

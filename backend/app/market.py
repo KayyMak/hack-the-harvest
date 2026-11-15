@@ -4,7 +4,7 @@ retrieves passages from our own analysis write-ups, and writes a short market br
 Grounding (the report may only say what our data says):
   * Tools read saved outputs only: the model's held-out per-field predictions and mid-season calls
     (baseline/outputs via artifacts.py), USDA NASS figures (market/data/nass_market.csv), the team's
-    2025 acreage forecast (forecast/outputs/summary.json), and BM25 retrieval over the team's
+    2025 acreage forecast (forecast_v2/outputs/summary.json), and BM25 retrieval over the team's
     analysis documents (docsearch.py). Nothing is fitted or downloaded here.
   * No hindsight: tools refuse data published after the report's as-of date. For an in-season date
     (before Dec 31) they also hide BARC reference labels, the model's held-out accuracy and the
@@ -37,7 +37,7 @@ ROOT = artifacts.ROOT
 ENV_FILE = ROOT / '.env'
 NASS_CSV = ROOT / 'market' / 'data' / 'nass_market.csv'
 NASS_SOURCES = ROOT / 'market' / 'data' / 'nass_sources.json'
-FORECAST = ROOT / 'forecast' / 'outputs' / 'summary.json'
+FORECAST = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 TIMELINE = ROOT / 'market' / 'data' / 'market_timeline.json'
 YEARS = (2021, 2022, 2023)            # seasons the BARC satellite model covers
 OUTLOOK_SEASON = 2025                 # season with a month-by-month statewide/US outlook
@@ -419,7 +419,7 @@ def planting_outlook() -> dict:
             'grain_acres_harvested': _int(p['md_grain_acres']), 'silage_acres_harvested': _int(p['md_silage_acres']),
             'silage_95pct_range': f"{_int(p['md_silage_low'])} to {_int(p['md_silage_high'])}",
             'silage_share': _pct(p['md_silage_share']),
-            'method': 'Team forecast from NASS reports public on that date (forecast/estimate_2025.py), not the BARC satellite model.'}
+            'method': 'Team forecast from NASS reports public on that date (forecast_v2/estimate_2025.py), not the BARC satellite model.'}
     except (ValueError, ArtifactUnavailable):
         pass
     return out
@@ -1062,5 +1062,5 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
             'grounding': {'claims_checked': len(claims(text)), 'ungrounded': issues, 'verifier': verifier},
             'disclaimer': DISCLAIMER,
             'sources': list(_sources().values()) + ['Team model: baseline/outputs (field-held-out predictions)',
-                                                    'Team 2025 forecast: forecast/outputs/summary.json and market/data/market_timeline.json',
+                                                    'Team 2025 forecast: forecast_v2/outputs/summary.json and market/data/market_timeline.json',
                                                     'Project documents: ' + ', '.join(docsearch.corpus_files(_doc_sources()))]}

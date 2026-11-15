@@ -1,10 +1,8 @@
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
-import type { EvaluateResponse, Forecast2025, Pred, RollupResponse, UnlabeledYearView } from '../api'
+import type { EvaluateResponse, Pred, RollupResponse, UnlabeledYearView } from '../api'
 import { acres, num, pct, shortDate } from '../format'
-import type { AsyncState } from '../hooks'
 import { DATA, useTheme } from '../theme'
-import { ChartTip, type TipProps } from './charts'
-import { ForecastCards } from './Forecast2025'
+import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
 import { Pending } from './Pending'
 
 export interface ReviewItem {
@@ -17,10 +15,9 @@ export interface ReviewItem {
 interface Props {
   year: number
   asOf: string
-  counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number }
+  /** total = every BARC field; labeled = fields with a BARC Grain/Silage label this year (the only ones scored) */
+  counts: { Grain: number; Silage: number; Pending: number; Insufficient: number; total: number; labeled: number }
   rollup: RollupResponse | null
-  /** graded 2025 Maryland forecast vs NASS; pending until the saved forecast exists */
-  forecast: AsyncState<Forecast2025>
   /** season-end model calls on blank-label fields that CDL marks as corn */
   unlabeled?: UnlabeledYearView | null
   unlabeledError?: Error | null
@@ -38,7 +35,7 @@ interface Props {
 const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, forecast, unlabeled, unlabeledError, unlabeledAtSeasonEnd = false, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
+export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError, unlabeledAtSeasonEnd = false, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
   const chart = useTheme().chart
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
@@ -47,46 +44,46 @@ export function Overview({ year, asOf, counts, rollup, forecast, unlabeled, unla
   const split = evaluation?.split_label ?? 'whole years held out'
   const base = evaluation?.baseline
   const balanced = evaluation?.convergence.some((c) => c.bal_acc != null) ?? false
-  const w = (n: number) => `${counts.total ? (n / counts.total) * 100 : 0}%`
+  const w = (n: number) => `${counts.labeled ? (n / counts.labeled) * 100 : 0}%`
 
   return (
     <>
       <div className="lead">
-      <ForecastCards state={forecast} />
       <section className="kpis" aria-label="Key figures">
         {rollup || !base ? (
           <article className="glass kpi">
-            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}{rollup?.reference_name ? ' (Nov 30)' : ''}</h2>
+            <h2 className="kpi__label">BARC silage acres</h2>
             <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
-            {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
+            {rollup && <div className="kpi__sub">{rollup.region ?? 'Maryland'}, {year}{rollup.reference_name ? ' (Nov 30)' : ''}; 95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
             {rollup && <div className="kpi__foot">{rollup.reference_name ?? `Census ${rollup.year}`}: {acres(rollup.census_acres)}</div>}
           </article>
         ) : (
           <article className="glass kpi">
-            <h2 className="kpi__label">Balanced accuracy, 2021–2023</h2>
+            <h2 className="kpi__label">Balanced accuracy</h2>
             <div className="kpi__value">{num(evaluation?.balanced_accuracy)}</div>
             <div className="kpi__sub">{base.name ?? 'Baseline'}: {num(base.balanced_accuracy)}</div>
             <div className="kpi__foot">{evaluation?.n_evaluated} field-years, {split}</div>
           </article>
         )}
         <article className="glass kpi">
-          <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Fields decided by ${shortDate(asOf)}`}</h2>
+          <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Decided by ${shortDate(asOf)}`}</h2>
           <div className="kpi__value">
-            {decided} <span className="kpi__of">of {counts.total}</span>
+            {decided} <span className="kpi__of">of {counts.labeled}</span>
           </div>
+          <div className="kpi__sub">labeled {year} fields</div>
           <div className="kpi__bar" aria-hidden="true">
             <span style={{ width: w(counts.Silage), background: DATA.silage }} />
             <span style={{ width: w(counts.Grain), background: DATA.grain }} />
             <span style={{ width: w(counts.Insufficient), background: '#c9d3cf' }} />
           </div>
           <div className="kpi__foot">
-            {counts.Silage} silage, {counts.Grain} grain{seasonEnd ? `, ${counts.total - decided} not labeled` : `, ${counts.Insufficient} abstained`}
+            {counts.Silage} silage, {counts.Grain} grain{seasonEnd ? `; ${counts.total - counts.labeled} of ${counts.total} fields not labeled` : `, ${counts.Insufficient} abstained`}
           </div>
         </article>
         <article className="glass kpi">
-          <h2 className="kpi__label">Silage recall, full season 2021–2023</h2>
+          <h2 className="kpi__label">Silage recall</h2>
           <div className="kpi__value">{S ? num(S.recall.value) : '—'}</div>
-          {S && <div className="kpi__sub">95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
+          {S && <div className="kpi__sub">Full season, 2021–2023 pooled; 95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
           {evaluation && (
             <div className="kpi__foot">
               {evaluation.confusion[evaluation.labels.indexOf('Silage')]?.[evaluation.labels.indexOf('Silage')] ?? 0} of {S?.support ?? 0} silage field-years found
@@ -124,7 +121,7 @@ export function Overview({ year, asOf, counts, rollup, forecast, unlabeled, unla
 
         <section>
           <div className="rail__head">
-            <h2 className="rail__title">Held-out accuracy</h2>
+            <h2 className="rail__title">Held-out accuracy, 2021–2023 pooled</h2>
             <button className="link" onClick={onOpenQuality}>
               Model quality
             </button>
@@ -177,10 +174,10 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
   return (
     <div className="conv">
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={rows} margin={{ top: 16, right: 16, bottom: 0, left: -18 }}>
+      <LineChart data={rows} margin={{ top: 12, right: 16, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
-        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} />
-        <YAxis domain={[0, 1]} ticks={[0, 0.5, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} />
+        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} height={34} label={xTitle('Satellite checkpoint', t.muted)} />
+        <YAxis domain={[0, 1]} ticks={[0, 0.5, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Percent', t.muted)} />
         {current && <ReferenceLine x={current.label} stroke={t.share} strokeOpacity={0.35} strokeWidth={28} />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
         <Line dataKey="share_decided" name="Fields decided" stroke={t.share} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.share }} isAnimationActive={false} />
