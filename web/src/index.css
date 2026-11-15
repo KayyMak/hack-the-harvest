@@ -2222,3 +2222,107 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
   .shell .topbar .ghost-btn { padding: 5px 8px; font-size: 12.5px; }
   .shell .topbar .asof { gap: 6px; }
 }
+
+.nowrap { white-space: nowrap; }
+
+/* ---------- final pass: crop toggle, all-states table ---------- */
+.statecrop { display: flex; gap: 4px; padding: 5px; border-radius: 14px; background: rgba(8, 16, 14, 0.78); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+.statecrop .seg__btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border: 0; border-radius: 10px; background: transparent; color: #c9d6d1; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.statecrop .seg__btn + .seg__btn { border-left: 0; }
+.statecrop .seg__btn:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.statecrop .seg__btn.is-on { background: #eef3f1; color: #0d1715; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot--silage { background: #5cbf7a; }
+.dot--grain { background: #e2a43a; }
+:root[data-mode='light'] .statecrop { background: rgba(255, 255, 255, 0.9); border-color: rgba(13, 23, 21, 0.12); box-shadow: 0 6px 18px rgba(13, 23, 21, 0.12); }
+:root[data-mode='light'] .statecrop .seg__btn { color: #3b4a45; }
+:root[data-mode='light'] .statecrop .seg__btn:hover { background: rgba(13, 23, 21, 0.06); color: #0d1715; }
+:root[data-mode='light'] .statecrop .seg__btn.is-on { background: #0d1715; color: #fff; }
+
+.sheet__actions { display: flex; gap: 8px; flex: none; }
+.sheet:has(.ftable--states) { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 20px; }
+.sheet:has(.ftable--states) .sheet__lede { margin-bottom: 12px; font-size: 14px; }
+.ftable--states { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.ftable--states .ftable__scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.ftable--states table { font-size: 14px; font-variant-numeric: tabular-nums; }
+.ftable--states th { z-index: 2; }
+.ftable--states .ftable__groups th { top: 0; height: 30px; padding: 6px 10px 0; text-align: left; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #e8eeeb; border-bottom: 0; }
+.ftable--states .ftable__groups .grp { border-left: 1px solid rgba(255, 255, 255, 0.1); }
+.ftable--states .ftable__groups .grp .dot { margin-right: 8px; vertical-align: 0; }
+.ftable--states .ftable__groups .grp--silage { box-shadow: inset 0 3px 0 #5cbf7a; }
+.ftable--states .ftable__groups .grp--grain { box-shadow: inset 0 3px 0 #e2a43a; }
+.ftable--states .ftable__cols th { top: 30px; }
+.ftable--states th button, .ftable--states .th__plain { padding: 6px 10px 8px; display: inline-flex; }
+.ftable--states td { padding: 7px 10px; white-space: nowrap; }
+.ftable--states .grp-start { border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.ftable--states .ftable__nass { color: #a9b8b2; }
+.ftable--states tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.025); }
+.ftable--states tbody tr:hover { background: rgba(143, 205, 242, 0.08); }
+.ftable--states .ftable__state .link { font-weight: 600; }
+.ftable__flag { color: #ffb4a6; }
+:root[data-mode='light'] .ftable--states .ftable__groups th { color: #0d1715; }
+:root[data-mode='light'] .ftable--states .ftable__nass { color: #4a5a55; }
+:root[data-mode='light'] .ftable--states tbody tr:nth-child(even) { background: rgba(13, 23, 21, 0.03); }
+:root[data-mode='light'] .ftable--states .grp-start, :root[data-mode='light'] .ftable--states .ftable__groups .grp { border-left-color: rgba(13, 23, 21, 0.1); }
+/* the table sheet takes the right side: the headline cards keep the left, two per row */
+.shell:has(.sheet) .lead { right: calc(min(780px, 56vw - 16px) + 32px); }
+.shell:has(.sheet) .lead .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { .shell:has(.sheet) .lead { right: auto; } .sheet:has(.ftable--states) { overflow: visible; } }
+/* selects never run their text under the chevron */
+.yearpick select { padding-right: 34px !important; text-overflow: ellipsis; }
+:root[data-mode='light'] .ftable__flag { color: #b3261e; }
+/* 2025 tab: crop toggle and CSV download live in the top bar, like BARC validation; panels start right under it */
+.topbar .statecrop-top .seg__btn { display: inline-flex; align-items: center; gap: 7px; }
+.shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: 96px; }
+@media (max-width: 900px) { .shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: auto; } }
+/* narrow laptops: headline tiles two per row so nothing is clipped */
+@media (max-width: 1180px) and (min-width: 901px) { .lead .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* the map key is only as wide as its content */
+@media (min-width: 901px) { .shell .mapkey { width: fit-content; } }
+/* fixed map chrome (desktop): the key is a fixed-width bar at bottom-left; zoom sits right beside it,
+   same place on every tab, never moved by the panels on the right */
+@media (min-width: 901px) {
+  .shell .mapkey, .shell--overview .mapkey, .shell:has(.drawer) .mapkey, .shell:has(.sheet) .mapkey {
+    left: 16px; bottom: 16px; width: 520px !important; max-width: 520px !important; box-sizing: border-box;
+  }
+  .shell .leaflet-bottom.leaflet-left { left: 548px; bottom: 16px; }
+  .shell .leaflet-bottom.leaflet-left .leaflet-control-zoom { margin: 0 !important; }
+  .shell .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; font-size: 20px !important; }
+}
+/* narrow laptops: the top bar keeps every control on one line */
+.lbl-short { display: none; }
+@media (max-width: 1180px) and (min-width: 901px) {
+  .lbl-long { display: none; } .lbl-short { display: inline; }
+  .topbar .asof__label { display: none; }
+  .views__btn { padding: 8px 7px; }
+  .topbar .seg__btn { padding: 6px 9px; }
+}
+/* (higher specificity: earlier .shell .topbar rules win otherwise) */
+.shell .topbar .lbl-short { display: none !important; }
+@media (max-width: 1180px) and (min-width: 901px) {
+  .shell .topbar .lbl-long { display: none !important; }
+  .shell .topbar .lbl-short { display: inline !important; }
+  .shell .topbar .asof__label { display: none !important; }
+}
+/* map shapes: no rectangular browser focus box on click; the white outline shows the selection */
+.leaflet-container path.leaflet-interactive:focus,
+.leaflet-container path.leaflet-interactive:focus-visible,
+.leaflet-container .leaflet-interactive:focus { outline: none !important; }
+/* 2025 rail: coverage lines + largest states */
+.closeness { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 6px; font-size: 14px; color: #c7d2ce; }
+.closeness b { color: #8fd9a5; font-weight: 700; }
+.rail__sub { margin: 4px 0 2px; font-size: 13px; font-weight: 600; color: #a9b8b2; }
+:root[data-mode='light'] .closeness { color: #2c3a35; }
+:root[data-mode='light'] .closeness b { color: #1f7a3f; }
+:root[data-mode='light'] .rail__sub { color: #4a5a55; }
+/* every right-hand panel ends at the same height on every tab, just above the map credits */
+@media (min-width: 901px) {
+  .shell .rail, .shell--states .rail, .shell--overview .rail, .shell .sheet, .shell .drawer {
+    bottom: auto !important; max-height: calc(100vh - 132px) !important;
+  }
+}
+/* home button: same size as the zoom buttons, stacked just above them */
+.shell .map-home { margin: 0 0 8px 0 !important; }
+.shell .map-home a { width: 36px !important; height: 36px !important; display: flex !important; align-items: center; justify-content: center; }
+/* the four headline tiles are the same size on the 2025 and BARC tabs */
+@media (min-width: 901px) { .lead .kpis .kpi { min-height: 136px; box-sizing: border-box; } }

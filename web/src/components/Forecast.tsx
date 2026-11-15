@@ -27,10 +27,6 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
   return (
     <>
       <div className="lead">
-        <p className="glass banner" role="note">
-          <span>This is our submitted 2025 answer, made only from NASS reports released before January 2026 — <code>forecast_v2/outputs/state_estimates_2025.csv</code> (QuickStats format)</span>
-          <a className="ghost-btn banner__dl" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">Download 2025 CSV</a>
-        </p>
         <section className="kpis" aria-label="2025 headline numbers">
           <UsCard crop="silage" cell={data.us.silage} rel={data.reliability?.silage ?? null} />
           <UsCard crop="grain" cell={data.us.grain} rel={data.reliability?.grain ?? null} />
@@ -44,7 +40,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               {data.scores.silage.within_10pct}/{data.scores.silage.states} silage
             </div>
             <div className="kpi__foot">
-              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
+              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error.toFixed(1)}%, silage {data.scores.silage.acre_weighted_abs_pct_error.toFixed(1)}%
             </div>
           </article>
           {md && (
@@ -73,11 +69,17 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           </section>
           <section>
             <div className="rail__head">
-              <h2 className="rail__title">Biggest misses, {crop} (acres, ours vs NASS)</h2>
+              <h2 className="rail__title">How close we came, 2025</h2>
               <button className="link" onClick={() => onTable(true)}>All states</button>
             </div>
+            <ul className="closeness">
+              <li><b>{data.scores.silage.inside_95_interval} of {data.scores.silage.states}</b> silage states: NASS final inside our 95% range</li>
+              <li><b>{data.scores.grain.inside_95_interval} of {data.scores.grain.states}</b> grain states: NASS final inside our 95% range</li>
+            </ul>
+            <h3 className="rail__sub">Largest {crop} states (acres, ours vs NASS)</h3>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
           </section>
+          <ScoreUpload data={data} crop={crop} />
           <section>
             <h2 className="rail__title">How it works</h2>
             <p className="rail__note rail__note--keep">
@@ -116,7 +118,6 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               </table>
             </details>
           </section>
-          <ScoreUpload data={data} crop={crop} />
         </aside>
       )}
 
@@ -124,9 +125,11 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
         <section className="glass sheet" aria-label="All states">
           <div className="sheet__headrow">
             <h1 className="sheet__title">All states, 2025</h1>
-            <button className="ghost-btn" onClick={() => onTable(false)}>Back to map</button>
+            <div className="sheet__actions">
+              <button className="ghost-btn" onClick={() => onTable(false)}>Back to map</button>
+            </div>
           </div>
-          <p className="sheet__lede">{data.estimate_note} {data.reference_note}</p>
+          <p className="sheet__lede">Acres harvested, our estimate vs NASS final. Hover an estimate for its 95% range; <b className="ftable__flag">!</b> = NASS fell outside it. Click a state for detail.</p>
           <StateTable rows={data.states} onSelect={onSelect} selected={selected} />
         </section>
       )}
@@ -159,7 +162,7 @@ function UsCard({ crop, cell, rel }: { crop: Crop; cell: Cell; rel: Reliability 
           className="kpi__foot"
           title={`NASS reliability format, from the ${rel.years} backtest (${rel.n} years, each forecast with only what was known then): root-mean-square error ${rel.rmse_pct}%; 9 times in 10 the miss is no more than ±${rel.margin90_pct}% (Student t ${rel.t} × RMSE). Largest miss: ${rel.max_abs_pct}%.`}
         >
-          Margin of error ±{rel.margin90_pct}% (90%) · RMSE {rel.rmse_pct}%
+          <span className="nowrap">Margin of error ±{rel.margin90_pct}% (90%)</span> · <span className="nowrap">RMSE {rel.rmse_pct}%</span>
         </div>
       )}
       <div className="kpi__foot">
@@ -220,7 +223,8 @@ function ConvergenceChart({ data }: { data: Forecast }) {
 
 function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSelect: (s: string) => void }) {
   const misses = useMemo(
-    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 6),
+    // the states that carry the most acres (what an acre-weighted score weighs most), largest first
+    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => b[crop]!.nass! - a[crop]!.nass!).slice(0, 5),
     [rows, crop],
   )
   return (
@@ -246,7 +250,7 @@ type SortKey = 'state' | 'silage' | 'silage_err' | 'grain' | 'grain_err'
 function StateTable({ rows, onSelect, selected }: { rows: StateRow[]; onSelect: (s: string) => void; selected: string | null }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'silage', dir: -1 })
   const val = (r: StateRow, k: SortKey): number | string =>
-    k === 'state' ? r.state : k === 'silage' ? r.silage?.nass ?? -1 : k === 'grain' ? r.grain?.nass ?? -1 : k === 'silage_err' ? Math.abs(r.silage?.err ?? -1) : Math.abs(r.grain?.err ?? -1)
+    k === 'state' ? r.state : k === 'silage' ? r.silage?.est ?? -1 : k === 'grain' ? r.grain?.est ?? -1 : k === 'silage_err' ? Math.abs(r.silage?.err ?? -1) : Math.abs(r.grain?.err ?? -1)
   const sorted = [...rows].sort((a, b) => (val(a, sort.key) < val(b, sort.key) ? -1 : val(a, sort.key) > val(b, sort.key) ? 1 : 0) * sort.dir)
   const head = (k: SortKey, label: string, num = true) => (
     <th className={num ? 'is-num' : undefined} aria-sort={sort.key === k ? (sort.dir === 1 ? 'ascending' : 'descending') : 'none'}>
@@ -256,37 +260,42 @@ function StateTable({ rows, onSelect, selected }: { rows: StateRow[]; onSelect: 
       </button>
     </th>
   )
-  const cells = (c: Cell | null) =>
+  const cells = (c: Cell | null, first: string) =>
     c ? (
       <>
-        <td className="is-num">{fmtFull(c.est)}<div className="ftable__range">{fmtAcres(c.low)}–{fmtAcres(c.high)}</div></td>
-        <td className="is-num">{fmtFull(c.nass)}</td>
-        <td className="is-num"><ErrTag err={c.err} />{c.inside === false && <span className="ftable__flag" title="NASS outside our 95% range">!</span>}</td>
+        <td className={`is-num ${first}`} title={c.low != null && c.high != null ? `95% range ${fmtFull(c.low)}–${fmtFull(c.high)}` : undefined}>{fmtFull(c.est)}</td>
+        <td className="is-num ftable__nass">{fmtFull(c.nass)}</td>
+        <td className="is-num ftable__err"><ErrTag err={c.err} />{c.inside === false && <span className="ftable__flag" title="NASS outside our 95% range">!</span>}</td>
       </>
     ) : (
-      <><td className="is-num">—</td><td className="is-num">—</td><td className="is-num">—</td></>
+      <><td className={`is-num ${first}`}>—</td><td className="is-num ftable__nass">—</td><td className="is-num ftable__err">—</td></>
     )
   return (
-    <div className="ftable">
+    <div className="ftable ftable--states">
       <div className="ftable__scroll">
         <table>
           <thead>
-            <tr>
+            <tr className="ftable__groups">
+              <th />
+              <th colSpan={3} className="grp grp--silage"><i className="dot dot--silage" />Silage</th>
+              <th colSpan={3} className="grp grp--grain"><i className="dot dot--grain" />Grain</th>
+            </tr>
+            <tr className="ftable__cols">
               {head('state', 'State', false)}
-              {head('silage', 'Silage, ours')}
-              <th className="is-num">NASS</th>
+              {head('silage', 'Ours')}
+              <th className="is-num"><span className="th__plain">NASS</span></th>
               {head('silage_err', 'Error')}
-              {head('grain', 'Grain, ours')}
-              <th className="is-num">NASS</th>
+              {head('grain', 'Ours')}
+              <th className="is-num"><span className="th__plain">NASS</span></th>
               {head('grain_err', 'Error')}
             </tr>
           </thead>
           <tbody>
             {sorted.map((r) => (
               <tr key={r.state} className={r.state === selected ? 'is-selected' : undefined} onClick={() => onSelect(r.state)}>
-                <td><button className="link" onClick={() => onSelect(r.state)}>{titleCase(r.state)}</button></td>
-                {cells(r.silage)}
-                {cells(r.grain)}
+                <td className="ftable__state"><button className="link" onClick={() => onSelect(r.state)}>{titleCase(r.state)}</button></td>
+                {cells(r.silage, 'grp-start')}
+                {cells(r.grain, 'grp-start')}
               </tr>
             ))}
           </tbody>

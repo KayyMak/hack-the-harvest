@@ -94,7 +94,8 @@ export function MarketPanel() {
         </>
       )}
 
-      <div className="market__actions">
+      {/* No NVIDIA key on the server: the chart stands alone; no placeholder for the report. */}
+      {status.data?.configured !== false && <div className="market__actions">
         <button className="button" onClick={() => void generate()} disabled={busy || !o}>
           {busy ? 'Nemotron is writing…' : shownReport ? 'Regenerate outlook' : `Write outlook as of ${shownAsOf ? shortDate(shownAsOf) : '…'}`}
         </button>
@@ -105,13 +106,8 @@ export function MarketPanel() {
           </span>
         )}
         {busy && <span className="muted">Calling tools, writing and checking every sentence; this can take up to a minute.</span>}
-      </div>
+      </div>}
 
-      {status.data && !status.data.configured && !error && (
-        <Pending title="Connect Nemotron">
-          {status.data.how_to_configure} Get a free key on build.nvidia.com. The key stays on the server and is never sent to this page.
-        </Pending>
-      )}
       {error && (
         <p className="inline-error" role="alert">
           {error}
@@ -159,16 +155,16 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   const tl = outlook.timeline as Dict
   const series = (tl.series as Dict[]) ?? []
   const grid = <CartesianGrid stroke={t.grid} vertical={false} />
-  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
+  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} padding={{ left: 18, right: 18 }} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
   const tip = <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
-  const legend = <Legend verticalAlign="top" align="left" height={40} iconType="plainline" wrapperStyle={{ fontSize: 12, color: t.ink, paddingBottom: 8 }} />
+  const legend = <Legend verticalAlign="top" align="left" height={58} iconType="plainline" wrapperStyle={{ fontSize: 12, lineHeight: '18px', color: t.ink, paddingBottom: 14 }} />
   if (tl.kind === 'statewide_and_us_outlook') {
     const rows = series.map((r) => ({ label: shortDate(String(r.as_of)), supply: r.us_production_change_pct, md: r.md_silage_share_pct }))
     // The June Acreage report carries no grain production forecast, so the supply line starts at the first one.
     const firstNoSupply = rows.length > 0 && rows[0].supply == null
     return (
       <figure className="market__chart" role="img" aria-label="US grain supply change versus 2024 and our Maryland silage share, by release date">
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={300}>
           <ComposedChart data={rows} margin={{ top: 4, right: 16, bottom: 4, left: 4 }}>
             {grid}{x}
             <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={60} unit="%" label={yTitle('Percent', t.muted)} />

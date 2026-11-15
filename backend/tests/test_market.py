@@ -290,6 +290,17 @@ class MarketChecks(unittest.TestCase):
         # Required sections left empty say so; an extra empty heading the model added is dropped.
         self.assertEqual(out, '# Title\n## Bottom line\nOur data does not cover this.\n## Price outlook\nKept [a].')
 
+    def test_list_intro_is_dropped_when_its_list_is_removed(self):
+        text = ('## Supply outlook\nSupply fell [a]. Maryland silage moved as follows [b]:\n- Gone one [b].\n'
+                '- Gone two [b].\n## Price outlook\nPrices are listed below [c]:\n- Kept [c].\n'
+                '## How much to trust this\nThe changes were [d]:\n\n- Gone three [d].')
+        out = market.remove_claims(text, {'Gone one [b].', 'Gone two [b].', 'Gone three [d].'})
+        self.assertEqual(out, '## Supply outlook\nSupply fell [a].\n## Price outlook\nPrices are listed below [c]:\n'
+                              '- Kept [c].\n## How much to trust this\nOur data does not cover this.')
+        # An intro whose list was never touched stays.
+        self.assertEqual(market.remove_claims('## Bottom line\nAs follows [a]:\n- Kept [a].\nGone.', {'Gone.'}),
+                         '## Bottom line\nAs follows [a]:\n- Kept [a].')
+
     def test_claims_split_sentences_bullets_and_skip_headings(self):
         text = '## Bottom line\nFirst claim [a]. Second claim.\n[b]\n- Bullet claim [c]\n'
         # A citation-only fragment (here on its own line) attaches to the sentence before it.

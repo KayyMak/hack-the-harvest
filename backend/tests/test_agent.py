@@ -84,7 +84,88 @@ class AgentChecks(unittest.TestCase):
         self.assertIn('0.97', flags[0]['summary'])
         self.assertIn('0.97', script.sent[2][0][-1]['content'])  # named in the retry request
         self.assertEqual(steps[-1]['type'], 'report')
-        self.assertIn('Verifier', steps[-1]['summary'])
+        # Still unsupported after the retry: removed from the report (no warning footer), noted in the trace.
+        self.assertNotIn('0.97', steps[-1]['summary'])
+        self.assertNotIn('Verifier', steps[-1]['summary'])
+        self.assertIn('Summary of tool results', steps[-1]['summary'])  # nothing left: the tool-result summary
+        self.assertIn('removed 1 sentence', steps[-2]['summary'])
+
+    def test_unsupported_sentences_are_removed_and_supported_ones_kept(self):
+        fc = json.dumps(agent.harvest_tools.call('forecast_2025', {}))
+        script = Script(
+            {'content': None, 'tool_calls': [call(1, 'forecast_2025')]},
+            {'content': '## 2025 Maryland silage\n### Findings\n- Maryland silage estimate: 31.5 acres [forecast_2025]\n'
+                        '- CI 22.1 to 40.9 [forecast_2025]\n### Uncertainty\n- Invented spread 12.34 [forecast_2025]\n'
+                        '### Sources (tools used)\n- forecast_2025'},
+            {'content': '## 2025 Maryland silage\n### Findings\n- Maryland silage estimate: 36,648 acres, CV 22% '
+                        '[forecast_2025].\nThat is solid [forecast_2025]. Still 31.5 acres somewhere.\n'
+                        '- The calls were as follows:\n'
+                        '  - field 9999: 0.4242 [classify]\n### Uncertainty\n- Invented spread 12.34 [forecast_2025]\n'
+                        '### Sources (tools used)\n- forecast_2025\n\n| region | acres [forecast_2025] |\n|---|---|\n'
+                        '| Maryland | 31.5 |'},
+        )
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('What is our 2025 Maryland silage estimate and how sure are we?', 'r-drop')
+        steps = self.trace('r-drop')
+        self.assertIn('36648', fc)
+        report = steps[-1]['summary']
+        self.assertEqual(steps[-1]['type'], 'report')
+        self.assertIn('36,648 acres, CV 22%', report)  # supported bullet kept (whole bullet is one unit)
+        self.assertIn('That is solid [forecast_2025].', report)  # prose: only the unsupported sentence goes
+        for gone in ('31.5', '12.34', '9999', '0.4242', 'as follows', '| region', '|---|', 'Verifier'):
+            self.assertNotIn(gone, report)
+        self.assertIn('### Uncertainty\nNot available from the tools.', report)
+        self.assertIn('### Findings', report)
+        self.assertTrue(report.startswith('## 2025 Maryland silage'))
+
+    def test_drop_unsupported_splits_prose_and_keeps_headings(self):
+        results = ['{"balanced_accuracy": 0.69}']
+        out, removed = agent.drop_unsupported('## Rule\nThe rule scored 0.69 [x]. The model scored 0.95 [x].\n## Next\n- 7.7 [x]',
+                                              results, '')
+        self.assertEqual(out, '## Rule\nThe rule scored 0.69 [x].\n## Next\nNot available from the tools.')
+        self.assertEqual(removed, ['The model scored 0.95 [x].', '- 7.7 [x]'])
+
+    def test_forecast_2025_tool_returns_the_submitted_forecast(self):
+        out = agent.harvest_tools.call('forecast_2025', {})
+        self.assertNotIn('error', out)
+        self.assertEqual((out['year'], out['state']), (2025, 'MARYLAND'))
+        self.assertEqual(out['maryland']['silage'], 36648)
+        for k in ('silage_se', 'silage_cv_pct', 'silage_low', 'silage_high', 'grain', 'grain_low', 'grain_high'):
+            self.assertIn(k, out['maryland'])
+            self.assertIn(k, out['us'])
+        self.assertIn('before January 2026', out['note'])
+        self.assertIn('method', out)
+        self.assertIn('silage', out['nass_2025_final']['maryland'])
+        self.assertEqual(out['margin_of_error']['silage']['rmse_pct'], 3.9)
+        self.assertEqual(out['margin_of_error']['grain']['margin90_pct'], 1.7)
+        self.assertEqual(agent.harvest_tools.call('forecast_2025', {'state': 'iowa'})['state'], 'IOWA')
+        self.assertIn('error', agent.harvest_tools.call('forecast_2025', {'state': 'ATLANTIS'}))
+        self.assertEqual(agent.harvest_tools.call('forecast_2025', {'state': 'US'})['state'], 'MARYLAND')
+        names = {t['function']['name'] for t in agent.tool_specs()}
+        self.assertTrue({'forecast_2025', 'decline_rule_baseline'} <= names)
+        summary = agent._summary(out)  # trace line and fallback-report finding
+        self.assertIn('MARYLAND silage=36648', summary)
+        self.assertIn('US silage=', summary)
+        rule = agent._summary(agent.harvest_tools.call('decline_rule_baseline', {}))
+        self.assertIn('decline rule balanced_accuracy=0.69', rule)
+        self.assertIn('model balanced_accuracy=0.90', rule)
+        self.assertIn('n=44', rule)
+
+    def test_forecast_2025_without_the_dashboard_reliability_file(self):
+        with patch.object(agent.harvest_tools, 'RELIABILITY_JSON', Path(self.tmp.name) / 'missing.json'):
+            out = agent.harvest_tools.call('forecast_2025', {})
+        self.assertNotIn('error', out)
+        self.assertNotIn('margin_of_error', out)
+        self.assertEqual(out['maryland']['silage'], 36648)
+
+    def test_decline_rule_baseline_tool_returns_the_saved_comparison(self):
+        out = agent.harvest_tools.call('decline_rule_baseline', {})
+        self.assertNotIn('error', out)
+        self.assertAlmostEqual(out['decline_rule']['balanced_accuracy'], 0.6927, places=4)
+        self.assertAlmostEqual(out['logistic_same_rows']['balanced_accuracy'], 0.9010, places=4)
+        self.assertEqual(out['evaluated_field_years'], 44)
+        self.assertIn('Season-end', out['scope'])
+        self.assertIn('error', agent.harvest_tools.call('decline_rule_baseline', {'as_of': '2022-10-12'}))
 
     def test_rounded_numbers_pass_invented_ones_do_not(self):
         results = ['{"balanced_accuracy": 0.8333333333333333, "ci": [40.13, 107.28]}']

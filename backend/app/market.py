@@ -784,21 +784,36 @@ def _verify(cfg: Config, report_claims: list[tuple[str, list[str]]], sources: di
 
 SERIOUS = ('uncited', 'unsupported', 'verifier')
 NOT_COVERED = 'Our data does not cover this.'
+INTRO = re.compile(r':\s*(?:\[[^\]]*\]\s*)*$|(?:\[[^\]]*\]\s*)+:\s*$')  # "... as follows:" (citations before/after)
 SECTIONS = ('bottom line', 'supply outlook', 'silage and what farmers are growing', 'price outlook',
             'how the outlook changed month to month', 'how much to trust this')
 
 
 def remove_claims(markdown: str, texts: set[str]) -> str:
-    """Drop the given sentences/bullets; a section left empty says our data does not cover it."""
-    lines = []
+    """Drop the given sentences/bullets; a section left empty says our data does not cover it, and a list
+    intro ("... moved as follows:") whose list items were all removed is dropped too."""
+    entries = []  # (line, removed by this call)
     for raw in markdown.split('\n'):
         line = raw
         for t in texts:
             line = line.replace(t, '')
         stripped = re.sub(r'^\s*(?:[-*•]|\d+\.)\s*$', '', line).strip()
         if raw.strip() and not stripped:
-            continue  # the whole line was removed
-        lines.append(re.sub(r'\s{2,}', ' ', line).rstrip() if line != raw else line)
+            entries.append((raw, True))  # the whole line was removed
+            continue
+        entries.append((re.sub(r'\s{2,}', ' ', line).rstrip() if line != raw else line, False))
+    for i, (line, gone) in enumerate(entries):
+        if gone or not INTRO.search(line.strip()) or re.match(r'^#{1,6}\s', line.strip()):
+            continue
+        cut, j = False, i + 1
+        while j < len(entries) and (entries[j][1] or not entries[j][0].strip()):
+            cut = cut or entries[j][1]
+            j += 1
+        nxt = entries[j][0].strip() if j < len(entries) else ''
+        if cut and not re.match(r'^(?:[-*•+]|\d+[.)])\s|^\|', nxt):  # its list is gone: drop the intro sentence
+            parts = re.split(r'(?<=[.!?])\s+(?=[A-Z(\[*])', line)
+            entries[i] = (' '.join(parts[:-1]), False) if len(parts) > 1 else (line, True)
+    lines = [line for line, gone in entries if not gone]
     out = []
     for i, line in enumerate(lines):
         heading = re.match(r'^##\s+(.*)$', line.strip())

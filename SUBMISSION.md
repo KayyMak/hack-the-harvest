@@ -75,6 +75,8 @@ the forecast's backtest, not a classifier split.
 | Spatial blocks (k-means blocks of field centroids, k = 4, 5, 6; model v1) | balanced accuracy 0.76 to 0.78, against 0.78 for v1 held out by field | `baseline/outputs/spatial_holdout.json` |
 | Farm (train on the other farms) | **fails for silage**: Central Farm has 11 of the 12 silage field-years; holding it out leaves one silage example to train on, and none of its 11 silage fields is found (balanced accuracy 0.5) | notebook section 4 |
 | Organizers' decline-date rule, same rows | rule: balanced accuracy 0.69 (11 of 12 silage, but 17 of 32 grain flagged); model: 0.90 | `baseline/outputs/decline_rule/metrics.json` |
+| Extra training labels (21 public BARC farm-record and Kraatz field-years, 2017-2023, never in a test fold) | no gain: balanced accuracy 0.89-0.91 vs 0.925 without them over 20 seeds, within noise, so the submitted model is unchanged | `baseline/outputs/experiments/extra_labels/results.md` |
+| Forecast round 3 (three more silage methods and a grain bias correction, pre-registered before scoring) | the submitted methods still win the backtest: silage 12.7% vs 14.8-15.9%, grain 1.60% vs 1.75%; 2025 numbers unchanged | `forecast_v2/PREREGISTRATION_ROUND3.md`, `forecast_v2/results_round3.md` |
 | Forecast backtest (each year 2018-2024 forecast with only what was known then) | silage: acre-weighted error 12.7% (first forecast's method 13.8%), median 10.3%, 95% range covered 94.6% of state-years; grain (2013-2024): acre-weighted 1.6%, covered 94.4% | `forecast_v2/outputs/summary.json`, `forecast_v2/results.md` |
 
 ## Limitations

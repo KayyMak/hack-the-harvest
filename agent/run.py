@@ -8,7 +8,8 @@ Graph:  analyst --(tool calls)--> tools --> analyst ... --(draft)--> verifier --
   tools     runs harvest.tools.call(name, args): the saved field-held-out model, as-of refits,
             NASS QuickStats, field time series. Results are the only facts the agent may use.
   verifier  every number in the draft must appear in a tool result; otherwise the draft goes back
-            once with the offending numbers named, and any that remain are flagged in the report.
+            once with the offending numbers named; sentences whose numbers are still unsupported are
+            removed from the report by the writer (noted in the trace, never shown as a footer).
   writer    saves the markdown report (backend tools.write_report) and logs the final `report` step.
 
 Every step is appended to the run's trace (backend tools.log_step), the format the Agent tab polls.
@@ -60,6 +61,13 @@ Use the tools to answer. They read the team's saved, field-held-out model result
 optionally as of a date so only satellite months complete by then are used), evaluate (scores against BARC
 labels), aggregate (silage acres with a 95% interval), get_fields, get_timeseries, get_quickstats (NASS
 county/state acres, context only, never field labels) and get_chip.
+- forecast_2025 is the team's submitted 2025 forecast of state and US acres harvested for silage and grain
+  (estimate, SE, CV%, 95% range, margin of error, NASS 2025 final acres). Any question about the 2025
+  estimate/forecast or how sure we are about it must use forecast_2025, not the BARC tools. Quote its acre
+  figures exactly as returned (write 1234567 or 1,234,567, never "1.2 million"); do not compute your own gaps
+  or percentages against NASS.
+- decline_rule_baseline is the organizers' NDVI decline-date rule vs our model on the same BARC field-years
+  (balanced accuracy, precision, recall, confusion matrices). Any comparison with the decline rule must use it.
 
 Call tools through the tool-calling interface only. Never write a tool call as text (no <tool_call>, <function=...>
 or {"name": ..., "arguments": ...} in your answer).
@@ -211,6 +219,14 @@ def _text_calls(content: str, rounds: int) -> list[dict]:
 def _summary(out: dict) -> str:
     if 'error' in out:
         return f"error: {out['error']}"
+    if out.get('year') == 2025 and isinstance(out.get('us'), dict) and isinstance(out.get('state'), str):  # forecast_2025
+        st, us = out.get(out['state'].lower(), {}), out['us']
+        return (f"2025 forecast: {out['state']} silage={st.get('silage')} (95% {st.get('silage_low')}-"
+                f"{st.get('silage_high')}), US silage={us.get('silage')} (95% {us.get('silage_low')}-{us.get('silage_high')})")
+    if isinstance(out.get('decline_rule'), dict) and isinstance(out.get('logistic_same_rows'), dict):
+        return llm_guard.round_long_floats(
+            f"decline rule balanced_accuracy={out['decline_rule'].get('balanced_accuracy')}, model balanced_accuracy="
+            f"{out['logistic_same_rows'].get('balanced_accuracy')}, n={out.get('evaluated_field_years')}")
     keys = [k for k in ('year', 'as_of', 'n', 'n_pending', 'expected_silage_acres', 'balanced_accuracy') if k in out]
     return llm_guard.round_long_floats(', '.join(f'{k}={out[k]}' for k in keys) or ', '.join(list(out)[:5]))
 
@@ -374,13 +390,100 @@ def verifier(state: AgentState) -> AgentState:
     return state
 
 
+HEADING = re.compile(r'^\s*(#{1,6})\s')
+LIST_ITEM = re.compile(r'^\s*(?:[-*•+]|\d+[.)])\s')
+TABLE_RULE = re.compile(r'^\s*\|?\s*:?-{3,}:?\s*(?:\|\s*:?-{3,}:?\s*)*\|?\s*$')
+INTRO = re.compile(r':\s*(?:\[[^\]]*\]\s*)*$|(?:\[[^\]]*\]\s*)+:\s*$')  # "... as follows:" (citations before/after)
+SENTENCE = re.compile(r'(?<=[.!?])\s+(?=[A-Z(\[*])')
+NOT_AVAILABLE = 'Not available from the tools.'
+
+
+def drop_unsupported(report: str, results: list[str], query: str) -> tuple[str, list[str]]:
+    """Remove every sentence, bullet or table row whose numbers are not in a tool result (same test as the
+    verifier, applied to that unit alone). Headings stay; a section left empty says it is not available,
+    a table left without rows loses its header, and a list intro ("... as follows:") left with no list
+    is dropped. Returns (report, removed units)."""
+    removed: list[str] = []
+    entries: list[tuple[str, bool]] = []  # (line, removed by this pass)
+    for line in report.split('\n'):
+        s = line.strip()
+        if not s or HEADING.match(line) or TABLE_RULE.match(line):
+            entries.append((line, False))
+            continue
+        if s.startswith('|') or LIST_ITEM.match(line):
+            units = [line]  # a bullet or table row stands or falls as a whole
+        else:
+            units = [u for u in SENTENCE.split(line) if u.strip()]
+        keep = [u for u in units if not unsupported_numbers(u, results, query)]
+        removed += [u.strip() for u in units if u not in keep]
+        if not keep:
+            entries.append((line, True))
+        else:
+            entries.append((line if len(keep) == len(units) else ' '.join(keep), False))
+
+    def next_kept(i: int) -> tuple[int, bool]:
+        """Index of the next kept non-blank line after i (len(entries) if none), and whether lines between
+        were removed by this pass."""
+        cut = False
+        for j in range(i + 1, len(entries)):
+            text, gone = entries[j]
+            if gone:
+                cut = True
+            elif text.strip():
+                return j, cut
+        return len(entries), cut
+
+    def drop(i: int) -> None:
+        entries[i] = (entries[i][0], True)
+
+    for i, (text, gone) in enumerate(entries):  # a table whose rows were all removed loses its header
+        if not gone and TABLE_RULE.match(text):
+            j, cut = next_kept(i)
+            if cut and (j == len(entries) or not entries[j][0].strip().startswith('|')):
+                drop(i)
+                if i and entries[i - 1][0].strip().startswith('|'):
+                    drop(i - 1)
+    for i, (text, gone) in enumerate(entries):  # a list intro whose list was removed goes too
+        if not gone and text.strip() and not HEADING.match(text) and INTRO.search(text.strip()):
+            j, cut = next_kept(i)
+            if cut and (j == len(entries) or not (LIST_ITEM.match(entries[j][0])
+                                                  or entries[j][0].strip().startswith('|'))):
+                parts = [] if LIST_ITEM.match(text) else SENTENCE.split(text)
+                if len(parts) > 1:  # only the intro sentence goes
+                    entries[i] = (' '.join(parts[:-1]), False)
+                else:
+                    drop(i)
+    lines = [text for text, gone in entries if not gone]
+    out = []
+    for i, line in enumerate(lines):  # a section with nothing left under it says so
+        out.append(line)
+        h = HEADING.match(line)
+        if not h:
+            continue
+        j = i + 1
+        while j < len(lines) and not lines[j].strip():
+            j += 1
+        nxt = HEADING.match(lines[j]) if j < len(lines) else None
+        if j == len(lines) or (nxt and len(nxt.group(1)) <= len(h.group(1))):
+            out.append(NOT_AVAILABLE)
+    return re.sub(r'\n{3,}', '\n\n', '\n'.join(out)).strip(), removed
+
+
+def _has_content(report: str) -> bool:
+    return any(s.strip() and not HEADING.match(s) and s.strip() != NOT_AVAILABLE for s in report.split('\n'))
+
+
 def writer(state: AgentState) -> AgentState:
     run_id = state['run_id']
     report = llm_guard.strip_tool_markup(state.get('draft'))  # a report never shows tool-call markup
     report = llm_guard.round_long_floats(report or fallback_report(state))
-    if state.get('flags'):
-        report += ('\n\n> **Verifier:** these numbers were not found in any tool result and may be wrong: '
-                   + ', '.join(state['flags']))
+    if state.get('flags'):  # still unsupported after the retry: removed from the report, noted in the trace only
+        report, removed = drop_unsupported(report, state.get('results', []), state['query'])
+        if not _has_content(report):
+            report = fallback_report(state)
+        log_step(run_id, node='writer', type='plan',
+                 summary=f"removed {len(removed)} sentence(s) whose numbers were not found in any tool result "
+                         f"({', '.join(state['flags'])})")
     write_report(run_id, report)
     log_step(run_id, node='writer', type='report', summary=report)
     return state

@@ -13,7 +13,7 @@ import { ForecastKey, ForecastPanels } from './components/Forecast'
 import type { Crop, Forecast } from './components/forecastTypes'
 import { USMap } from './components/USMap'
 import { MarketPanel } from './components/MarketPanel'
-import { MetricsPanel, ModelV2Section } from './components/MetricsPanel'
+import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
 import { AcresConvergence } from './components/AcresConvergence'
@@ -145,7 +145,8 @@ export default function App() {
 
   // Measure where the right-hand panels start so the map key and zoom buttons stay in the visible map.
   const shellRef = useRef<HTMLDivElement>(null)
-  const panelsOpen = `${view}-${selectedId != null}`
+  // re-measure when any right-hand panel can appear or change: tab, field drawer, 2025 data, table, state drawer
+  const panelsOpen = `${view}-${selectedId != null}-${!!byState.data}-${stateTable}-${usState ?? ''}`
   useLayoutEffect(() => {
     const shell = shellRef.current
     if (!shell) return
@@ -158,8 +159,9 @@ export default function App() {
       shell.style.setProperty('--free-right', `${freeRight}px`)
     }
     measure()
+    const raf = requestAnimationFrame(measure)  // after the panels' first layout
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
   }, [panelsOpen])
 
   const downloadCsv = () => {
@@ -202,11 +204,6 @@ export default function App() {
         ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} seasonEnd={atSeasonEnd} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
         {view === 'states' && byState.data && (
           <>
-            <div className="glass statecrop seg" role="group" aria-label="Crop">
-              {(['silage', 'grain'] as Crop[]).map((c) => (
-                <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}>{c === 'silage' ? 'Silage' : 'Grain'}</button>
-              ))}
-            </div>
             <ForecastPanels data={byState.data} crop={crop} selected={usState} onSelect={setUsState} showTable={stateTable} onTable={setStateTable} />
             <ForecastKey crop={crop} />
           </>
@@ -238,7 +235,7 @@ export default function App() {
             <div className="seg">
               {asOfDates.map((d, i) => (
                 <button key={d} className={`seg__btn${d === asOf ? ' is-on' : ''}`} aria-pressed={d === asOf} onClick={() => setAsOfIdx(i)} title={CHECKPOINT_TIP}>
-                  {shortDate(d)}{d.endsWith('-11-30') ? ' · season end' : ''}
+                  {shortDate(d)}
                 </button>
               ))}
             </div>
@@ -267,11 +264,24 @@ export default function App() {
               </select>
             </label>
           )}
+          {view === 'states' && byState.data && <>
+            <div className="seg statecrop-top" role="group" aria-label="Crop">
+              {(['silage', 'grain'] as Crop[]).map((c) => (
+                <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}><i className={`dot dot--${c}`} aria-hidden="true" />{c === 'silage' ? 'Silage' : 'Grain'}</button>
+              ))}
+            </div>
+            <a className="ghost-btn" href={`${import.meta.env.BASE_URL ?? '/'}forecast_state_estimates_2025.csv`} download="state_estimates_2025.csv">
+              <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
+              </svg>
+              <span className="lbl-long">Download 2025 CSV</span><span className="lbl-short">CSV</span>
+            </a>
+          </>}
           {BARC_VIEWS.has(view) && <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
             </svg>
-            Download BARC fields CSV
+            <span className="lbl-long">Download BARC fields CSV</span><span className="lbl-short">CSV</span>
           </button>}
           {theme.id === 'glass' && <ModeToggle mode={mode} onToggle={() => setMode((m) => (m === 'dark' ? 'light' : 'dark'))} />}
         </header>
@@ -338,9 +348,8 @@ export default function App() {
                   <summary>Decline-rule baseline</summary>
                   <DeclineRulePanel state={declineRule} />
                 </details>
-                <ModelV2Section data={evaluation.data} />
                 <details className="more section">
-                  <summary>Satellite cross-check, Maryland 2025 (not our submitted answer)</summary>
+                  <summary>Satellite cross-check, Maryland 2025</summary>
                   <Estimate2025Panel state={estimate} />
                 </details>
               </>
@@ -375,7 +384,7 @@ export default function App() {
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
           <span><i className="k k--pending" />{seasonEnd || atSeasonEnd ? 'No label, no call' : 'Not yet decided'}</span>
-          {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label (season end)</span>}
+          {unlabeledMap.size > 0 && <span><i className="k k--unlabeled" />Model call, no label</span>}
           {!seasonEnd && <span><i className="k k--abstain" />Abstained</span>}
           <span className="mapkey__note">Fill is the model's call, outline is the BARC label{coverMap.size > 0 ? '; hover a field for its USDA Cropland Data Layer crop' : ''}</span>
           <span className="mapkey__fine">
