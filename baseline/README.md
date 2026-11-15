@@ -203,6 +203,32 @@ and label licensing/meaning remain those supplied in the explorer and guide.
 - `outputs/metrics.json`: pooled, by-year, and by-fold metrics and split records.
 - `outputs/results.md`: readable measured results and data quality summary.
 
+## Calls on unlabeled field-years
+
+`unlabeled_calls.py` gives model calls for blank-label field-years. A blank label is
+unknown, and BARC rotates crops, so most blanks were not corn that year. The script
+first checks each field-year against the USDA Cropland Data Layer (CDL, Maryland,
+30 m; only a clip around BARC is read, into the gitignored `data/raw/cdl/`). It then
+extracts Sentinel-2 features for the blank field-years that are at least 50% CDL
+corn, with `run_baseline.py`'s own functions and configuration, into
+`cache_unlabeled/`. Last, it fits `build_model()` on the labeled field-years and calls
+them. Labeled field-years are refused, and blanks never enter training.
+
+```powershell
+baseline/.runtime/python.exe baseline/unlabeled_calls.py corn
+baseline/.runtime/python.exe baseline/unlabeled_calls.py pilot --field 235 --year 2021
+baseline/.runtime/python.exe baseline/unlabeled_calls.py extract
+baseline/.runtime/python.exe baseline/unlabeled_calls.py predict
+```
+
+Outputs are in `outputs/unlabeled/`: `corn_check.csv`/`.json` (CDL corn share for all
+249 field-years, including the CDL rule checked on the 44 labeled ones),
+`predictions.csv` and `summary.json` (calls, acres by year with the roll-up's
+Bernoulli 95% interval, caveat, held-out accuracy for context, farm-record spot
+check, sources). `predict` first re-runs the saved cross-validation from
+`features.csv` and stops unless it reproduces `heldout_predictions.csv`. There is no
+reference label for these calls, so they cannot be scored.
+
 Read failures are recorded per scene; fatal failures also write
 `outputs/last_failure.txt` and stop with a nonzero exit status. A partially
 observed field-year can still be scored; its failed scenes and missing features

@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, Forecast2025, Forecast2025Summary, ForecastCrop, NassAcres } from './types'
+import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, Forecast2025, Forecast2025Summary, ForecastCrop, NassAcres, UnlabeledCallView, UnlabeledYearView } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -227,5 +227,54 @@ export function adaptForecast2025(data: SavedForecast2025): Forecast2025 {
       grain: forecastCrop(s.us.grain, s.us.grain_low, s.us.grain_high, nass?.us.grain),
     },
     backtest_years: Object.keys(s.backtest?.silage?.us_total ?? {}).sort(),
+  }
+}
+
+/** GET /api/unlabeled: saved model calls on blank-label field-years that CDL marks as corn. */
+export interface SavedUnlabeled {
+  caveat: string
+  by_year: {
+    year: number
+    field_years_called: number
+    total_acres: number
+    called_silage: number
+    called_grain: number
+    called_silage_acres: number
+    no_usable_dates: number
+    expected_silage_acres: number
+    expected_silage_acres_95ci: [number, number]
+  }[]
+  calls: {
+    field_id: number
+    year: number
+    acres: number | null
+    corn_share: number
+    status: 'called' | 'no_usable_dates'
+    predicted_label: Label | null
+    silage_probability: number | null
+  }[]
+}
+
+/**
+ * Unlabeled calls are season-end calls: show them only when the selected date is Nov 30 of that year,
+ * so a mid-season view never implies a mid-season result for these fields.
+ */
+export function unlabeledCallsAt(view: UnlabeledYearView | null | undefined, year: number, asOf: string): UnlabeledCallView[] {
+  return view && view.year === year && asOf === `${year}-11-30` ? view.calls : []
+}
+
+/** One year's unlabeled calls. Field-years without usable satellite dates are counted, never called. */
+export function adaptUnlabeled(data: SavedUnlabeled, year: number): UnlabeledYearView {
+  const y = data.by_year.find((row) => row.year === year)
+  if (!y) throw new Error(`No saved unlabeled calls for ${year}.`)
+  const calls = data.calls
+    .filter((c) => c.year === year && c.status === 'called' && c.predicted_label && c.silage_probability != null)
+    .map((c) => ({ OBJECTID: c.field_id, label: c.predicted_label as Label, p_silage: c.silage_probability as number,
+      acres: c.acres, corn_share: c.corn_share }))
+  return {
+    year, corn_field_years: y.field_years_called + y.no_usable_dates, called: y.field_years_called,
+    acres: y.total_acres, silage: y.called_silage, grain: y.called_grain, silage_acres: y.called_silage_acres,
+    expected_silage_acres: y.expected_silage_acres, ci: y.expected_silage_acres_95ci,
+    no_usable_dates: y.no_usable_dates, caveat: data.caveat, calls,
   }
 }

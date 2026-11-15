@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey, adaptUnlabeled, unlabeledCallsAt } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -206,4 +206,45 @@ test('a missing forecast or one without Maryland rejects instead of showing numb
   const noMaryland = { ...forecast, states: forecast.states.filter((s) => s.state !== 'MARYLAND') }
   assert.throws(() => adaptForecast2025({ summary: noMaryland, nass_2025: nassFixture }), /no Maryland row/)
   assert.throws(() => adaptForecast2025({}), /no Maryland row/)
+})
+
+const unlabeledFixture = {
+  caveat: 'These are model calls on BARC field-years that have no silage/grain label.',
+  by_year: [{ year: 2022, field_years_called: 2, total_acres: 30, called_silage: 1, called_grain: 1,
+    called_silage_acres: 10, no_usable_dates: 1, expected_silage_acres: 12.5, expected_silage_acres_95ci: [2.1, 22.9] }],
+  calls: [
+    { field_id: 7, year: 2022, acres: 10, corn_share: 0.9, status: 'called', predicted_label: 'Silage', silage_probability: 0.8 },
+    { field_id: 8, year: 2022, acres: 20, corn_share: 0.7, status: 'called', predicted_label: 'Grain', silage_probability: 0.2 },
+    { field_id: 9, year: 2022, acres: 5, corn_share: 0.6, status: 'no_usable_dates', predicted_label: null, silage_probability: null },
+    { field_id: 7, year: 2021, acres: 10, corn_share: 0.9, status: 'called', predicted_label: 'Grain', silage_probability: 0.1 },
+  ],
+}
+
+test('unlabeled calls stay separate: one year, called only, uncalled field-years counted not filled', () => {
+  const view = adaptUnlabeled(unlabeledFixture, 2022)
+  assert.deepEqual(view.calls.map((c) => [c.OBJECTID, c.label]), [[7, 'Silage'], [8, 'Grain']])
+  assert.equal(view.corn_field_years, 3)
+  assert.equal(view.no_usable_dates, 1)
+  assert.deepEqual(view.ci, [2.1, 22.9])
+  assert.ok(view.calls.every((c) => !('reference_label' in c)), 'a model call is never presented as a label')
+  assert.throws(() => adaptUnlabeled(unlabeledFixture, 2019), /No saved unlabeled calls/)
+})
+
+test('unlabeled calls come from /api/unlabeled; a missing artifact is an error, never zeros', async (t) => {
+  let status = 200
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, '/api/unlabeled')
+    return status === 200 ? Response.json(unlabeledFixture) : new Response('{}', { status })
+  })
+  assert.equal((await api.unlabeled(2022)).silage, 1)
+  status = 503
+  await assert.rejects(api.unlabeled(2022), (error) => error.status === 503)
+})
+
+test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-season date', () => {
+  const view = adaptUnlabeled(unlabeledFixture, 2022)
+  assert.equal(unlabeledCallsAt(view, 2022, '2022-11-30').length, 2)
+  for (const asOf of ['2022-08-12', '2022-09-12', '2022-10-12', '2022-11-12']) assert.deepEqual(unlabeledCallsAt(view, 2022, asOf), [])
+  assert.deepEqual(unlabeledCallsAt(view, 2023, '2023-11-30'), [], 'another year\'s calls are never shown')
+  assert.deepEqual(unlabeledCallsAt(null, 2022, '2022-11-30'), [])
 })

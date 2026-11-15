@@ -389,3 +389,62 @@ class Forecast2025(BaseModel):
     summary: Forecast2025Summary
     # null when the NASS 2025 reference file cannot be read; the forecast itself is still served
     nass_2025: Nass2025 | None
+
+
+class UnlabeledCall(BaseModel):
+    """Model call on a field-year with a blank BARC label. Not a reference label."""
+    field_id: int
+    year: int
+    acres: float | None = Field(default=None, ge=0)
+    corn_share: float = Field(ge=0, le=1)
+    valid_dates: int = Field(ge=0)
+    missing_features: list[str]
+    status: Literal['called', 'no_usable_dates']
+    predicted_label: HarvestType | None
+    silage_probability: float | None = Field(default=None, ge=0, le=1)
+
+    @model_validator(mode='after')
+    def _call_matches_status(self):
+        called = self.predicted_label is not None and self.silage_probability is not None
+        if called != (self.status == 'called'):
+            raise ValueError('A call needs a label and probability; a field-year without usable dates has neither')
+        return self
+
+
+class UnlabeledYear(BaseModel):
+    year: int
+    field_years_called: int = Field(ge=0)
+    total_acres: float = Field(ge=0)
+    called_silage: int = Field(ge=0)
+    called_grain: int = Field(ge=0)
+    called_silage_acres: float = Field(ge=0)
+    called_grain_acres: float = Field(ge=0)
+    no_usable_dates: int = Field(ge=0)
+    expected_silage_acres: float = Field(ge=0)
+    expected_silage_acres_95ci: tuple[float, float]
+    cv_percent: float | None
+
+
+class UnlabeledCounts(BaseModel):
+    blank_field_years: int = Field(ge=0)
+    blank_likely_corn: int = Field(ge=0)
+    blank_mixed: int = Field(ge=0)
+    blank_not_corn: int = Field(ge=0)
+    blank_uncertain: int = Field(ge=0)
+    called: int = Field(ge=0)
+    no_usable_dates: int = Field(ge=0)
+
+
+class UnlabeledCalls(BaseModel):
+    generated_utc: str
+    scope: str
+    caveat: str
+    method: str
+    counts: UnlabeledCounts
+    corn_rule: dict
+    cdl_sanity_check_on_labeled: dict
+    by_year: list[UnlabeledYear]
+    heldout_accuracy_for_context: dict
+    farm_record_spot_check: dict
+    sources: list[dict]
+    calls: list[UnlabeledCall]

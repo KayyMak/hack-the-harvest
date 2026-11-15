@@ -15,6 +15,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
   baseline/outputs/estimate_2025/summary.json (+ benchmark.json) -> estimate_2025.json (2025 Maryland estimate)
   forecast/outputs/summary.json (+ data/reference NASS 2025 acres) -> forecast_2025.json (graded 2025 forecast)
+  baseline/outputs/unlabeled/                -> unlabeled.json (model calls on blank-label corn fields)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -290,6 +291,19 @@ def main() -> None:
     except Exception as exc:  # explicit, never a silent substitute
         print(f'convergence_acres.json NOT written: {exc}')
 
+    # ---- model calls on blank-label fields CDL marks as corn (same reader as GET /api/unlabeled) ----
+    try:
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app import artifacts
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE
+            write('unlabeled', json.loads(artifacts.read_unlabeled().model_dump_json()))
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
+    except Exception as exc:  # explicit, never a silent substitute; the dashboard shows Pending
+        print(f'unlabeled.json NOT written: {exc}')
+
     # ---- optional: before/after chips ----
     has_chips = False
     cdir = BASE / 'chips'
@@ -321,7 +335,6 @@ def main() -> None:
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:
-        import sys
         sys.path.insert(0, str(ROOT / 'backend'))
         from app.artifacts import compute_rollup  # same code as GET /api/baseline/rollup
         write('barc_rollup', compute_rollup().model_dump())

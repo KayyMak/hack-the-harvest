@@ -1,0 +1,194 @@
+{
+  "generated_utc": "2026-11-15T07:39:42+00:00",
+  "question": "Which blank field-years were corn? A blank label can mean the field was not corn that year.",
+  "rule": {
+    "name": "corn_class_only",
+    "share_column": "corn_share",
+    "likely_corn_share_at_least": 0.5,
+    "mixed_share_at_least": 0.2,
+    "min_cdl_pixels": 10,
+    "categories": "likely_corn: >= 50% corn pixels; mixed: 20-50% (part corn, not called); not_corn: < 20%; uncertain: too few CDL pixels to judge.",
+    "corn_classes": {
+      "1": "Corn"
+    },
+    "pixel_selection": "CDL 30 m pixel centers inside the polygon"
+  },
+  "rules_compared": {
+    "corn_class_only": {
+      "share_column": "corn_share",
+      "labeled_passing": 37,
+      "labeled_total": 44,
+      "labeled_passing_by_label": {
+        "Grain": 25,
+        "Silage": 12
+      },
+      "blank_likely_corn": 33
+    },
+    "corn_incl_double_crop": {
+      "share_column": "corn_incl_double_share",
+      "labeled_passing": 37,
+      "labeled_total": 44,
+      "labeled_passing_by_label": {
+        "Grain": 25,
+        "Silage": 12
+      },
+      "blank_likely_corn": 33
+    }
+  },
+  "blank_field_years": 205,
+  "blank_by_category": {
+    "likely_corn": 33,
+    "mixed": 19,
+    "not_corn": 153,
+    "uncertain": 0
+  },
+  "blank_by_year": {
+    "2021": {
+      "likely_corn": 11,
+      "mixed": 6,
+      "not_corn": 48,
+      "uncertain": 0
+    },
+    "2022": {
+      "likely_corn": 13,
+      "mixed": 3,
+      "not_corn": 60,
+      "uncertain": 0
+    },
+    "2023": {
+      "likely_corn": 9,
+      "mixed": 10,
+      "not_corn": 45,
+      "uncertain": 0
+    }
+  },
+  "blank_likely_corn_acres": {
+    "2021": 115.4,
+    "2022": 161.59,
+    "2023": 106.75
+  },
+  "blank_not_corn_top_classes": {
+    "Soybeans": 76,
+    "Grassland/Pasture": 37,
+    "Dbl Crop WinWht/Soybeans": 19,
+    "Other Hay/Non Alfalfa": 6,
+    "Winter Wheat": 6,
+    "Developed/Open Space": 3,
+    "Developed/Med Intensity": 3,
+    "Alfalfa": 2,
+    "Barley": 1
+  },
+  "labeled_sanity_check": {
+    "field_years": 44,
+    "likely_corn": 37,
+    "sensitivity": 0.8409,
+    "not_passing": [
+      {
+        "field_id": 571,
+        "year": 2021,
+        "label": "Grain",
+        "cdl_pixels": 40,
+        "corn_share": 0.45,
+        "corn_incl_double_share": 0.45,
+        "top_class_name": "Corn",
+        "category": "mixed"
+      },
+      {
+        "field_id": 251,
+        "year": 2022,
+        "label": "Grain",
+        "cdl_pixels": 52,
+        "corn_share": 0.0192,
+        "corn_incl_double_share": 0.0192,
+        "top_class_name": "Soybeans",
+        "category": "not_corn"
+      },
+      {
+        "field_id": 286,
+        "year": 2022,
+        "label": "Grain",
+        "cdl_pixels": 29,
+        "corn_share": 0.0,
+        "corn_incl_double_share": 0.0,
+        "top_class_name": "Soybeans",
+        "category": "not_corn"
+      },
+      {
+        "field_id": 230,
+        "year": 2023,
+        "label": "Grain",
+        "cdl_pixels": 121,
+        "corn_share": 0.0083,
+        "corn_incl_double_share": 0.0083,
+        "top_class_name": "Soybeans",
+        "category": "not_corn"
+      },
+      {
+        "field_id": 231,
+        "year": 2023,
+        "label": "Grain",
+        "cdl_pixels": 43,
+        "corn_share": 0.1395,
+        "corn_incl_double_share": 0.1395,
+        "top_class_name": "Soybeans",
+        "category": "not_corn"
+      },
+      {
+        "field_id": 397,
+        "year": 2023,
+        "label": "Grain",
+        "cdl_pixels": 35,
+        "corn_share": 0.0286,
+        "corn_incl_double_share": 0.0286,
+        "top_class_name": "Soybeans",
+        "category": "not_corn"
+      },
+      {
+        "field_id": 400,
+        "year": 2023,
+        "label": "Grain",
+        "cdl_pixels": 84,
+        "corn_share": 0.4524,
+        "corn_incl_double_share": 0.4524,
+        "top_class_name": "Corn",
+        "category": "mixed"
+      }
+    ],
+    "median_corn_share": 0.83735
+  },
+  "sources": [
+    {
+      "year": 2021,
+      "url": "https://nassgeodata.gmu.edu/webservice/nass_data_cache/byfips/CDL_2021_24.tif",
+      "local_clip": "data/raw/cdl/CDL_2021_24_barc_clip.tif (gitignored)",
+      "accessed_utc": "2026-11-15T07:38:32+00:00",
+      "crs": "EPSG:5070",
+      "resolution_m": [
+        30.0,
+        30.0
+      ]
+    },
+    {
+      "year": 2022,
+      "url": "https://nassgeodata.gmu.edu/webservice/nass_data_cache/byfips/CDL_2022_24.tif",
+      "local_clip": "data/raw/cdl/CDL_2022_24_barc_clip.tif (gitignored)",
+      "accessed_utc": "2026-11-15T07:38:38+00:00",
+      "crs": "EPSG:5070",
+      "resolution_m": [
+        30.0,
+        30.0
+      ]
+    },
+    {
+      "year": 2023,
+      "url": "https://nassgeodata.gmu.edu/webservice/nass_data_cache/byfips/CDL_2023_24.tif",
+      "local_clip": "data/raw/cdl/CDL_2023_24_barc_clip.tif (gitignored)",
+      "accessed_utc": "2026-11-15T07:38:47+00:00",
+      "crs": "EPSG:5070",
+      "resolution_m": [
+        30.0,
+        30.0
+      ]
+    }
+  ]
+}

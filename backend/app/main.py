@@ -8,10 +8,10 @@ from pydantic import BaseModel
 
 from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_estimate_2025, read_forecast_2025, read_observations,
-    read_predictions, read_quickstats, read_summary)
+    read_predictions, read_quickstats, read_summary, read_unlabeled)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Forecast2025, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Estimate2025, Forecast2025, Observation, Prediction, QuickStatsRow, Rollup, UnlabeledCalls
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -91,6 +91,13 @@ def forecast_2025() -> Forecast2025:
     before January 2026, with NASS 2025 Maryland/US acres for comparison (null if unreadable).
     The graded output. 503 until forecast/outputs/summary.json is saved."""
     return _serve(read_forecast_2025)
+
+
+@app.get('/api/unlabeled', response_model=UnlabeledCalls)
+def unlabeled() -> UnlabeledCalls:
+    """Saved model calls on BARC field-years with a blank label that CDL marks as corn.
+    No reference label exists for these; they are never mixed into the scored predictions."""
+    return _serve(read_unlabeled)
 
 
 @app.get('/api/fields.geojson')

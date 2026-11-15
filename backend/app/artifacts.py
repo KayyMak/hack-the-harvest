@@ -10,8 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Estimate2025, Forecast2025, Nass2025, Observation, Prediction, QuickStatsRow,
-    Rollup, YearRollup)
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Estimate2025, Forecast2025, Nass2025, Observation, Prediction, QuickStatsRow, Rollup, YearRollup, UnlabeledCall, UnlabeledCalls)
 
 ROOT = Path(__file__).resolve().parents[2]
 OUTPUT_DIR = ROOT / 'baseline' / 'outputs'
@@ -136,6 +135,31 @@ def read_forecast_2025() -> Forecast2025:
     except (OSError, ValueError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved 2025 forecast is missing or invalid; '
             'expected forecast/outputs/summary.json.') from exc
+
+
+def read_unlabeled() -> UnlabeledCalls:
+    """Saved model calls on blank-label field-years that CDL marks as corn.
+
+    Written offline by baseline/unlabeled_calls.py (summary.json + predictions.csv);
+    nothing is fitted here. These are calls with no reference label to check them against.
+    """
+    folder = OUTPUT_DIR / 'unlabeled'
+    try:
+        summary = json.loads((folder / 'summary.json').read_text(encoding='utf-8'))
+        with (folder / 'predictions.csv').open(encoding='utf-8', newline='') as file:
+            rows = list(csv.DictReader(file))
+        calls = [UnlabeledCall(field_id=r['field_id'], year=r['year'], acres=_num(r['acres']),
+            corn_share=r['corn_share'], valid_dates=r['valid_dates'],
+            missing_features=[f for f in r['missing_features'].split(';') if f], status=r['status'],
+            predicted_label=r['predicted_label'] or None,
+            silage_probability=_num(r['silage_probability'])) for r in rows]
+        result = UnlabeledCalls(**summary, calls=calls)
+        if sum(c.status == 'called' for c in calls) != result.counts.called:
+            raise ValueError('Summary and predictions disagree on the number of calls')
+        return result
+    except (OSError, ValueError, KeyError, TypeError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved calls for unlabeled field-years (baseline/outputs/unlabeled/) are missing '
+            'or invalid; run baseline/unlabeled_calls.py.') from exc
 
 
 def _num(value: str | None) -> float | None:
