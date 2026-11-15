@@ -10,6 +10,9 @@ import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
 import { AcresConvergence } from './components/AcresConvergence'
+import { ForecastKey, ForecastPanels } from './components/Forecast'
+import type { Crop, Forecast } from './components/forecastTypes'
+import { USMap } from './components/USMap'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
@@ -23,6 +26,15 @@ const VIEWS = [
   { id: 'agent', label: 'Agent' },
 ] as const
 type ViewId = (typeof VIEWS)[number]['id']
+
+type Section = 'forecast' | 'validation'
+const PUBLIC = import.meta.env.BASE_URL ?? '/'
+const getPublicJson = async <T,>(name: string): Promise<T> => {
+  const r = await fetch(`${PUBLIC}${name}`)
+  if (!r.ok) throw new Error(`${name} → ${r.status}`)
+  return (await r.json()) as T
+}
+const initialSection = (): Section => (new URLSearchParams(window.location.search).get('section') === 'validation' ? 'validation' : 'forecast')
 
 const SHOW_DESIGN = new URLSearchParams(window.location.search).has('design')
 const LIVE_YEARS = [2021, 2022, 2023]
@@ -56,6 +68,13 @@ export default function App() {
   const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
   const [selectedId, setSelectedId] = useState<number | null>(null)
   const [view, setView] = useState<ViewId>('overview')
+  const [section, setSection] = useState<Section>(initialSection)
+  const [crop, setCrop] = useState<Crop>('silage')
+  const [usState, setUsState] = useState<string | null>(null)
+  const [stateTable, setStateTable] = useState(false)
+  const forecast = useAsync(() => getPublicJson<Forecast>('forecast_2025.json'), [])
+  const usShapes = useAsync(() => getPublicJson<Parameters<typeof USMap>[0]['shapes']>('us-states.geojson'), [])
+  const forecastRows = useMemo(() => new Map((forecast.data?.states ?? []).map((r) => [r.state, r])), [forecast.data])
 
   useEffect(() => {
     applyTheme(theme, mode)
@@ -110,7 +129,7 @@ export default function App() {
 
   // Measure where the right-hand panels start so the map key and zoom buttons stay in the visible map.
   const shellRef = useRef<HTMLDivElement>(null)
-  const panelsOpen = `${view}-${selectedId != null}`
+  const panelsOpen = `${section}-${view}-${selectedId != null}-${usState ?? ''}-${stateTable}`
   useLayoutEffect(() => {
     const shell = shellRef.current
     if (!shell) return
@@ -143,10 +162,17 @@ export default function App() {
       const el = e.target as HTMLElement
       if (el.closest('input, textarea, select')) return
       const n = Number(e.key)
-      if (n >= 1 && n <= VIEWS.length) setView(VIEWS[n - 1].id)
+      if (n >= 1 && n <= VIEWS.length) {
+        setSection('validation')
+        setView(VIEWS[n - 1].id)
+      }
+      if (e.key === '0') setSection('forecast')
       if (e.key === 'ArrowRight') setAsOfIdx((i) => Math.min(i + 1, asOfDates.length - 1))
       if (e.key === 'ArrowLeft') setAsOfIdx((i) => Math.max(i - 1, 0))
-      if (e.key === 'Escape') setSelectedId(null)
+      if (e.key === 'Escape') {
+        setSelectedId(null)
+        setUsState(null)
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -154,27 +180,50 @@ export default function App() {
 
   return (
     <ThemeContext.Provider value={shownTheme}>
-      <div ref={shellRef} className={`shell shell--${view}`}>
+      <div ref={shellRef} className={`shell shell--sec-${section} ${section === 'validation' ? `shell--${view}` : 'shell--forecast'}`}>
         {meta.error && <p className="map-card map-error" role="alert">Snapshot metadata unavailable: {meta.error.message}</p>}
         {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
-        <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
+        {section === 'forecast' && (
+          <USMap shapes={usShapes.data} rows={forecastRows} crop={crop} selected={usState} onSelect={setUsState} dark={mode === 'dark'}
+            layoutKey={`${usState ?? ''}-${stateTable}-${!!forecast.data}`} />
+        )}
+        {section === 'validation' && <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
 
         <header className="glass topbar">
           <div className="brand">
             <LogoMark size={30} />
             <div>
               <div className="brand__title">Cutline</div>
-              <div className="brand__sub">Silage or grain, BARC fields, Beltsville MD</div>
+              <div className="brand__sub">{section === 'forecast' ? '2025 corn acres by state vs NASS' : 'Silage or grain, BARC fields, Beltsville MD'}</div>
             </div>
           </div>
-          <nav className="views" aria-label="Views">
-            {VIEWS.map((v) => (
-              <button key={v.id} aria-current={view === v.id ? 'page' : undefined} className={`views__btn${view === v.id ? ' is-on' : ''}`} onClick={() => setView(v.id)}>
-                {v.label}
-              </button>
-            ))}
+          <nav className="views" aria-label="Sections">
+            <button aria-current={section === 'forecast' ? 'page' : undefined} className={`views__btn${section === 'forecast' ? ' is-on' : ''}`} onClick={() => setSection('forecast')}>
+              2025 estimate
+            </button>
+            <button aria-current={section === 'validation' ? 'page' : undefined} className={`views__btn${section === 'validation' ? ' is-on' : ''}`} onClick={() => setSection('validation')}>
+              BARC validation
+            </button>
           </nav>
           <div className="topbar__spacer" />
+          {section === 'forecast' && (
+            <>
+              <div className="seg" role="group" aria-label="Crop">
+                {(['silage', 'grain'] as Crop[]).map((c) => (
+                  <button key={c} className={`seg__btn${crop === c ? ' is-on' : ''}`} aria-pressed={crop === c} onClick={() => setCrop(c)}>
+                    {c === 'silage' ? 'Silage' : 'Grain'}
+                  </button>
+                ))}
+              </div>
+              <a className="ghost-btn" href={`${PUBLIC}forecast_state_estimates_2025.csv`} download>
+                <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
+                </svg>
+                2025 CSV
+              </a>
+            </>
+          )}
+          {section === 'validation' && (<>
           <div className="asof" role="group" aria-label="As-of date">
             <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
             {seasonEnd ? (
@@ -217,10 +266,32 @@ export default function App() {
             </svg>
             Download CSV
           </button>
+          </>)}
           {theme.id === 'glass' && <ModeToggle mode={mode} onToggle={() => setMode((m) => (m === 'dark' ? 'light' : 'dark'))} />}
         </header>
 
-        {view === 'overview' && (
+        {section === 'validation' && (
+          <nav className="glass subbar" aria-label="BARC validation views">
+            <span className="subbar__label">Validated on BARC fields, 2021–2023</span>
+            {VIEWS.map((v, i) => (
+              <button key={v.id} aria-current={view === v.id ? 'page' : undefined} className={`subbar__btn${view === v.id ? ' is-on' : ''}`} onClick={() => setView(v.id)} title={`Shortcut: ${i + 1}`}>
+                {v.label}
+              </button>
+            ))}
+          </nav>
+        )}
+
+        {section === 'forecast' && forecast.data && (
+          <>
+            <ForecastPanels data={forecast.data} crop={crop} selected={usState} onSelect={setUsState} showTable={stateTable} onTable={setStateTable} />
+            <ForecastKey crop={crop} />
+          </>
+        )}
+        {section === 'forecast' && forecast.error && (
+          <p className="map-card map-error" role="alert">2025 estimate unavailable: {forecast.error.message}</p>
+        )}
+
+        {section === 'validation' && view === 'overview' && (
           <Overview
             year={year}
             asOf={asOf}
@@ -235,7 +306,7 @@ export default function App() {
           />
         )}
 
-        {view !== 'overview' && (
+        {section === 'validation' && view !== 'overview' && (
           <section className="glass sheet" aria-label={VIEWS.find((v) => v.id === view)?.label}>
             {view === 'fields' && (
               <>
@@ -277,7 +348,7 @@ export default function App() {
           </section>
         )}
 
-        {selected && (
+        {section === 'validation' && selected && (
           <aside className="glass drawer" aria-label={`Field ${selected.properties.OBJECTID}`}>
             <button className="drawer__close" aria-label="Close field" onClick={() => setSelectedId(null)}>
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="2">
@@ -288,7 +359,7 @@ export default function App() {
           </aside>
         )}
 
-        <div className="glass mapkey">
+        {section === 'validation' && <div className="glass mapkey">
           <span><i className="k k--silage" />Silage</span>
           <span><i className="k k--grain" />Grain</span>
           <span><i className="k k--pending" />{seasonEnd ? 'No BARC label, not scored' : 'Not yet decided'}</span>
@@ -297,7 +368,7 @@ export default function App() {
           <span className="mapkey__fine">
             Sentinel-2 imagery. Scores {evaluation.data?.split_label ?? 'held out'}. Prototype, not a USDA or NASS release.
           </span>
-        </div>
+        </div>}
       </div>
     </ThemeContext.Provider>
   )
