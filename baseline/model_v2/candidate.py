@@ -32,10 +32,21 @@ import pandas as pd
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
-import run_baseline as rb  # noqa: E402
 from features import (BASE_FEATURES, TIMING_FEATURES, V1_REFERENCE, base_features, build_table,  # noqa: E402
                       daily_series, timing_features)
 from experiment import BY_NAME, REFERENCE_SEED, fit, heldout  # noqa: E402
+
+class _LazyRunBaseline:
+    """run_baseline imports the extraction stack (geopandas, rasterio, ...); load it only when used,
+    so fitting the model needs just numpy, pandas and scikit-learn."""
+
+    def __getattr__(self, name):
+        import run_baseline
+        return getattr(run_baseline, name)
+
+
+rb = _LazyRunBaseline()
+
 
 SPEC = BY_NAME['H']
 FEATURES = list(SPEC.features)

@@ -26,8 +26,20 @@ from sklearn.preprocessing import StandardScaler
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
-import run_baseline as rb  # noqa: E402  (only FEATURES, metrics, build_model, verify_originals)
+# run_baseline: only FEATURES, metrics, build_model, verify_originals
 from features import BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, V1_REFERENCE, build_table  # noqa: E402
+
+class _LazyRunBaseline:
+    """run_baseline imports the extraction stack (geopandas, rasterio, ...); load it only when used,
+    so fitting the model needs just numpy, pandas and scikit-learn."""
+
+    def __getattr__(self, name):
+        import run_baseline
+        return getattr(run_baseline, name)
+
+
+rb = _LazyRunBaseline()
+
 
 OUT = HERE / 'outputs'
 REFERENCE_SEED = 42

@@ -71,16 +71,26 @@ def _candidate():
     path = str(HERE / 'model_v2')
     if path not in sys.path:
         sys.path.insert(0, path)
-    import candidate  # noqa: E402  (imports run_baseline; kept lazy)
+    import candidate  # noqa: E402  (needs numpy, pandas, scikit-learn only)
     return candidate
 
 
+def v1_pipeline():
+    """The v1 pipeline, identical to run_baseline.build_model() (test_model_version checks this),
+    built here so fitting does not import the extraction stack."""
+    from sklearn.impute import SimpleImputer
+    from sklearn.linear_model import LogisticRegression
+    from sklearn.pipeline import make_pipeline
+    from sklearn.preprocessing import StandardScaler
+    return make_pipeline(SimpleImputer(strategy='median', keep_empty_features=True),
+        StandardScaler(), LogisticRegression(C=1.0, max_iter=2000, random_state=42))
+
+
 class V1Model:
-    """run_baseline.build_model() behind the fit(X, y, groups) signature; groups are not used."""
+    """The v1 pipeline behind the fit(X, y, groups) signature; groups are not used."""
 
     def __init__(self):
-        import run_baseline
-        self.pipeline = run_baseline.build_model()
+        self.pipeline = v1_pipeline()
 
     def fit(self, X, y, groups=None):
         self.pipeline.fit(X, y)

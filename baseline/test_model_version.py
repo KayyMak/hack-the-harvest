@@ -30,6 +30,19 @@ class Switch(unittest.TestCase):
                 mv.current()
         self.assertEqual(mv.features('v2'), mv.BASE_FEATURES + mv.TIMING_FEATURES)
 
+    def test_v1_pipeline_is_run_baseline_build_model(self):
+        import run_baseline
+        self.assertEqual(repr(mv.v1_pipeline()), repr(run_baseline.build_model()))
+        self.assertEqual(mv.v1_pipeline().get_params().keys(), run_baseline.build_model().get_params().keys())
+        for (n1, s1), (n2, s2) in zip(mv.v1_pipeline().steps, run_baseline.build_model().steps):
+            self.assertEqual((n1, s1.get_params()), (n2, s2.get_params()))
+
+    def test_building_a_model_does_not_import_the_extraction_stack(self):
+        code = ('import sys, model_version as mv; mv.build_model("v2"); mv.build_model("v1"); '
+                'bad = [m for m in ("run_baseline", "geopandas", "rasterio", "planetary_computer") if m in sys.modules]; '
+                'assert not bad, bad')
+        subprocess.run([sys.executable, '-c', code], cwd=HERE, check=True)
+
     def test_saved_outputs_match_their_recorded_version(self):
         saved = pd.read_csv(OUT / 'heldout_predictions.csv')
         version = mv.saved_version()
