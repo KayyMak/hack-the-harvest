@@ -2222,3 +2222,5 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
   .shell .topbar .ghost-btn { padding: 5px 8px; font-size: 12.5px; }
   .shell .topbar .asof { gap: 6px; }
 }
+
+.nowrap { white-space: nowrap; }

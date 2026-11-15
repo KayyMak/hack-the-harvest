@@ -44,7 +44,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               {data.scores.silage.within_10pct}/{data.scores.silage.states} silage
             </div>
             <div className="kpi__foot">
-              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
+              Weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error.toFixed(1)}%, silage {data.scores.silage.acre_weighted_abs_pct_error.toFixed(1)}%
             </div>
           </article>
           {md && (
@@ -159,7 +159,7 @@ function UsCard({ crop, cell, rel }: { crop: Crop; cell: Cell; rel: Reliability 
           className="kpi__foot"
           title={`NASS reliability format, from the ${rel.years} backtest (${rel.n} years, each forecast with only what was known then): root-mean-square error ${rel.rmse_pct}%; 9 times in 10 the miss is no more than ±${rel.margin90_pct}% (Student t ${rel.t} × RMSE). Largest miss: ${rel.max_abs_pct}%.`}
         >
-          Margin of error ±{rel.margin90_pct}% (90%) · RMSE {rel.rmse_pct}%
+          <span className="nowrap">Margin of error ±{rel.margin90_pct}% (90%)</span> · <span className="nowrap">RMSE {rel.rmse_pct}%</span>
         </div>
       )}
       <div className="kpi__foot">
