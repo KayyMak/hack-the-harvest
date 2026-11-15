@@ -231,7 +231,9 @@ function ConvergenceChart({ data, crop }: { data: Forecast; crop: Crop }) {
                 const text = `NASS final ${fmtAcres(nass)}`
                 const w = text.length * 6.4 + 14
                 const x = vb.x + vb.width - w - 2
-                const y = vb.y - 21
+                // put the pill on the side away from our estimate line so it never covers our points
+                const below = rows.length > 0 && rows[rows.length - 1].est > nass
+                const y = below ? vb.y + 4 : vb.y - 22
                 return (
                   <g>
                     <rect x={x} y={y} width={w} height={18} rx={9} fill={t.surface} stroke={t.accuracy} strokeOpacity={0.7} />
