@@ -1,0 +1,50 @@
+{
+ "cropan23": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/9306v916d/6395xk01g/cropan23.zip",
+  "title": "Crop Production 2022 Summary",
+  "released": "2023-01-12",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k3569432s",
+  "sha256": "0d48dbea4e742fde500ad2df70bc47c388b972d64fea2ddc9fb86b38de818176",
+  "fetched": "2026-11-15"
+ },
+ "cropan24": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/ns065v292/br86cq93r/cropan24.zip",
+  "title": "Crop Production 2023 Summary",
+  "released": "2024-01-12",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k3569432s",
+  "sha256": "53d01616645c7f2d8941f0b013691090514528046a36d6f71ff1ab4f5d9a7ac7",
+  "fetched": "2026-11-15"
+ },
+ "cropan25": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/nk324887m/4j03ft278/cropan25.zip",
+  "title": "Crop Production 2024 Summary",
+  "released": "2025-01-10",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k3569432s",
+  "sha256": "9f0ebe9f11b94629d3007765ee22026412eeb7f19a7bb53d8d979db1f1610461",
+  "fetched": "2026-11-15"
+ },
+ "cpvl0223": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k35694332/b85171637/34850w190/cpvl0223.zip",
+  "title": "Crop Values 2022 Summary",
+  "released": "2023-02-24",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k35694332",
+  "sha256": "faabe92bd143736f16fee0be8300bad43153598abadffbd85e5229471a648956",
+  "fetched": "2026-11-15"
+ },
+ "cpvl0224": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k35694332/g158d382b/gm80kj25n/cpvl0224.zip",
+  "title": "Crop Values 2023 Summary",
+  "released": "2024-02-26",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k35694332",
+  "sha256": "eaa5e93a4a7386bc4f204f5cbb1888000b6ba5351d797430b7ded8027a5de094",
+  "fetched": "2026-11-15"
+ },
+ "cpvl0225": {
+  "url": "https://esmis.nal.usda.gov/sites/default/release-files/k35694332/4m90gs04k/5h73rr79v/cpvl0225.zip",
+  "title": "Crop Values 2024 Summary",
+  "released": "2025-02-24",
+  "page": "https://esmis.nal.usda.gov/concern/publications/k35694332",
+  "sha256": "b551dd8167a7f5421691d9a14547253c8e175cc5a349f5de87e0cfe1fabeff1b",
+  "fetched": "2026-11-15"
+ }
+}

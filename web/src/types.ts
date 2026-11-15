@@ -321,6 +321,58 @@ export interface ConvergenceAcres {
   years: { year: number; points: ConvergenceAcresPoint[] }[]
 }
 
+/** GET /api/market/status: whether the server has an NVIDIA key (the key never reaches the browser). */
+export interface MarketStatus {
+  configured: boolean
+  model: string
+  how_to_configure: string
+}
+
+/** GET /api/market/outlook?season=&as_of=: a season's timeline known on `as_of` (no LLM). Values are display
+ *  strings except `timeline.series`, which carries numbers for the chart. */
+export interface MarketOutlook {
+  season: number
+  as_of: string
+  dates: string[]
+  sources: Record<string, string>
+  timeline: Record<string, unknown>
+}
+
+export interface MarketToolCall {
+  name: string
+  args: Record<string, unknown>
+  ok: boolean
+  summary: string
+}
+
+export interface MarketCitation {
+  id: string
+  kind: 'tool' | 'doc'
+  label: string
+  excerpt: string
+}
+
+/** POST /api/market/report {year}: Nemotron-written sample report. Every sentence cites a retrieved
+ *  tool result or project-document passage; sentences that fail the check are listed in `grounding.ungrounded`. */
+export interface MarketReport {
+  year: number
+  as_of: string
+  model: string
+  generated_at: string
+  mode: 'tools' | 'context'
+  markdown: string
+  tool_calls: MarketToolCall[]
+  citations: MarketCitation[]
+  grounding: {
+    claims_checked: number
+    /** uncited / unsupported / verifier = not backed by our data; miscited = correct figure, wrong source id */
+    ungrounded: { text: string; kind: 'uncited' | 'unsupported' | 'miscited' | 'verifier'; reason: string; removed: boolean }[]
+    verifier: 'nemotron' | 'unavailable'
+  }
+  disclaimer: string
+  sources: string[]
+}
+
 /** One model call on a field-year with no BARC label (CDL says it was corn). Not a reference label. */
 export interface UnlabeledCallView {
   OBJECTID: number

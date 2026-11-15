@@ -9,6 +9,7 @@ import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
 import { MapView } from './components/MapView'
+import { MarketPanel } from './components/MarketPanel'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
@@ -24,6 +25,7 @@ const VIEWS = [
   { id: 'fields', label: 'Fields' },
   { id: 'quality', label: 'Model quality' },
   { id: 'agent', label: 'Agent' },
+  { id: 'market', label: 'Market' },
 ] as const
 type ViewId = (typeof VIEWS)[number]['id']
 
@@ -146,7 +148,7 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
-  // Presenter shortcuts: 1–4 switch views, ←/→ step the as-of date, Esc closes a field.
+  // Presenter shortcuts: 1–5 switch views, ←/→ step the as-of date, Esc closes a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement
@@ -283,6 +285,12 @@ export default function App() {
                 <Forecast2025Panel state={forecast} />
                 <h2 className="sheet__h2">2025 Maryland estimate: satellite check</h2>
                 <Estimate2025Panel state={estimate} />
+              </>
+            )}
+            {view === 'market' && (
+              <>
+                <h1 className="sheet__title">Market outlook</h1>
+                <MarketPanel />
               </>
             )}
             {view === 'agent' && (
