@@ -10,7 +10,7 @@ from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_c
     read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
-from .frontend import mount_frontend
+from .frontend import mount_first_build
 from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
@@ -109,4 +109,5 @@ def agent_trace(run_id: str) -> list[dict]:
 
 
 # Keep this last so API routes take precedence over static files.
-mount_frontend(app, tools.artifacts.ROOT / 'frontend' / 'dist')
+# Cutline (web/) is the hosted dashboard; the original frontend/ build is the fallback.
+mount_first_build(app, [tools.artifacts.ROOT / 'web' / 'dist', tools.artifacts.ROOT / 'frontend' / 'dist'])

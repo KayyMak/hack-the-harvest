@@ -2,6 +2,7 @@
 import json
 import sys
 from urllib.error import HTTPError
+from urllib.parse import urljoin
 from urllib.request import Request, urlopen
 
 
@@ -17,7 +18,8 @@ def check(base: str) -> None:
     assets = re.findall(r'src="([^"]+\.js)"', html)
     assert assets, 'No built JavaScript found'
     for asset in assets:
-        assert get(asset), f'Empty asset: {asset}'
+        # Builds may reference assets relatively (./assets/...) or absolutely (/assets/...).
+        assert get(urljoin('/', asset)), f'Empty asset: {asset}'
     assert json.loads(get('/api/health')) == {'status': 'ok'}
     summary = json.loads(get('/api/baseline/summary'))
     rows = json.loads(get('/api/baseline/predictions'))
