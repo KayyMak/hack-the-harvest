@@ -331,6 +331,7 @@ function StateDrawer({ row, data, onClose }: { row: StateRow; data: Forecast; on
                   <div><dt>NASS 2025</dt><dd>{fmtFull(c.nass)}</dd></div>
                   <div><dt>95% range</dt><dd>{fmtAcres(c.low)}–{fmtAcres(c.high)}</dd></div>
                   <div><dt>Std. error / CV</dt><dd>{fmtAcres(c.se)}{c.se && c.est ? ` / ${((100 * c.se) / c.est).toFixed(1)}%` : ''}</dd></div>
+                  {c.hist5 != null && <div><dt>2020–24 average</dt><dd>{fmtFull(c.hist5)}</dd></div>}
                 </dl>
                 <p className="muted small">
                   {c.nass == null ? 'NASS publishes no row for this state.' : c.inside ? 'NASS final falls inside our 95% range.' : 'NASS final falls outside our 95% range.'}
