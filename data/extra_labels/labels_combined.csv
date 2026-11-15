@@ -1,0 +1,40 @@
+OBJECTID,year,label,label_source,n_sources,sources,sources_agree,any_conflict,harvest_date,planting_date,split,FARM,FIELD,ACRES,harvest_doy,use_for_training
+1,2021,Grain,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2021-09-21,,test_official_2021_2023,APU,1,16.4020680036,264.0,True
+1,2023,Grain,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2023-11-16,,test_official_2021_2023,APU,1,16.4020680036,320.0,True
+5,2018,Grain,kraatz_planting_record,1,kraatz_planting_record,True,False,,2018-05-11,train_extra,APU,1-98,8.51257524475,,True
+5,2020,Silage,kraatz_planting_record,1,kraatz_planting_record,True,False,,2020-05-17,train_extra,APU,1-98,8.51257524475,,True
+24,2021,Grain,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2021-09-20,,test_official_2021_2023,APU,30,14.2127523012,263.0,True
+24,2023,Grain,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2023-11-16,,test_official_2021_2023,APU,30,14.2127523012,320.0,True
+35,2015,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2015-09-14,,train_extra,APU,7,16.5348083226,257.0,True
+35,2018,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2018-10-02,,train_extra,APU,7,16.5348083226,275.0,True
+35,2020,Silage,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2020-09-08,,train_extra,APU,7,16.5348083226,252.0,True
+230,2020,Grain,kraatz_planting_record,1,kraatz_planting_record,True,False,,2020-05-17,train_extra,Central Farm,1-1,27.2466048428,,True
+230,2022,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2022-09-09,,train_extra,Central Farm,1-1,27.2466048428,252.0,True
+230,2023,Grain,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-1,27.2466048428,,True
+231,2020,Silage,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2020-09-06,2020-05-16,train_extra,Central Farm,1-11,9.77568079143,250.0,True
+231,2022,Silage,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-11,9.77568079143,,True
+231,2023,Grain,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-11,9.77568079143,,True
+234,2018,Silage,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2018-09-04,,train_extra,Central Farm,1-14B,6.85277840606,247.0,True
+234,2019,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2019-09-10,,train_extra,Central Farm,1-14B,6.85277840606,253.0,True
+234,2021,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2021-10-04,,train_extra,Central Farm,1-14B,6.85277840606,277.0,True
+235,2015,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2015-09-18,,train_extra,Central Farm,1-14C,8.58565535715,261.0,True
+235,2018,Silage,kraatz_planting_record,1,kraatz_planting_record,True,False,,2018-05-26,train_extra,Central Farm,1-14C,8.58565535715,,True
+235,2019,Grain,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2019-09-10,2019-04-29,train_extra,Central Farm,1-14C,8.58565535715,253.0,True
+235,2021,Grain,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2021-10-04,2021-04-30,train_extra,Central Farm,1-14C,8.58565535715,277.0,True
+235,2023,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2023-10-19,,train_extra,Central Farm,1-14C,8.58565535715,292.0,True
+238,2017,Silage,kraatz_planting_record,1,kraatz_planting_record,True,False,,2017-05-10,train_extra,Central Farm,1-15,17.3805022933,,True
+238,2021,Grain,barc_official,3,barc_official;barc_mgmt_harvest_record;kraatz_harvest_record,True,False,2021-10-20,,test_official_2021_2023,Central Farm,1-15,17.3805022933,293.0,True
+238,2023,Grain,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2023-10-30,,test_official_2021_2023,Central Farm,1-15,17.3805022933,303.0,True
+240,2019,Grain,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2019-09-16,,train_extra,Central Farm,1-20B,7.07302455279,259.0,True
+243,2021,Silage,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2021-09-13,2021-05-06,train_extra,Central Farm,1-2,43.28988536189,256.0,True
+248,2015,Grain,barc_mgmt_harvest_record,1,barc_mgmt_harvest_record,True,False,2015-09-29,,train_extra,Central Farm,1-32,14.9488823482,272.0,True
+248,2019,Silage,barc_mgmt_harvest_record,2,barc_mgmt_harvest_record;kraatz_harvest_record,True,False,2019-08-16,2019-05-09,train_extra,Central Farm,1-32,14.9488823482,228.0,True
+248,2023,Silage,barc_official,2,barc_official;barc_mgmt_harvest_record,True,True,2023-09-07,,test_official_2021_2023,Central Farm,1-32,14.9488823482,250.0,True
+249,2020,Grain,kraatz_planting_record,1,kraatz_planting_record,True,False,,2020-05-17,train_extra,Central Farm,1-33,8.7835582937,,True
+251,2021,Grain,kraatz_harvest_record,1,kraatz_harvest_record,True,False,2021-11-05,,train_extra,Central Farm,1-34,11.6547659903,309.0,True
+251,2022,Grain,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-34,11.6547659903,,True
+251,2023,Grain,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-34,11.6547659903,,True
+252,2022,Silage,barc_official,2,barc_official;barc_mgmt_harvest_record,True,False,2022-08-29,,test_official_2021_2023,Central Farm,1-37,29.5568460904,241.0,True
+254,2023,Silage,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-7B,26.963449742439998,,True
+263,2021,Grain,barc_official,1,barc_official,True,False,,,test_official_2021_2023,Central Farm,1-9A,32.61431839515,,True
+271,2018,Grain,kraatz_planting_record,1,kraatz_planting_record,True,False,,2018-05-11,train_extra,Central Farm,2-13,26.3269755296,,True
