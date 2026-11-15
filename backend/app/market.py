@@ -19,6 +19,7 @@ request, so adding it needs no restart) and is never sent to the browser.
 """
 import csv
 import json
+import logging
 import os
 import re
 import urllib.error
@@ -27,8 +28,10 @@ from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import date, datetime, timezone
 
-from . import artifacts, docsearch
+from . import artifacts, docsearch, llm_guard
 from .artifacts import ArtifactUnavailable
+
+log = logging.getLogger(__name__)
 
 ROOT = artifacts.ROOT
 ENV_FILE = ROOT / '.env'
@@ -571,8 +574,12 @@ def tool_specs() -> list[dict]:
         for name, (_, desc, args) in TOOLS.items()]
 
 
+INT_PARAMS = {'year': 'int', 'season': 'int'}  # month_day and scenario stay strings
+
+
 def tool_args(tc: dict) -> tuple[dict, str | None]:
-    """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object."""
+    """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object. Null-ish values
+    ("none", "null", "", "n/a") are dropped (so no citation id like price_effect.none) and "2022" becomes 2022."""
     fn = tc.get('function') if isinstance(tc, dict) else None
     raw = (fn if isinstance(fn, dict) else {}).get('arguments') or '{}'
     try:
@@ -581,7 +588,13 @@ def tool_args(tc: dict) -> tuple[dict, str | None]:
         return {}, 'tool arguments are not valid JSON; send a JSON object such as {"year": 2022}'
     if not isinstance(args, dict):
         return {}, 'tool arguments must be a JSON object such as {"year": 2022}'
-    return args, None
+    return llm_guard.clean_args(args, INT_PARAMS), None
+
+
+def _text_calls(content: str, rnd: int) -> list[dict]:
+    """Tool calls the model wrote as text in `content`, as structured calls (run_tool still refuses unknown names)."""
+    return [{'id': f'text-{rnd}-{i}', 'type': 'function', 'function': {'name': n, 'arguments': json.dumps(a, default=str)}}
+            for i, (n, a) in enumerate(llm_guard.text_tool_calls(content, set(TOOLS)))]
 
 
 def run_tool(name: str, args: dict) -> dict:
@@ -826,7 +839,9 @@ brackets: the cite_as id given in each tool result (e.g. [season_timeline] or
 [price_effect.one_point_of_maryland_silage_share]), or a document passage id like [market/README.md#0].
 Cite the specific result a number comes from; never mix numbers from different scenarios in one sentence.
 A sentence may cite several sources. Copy every number exactly as written in a cited source; never
-compute, round or convert. Acre figures from NASS are harvested acres.
+compute, round or convert, and never derive new ratios, fractions or counts. Acre figures from NASS are harvested acres.
+Call tools only through the tool-calling interface; never write a tool call (<tool_call>, <function=...> or
+{"name": ..., "arguments": ...}) as text in the report.
 
 Rules: BARC model numbers cover one research station, never Maryland or the US; price effects rest on an
 assumed elasticity range; say what is our estimate and what is a NASS forecast; no trading or investment advice.
@@ -839,13 +854,19 @@ Plain language, markdown, under 450 words, with exactly these sections:
 ## How much to trust this"""
 
 
+FINAL_ASK = ('Write the full report now in markdown with the required sections, ending every sentence with its '
+             'source id in square brackets. Do not call tools and do not write any tool-call markup.')
+
+
 def _post(cfg: Config, path: str, payload: dict | None, timeout: int = 120) -> dict:
     data = None if payload is None else json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(f'{cfg.base_url}{path}', data=data, method='POST' if data else 'GET',
                                  headers={'Authorization': f'Bearer {cfg.key}', 'Content-Type': 'application/json',
                                           'Accept': 'application/json'})
-    with urllib.request.urlopen(req, timeout=timeout) as r:
-        return json.load(r)
+    def on_retry(attempt: int, wait: float, reason: str) -> None:  # reason never holds headers or the key
+        log.warning('NVIDIA API %s on %s; retry %d of %d in %.1f s', reason, path, attempt, llm_guard.RETRY_ATTEMPTS - 1, wait)
+
+    return llm_guard.post_json(req, timeout, on_retry)
 
 
 def _nemotron_ids(cfg: Config) -> list[str]:
@@ -872,6 +893,9 @@ def _chat(cfg: Config, messages: list[dict], tools: list[dict] | None) -> dict:
             ids = _nemotron_ids(cfg)
             raise MarketUnavailable(f'Model {cfg.model!r} was rejected (HTTP {exc.code}). Set NEMOTRON_MODEL in .env to one of: '
                                     + (', '.join(ids) or 'see https://build.nvidia.com')) from exc
+        if exc.code == 429:
+            raise MarketUnavailable("NVIDIA's API is rate-limiting requests right now (HTTP 429), even after retrying "
+                        "for about a minute. Wait a minute and run it again.") from exc
         raise MarketUnavailable(f'NVIDIA API error (HTTP {exc.code}): {body}') from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise MarketUnavailable(f'Could not reach the NVIDIA API: {exc}') from exc
@@ -880,6 +904,7 @@ def _chat(cfg: Config, messages: list[dict], tools: list[dict] | None) -> dict:
 def _clean(text: str | None) -> str:
     # Some models inline their reasoning; it never belongs in the report.
     text = re.sub(r'<think>.*?</think>', '', text or '', flags=re.S)
+    text = llm_guard.strip_tool_markup(text, set(TOOLS))  # tool calls written as text never reach a report
     # Normalise headings the model wraps in bold (**## Title** or a bare **Title** line) to '## Title'.
     text = re.sub(r'^\s*\*\*\s*(#{1,6})\s*(.+?)\s*\*\*\s*$', r'\1 \2', text, flags=re.M)
     text = re.sub(r'^\s*\*\*([^*\[\]]{2,60}?)\*\*\s*:?\s*$', r'## \1', text, flags=re.M)
@@ -943,15 +968,18 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
     messages = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': ask}]
     mode, text = 'tools', None
     try:
-        for _ in range(MAX_ROUNDS):
+        for rnd in range(MAX_ROUNDS):
             msg = _chat(cfg, messages, tool_specs())
             tcs = msg.get('tool_calls') or []
+            if not tcs:  # tool calls the model wrote as text in `content` run like real ones
+                tcs = _text_calls(re.sub(r'<think>.*?</think>', '', msg.get('content') or '', flags=re.S), rnd)
             if not tcs:
                 text = _clean(msg.get('content'))
                 break
             skipped = len(tcs) - MAX_CALLS_PER_ROUND
             tcs = tcs[:MAX_CALLS_PER_ROUND]  # every call kept in the assistant message gets a tool reply
-            messages.append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': tcs})
+            messages.append({'role': 'assistant', 'content': llm_guard.strip_tool_markup(msg.get('content'), set(TOOLS)),
+                             'tool_calls': tcs})
             for tc in tcs:
                 fn = tc.get('function') if isinstance(tc, dict) else None
                 name = (fn if isinstance(fn, dict) else {}).get('name', '')
@@ -988,13 +1016,16 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
     elif text is None:
         messages.append({'role': 'user', 'content': 'Write the report now, without more tool calls.'})
         text = _clean(_chat(cfg, messages, None).get('content'))
+    if not text:  # empty, or nothing but tool-call markup: ask once more, with no tools offered
+        text = _clean(_chat(cfg, messages + [{'role': 'user', 'content': FINAL_ASK}], None).get('content'))
 
     # Two checks, then at most one rewrite: (1) deterministic: every sentence cites a retrieved source and
     # its numbers appear there; (2) Nemotron verifier: each cited source actually supports its sentence.
     year_ok = frozenset({str(year)} | _numbers(d.isoformat()))
     for attempt in range(2):
         if not text:
-            raise MarketUnavailable('Nemotron returned an empty report.')
+            raise MarketUnavailable('Nemotron did not return a written report (the reply was empty or only tool-call '
+                                    'markup), even when asked again. Please try again.')
         issues = check_grounding(text, ev.sources, year_ok)
         hard = {i['text'] for i in issues if i['kind'] != 'miscited'}
         mis = {i['text']: i for i in issues if i['kind'] == 'miscited'}
@@ -1013,13 +1044,17 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
                       + '\nRewrite the whole report. Every sentence must cite a retrieved source id in square brackets, '
                         'every number must be copied from the source it cites, and every statement must be supported by '
                         'that source. Remove anything the sources do not support.'}]
-        text = _clean(_chat(cfg, messages, None).get('content'))
+        rewrite = _clean(_chat(cfg, messages, None).get('content'))
+        if not rewrite:
+            break  # an empty / markup-only rewrite: keep the checked draft and its issues
+        text = rewrite
     # Anything still not backed by our data is removed, not just flagged; the UI lists what was removed.
     removed = {i['text'] for i in issues if i['kind'] in SERIOUS}
     for i in issues:
         i['removed'] = i['text'] in removed
     if removed:
         text = remove_claims(text, removed)
+    text = llm_guard.round_long_floats(text)  # display only, after the exact-match checks and removals
     used = sorted({c for c in _resolve_cites(CITE.findall(text), ev.sources) if c in ev.citations})
     return {'year': year, 'as_of': d, 'model': cfg.model, 'generated_at': datetime.now(timezone.utc), 'mode': mode,
             'markdown': text, 'tool_calls': ev.calls,

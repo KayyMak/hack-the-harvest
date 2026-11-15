@@ -1,7 +1,9 @@
 """LangGraph agent (agent/run.py) on real saved outputs, with Nemotron replaced by a script."""
+import io
 import json
 import sys
 import tempfile
+import urllib.error
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -166,10 +168,6 @@ class AgentChecks(unittest.TestCase):
         self.assertNotIn('nvapi-secret-test', json.dumps(self.trace('r-d')))
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class MalformedToolCallNames(unittest.TestCase):
     """A malformed model reply (non-string name, missing function) is a tool error, never a crash."""
 
@@ -191,3 +189,229 @@ class MalformedToolCallNames(unittest.TestCase):
         from app import market
         self.assertIn('error', market.run_tool(['x'], {}))
         self.assertIn('error', market.run_tool({'a': 1}, {}))
+
+
+def nvidia_reply(message):
+    return io.BytesIO(json.dumps({'choices': [{'message': message}]}).encode())
+
+
+def http_error(code, headers=None):
+    return urllib.error.HTTPError('https://x/v1/chat/completions', code, 'err', headers or {}, io.BytesIO(b'{"detail":"x"}'))
+
+
+def scripted_urlopen(replies, attempts=None):
+    def urlopen(req, timeout):
+        if attempts is not None:
+            attempts.append(req.full_url)
+        r = replies.pop(0) if len(replies) > 1 else replies[0]
+        if isinstance(r, Exception):
+            raise r
+        return r
+    return urlopen
+
+
+TEXT_CALL = """<tool_call>
+<function=evaluate>
+<parameter=year>
+2022
+</parameter>
+</function>
+</tool_call>"""
+
+
+class Reliability(AgentChecks):
+    """Failures seen against the live NVIDIA model, replayed with scripted replies."""
+
+    def report(self, run_id):
+        return self.trace(run_id)[-1]['summary']
+
+    # ---- 1. tool calls written as text
+    def test_tag_style_text_tool_call_is_run_as_a_real_call(self):
+        script = Script({'content': TEXT_CALL}, {'content': '## 2022\n### Findings\n- Balanced accuracy 0.83 [evaluate].'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-t1')
+        steps = self.trace('r-t1')
+        result = next(s for s in steps if s['type'] == 'tool_result')
+        self.assertEqual((result['tool'], result['args'], result['ok']), ('evaluate', {'year': 2022}, True))
+        self.assertTrue(any('as text' in (s.get('summary') or '') for s in steps if s['type'] == 'plan'))
+        sent = script.sent[1][0]
+        self.assertNotIn('<tool_call>', json.dumps(sent[1:]))  # the stored assistant turn is clean
+        self.assertEqual(sum(m['role'] == 'tool' for m in sent), 1)
+        self.assertNotIn('tool_call', self.report('r-t1'))
+
+    def test_json_text_tool_call_is_parsed_and_unoffered_names_are_refused(self):
+        script = Script({'content': 'Calling: {"name": "evaluate", "arguments": {"year": 2022}}'},
+                        {'content': '<tool_call><function=write_report><parameter=run_id>r-x</parameter></function></tool_call>'},
+                        {'content': '## Done\n### Findings\n- n=7 [evaluate].'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-t2')
+        results = [s for s in self.trace('r-t2') if s['type'] == 'tool_result']
+        self.assertEqual([(r['tool'], r['ok']) for r in results], [('evaluate', True), ('write_report', False)])
+        self.assertFalse((Path(self.tmp.name) / 'runs_dir' / 'reports' / 'r-x.md').exists())
+        self.assertEqual(self.report('r-t2'), '## Done\n### Findings\n- n=7 [evaluate].')
+
+    def test_markup_after_the_round_limit_is_stripped_and_the_report_re_asked(self):
+        rounds = [{'content': None, 'tool_calls': [call(1, 'evaluate', year=2022)]}] * agent.MAX_TOOL_ROUNDS
+        script = Script(*rounds, {'content': TEXT_CALL}, {'content': '## 2022\n### Findings\n- n=7 [evaluate].'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-t3')
+        self.assertEqual(sum(s['type'] == 'tool_result' for s in self.trace('r-t3')), agent.MAX_TOOL_ROUNDS)
+        self.assertIsNone(script.sent[-1][1])  # the re-ask offers no tools
+        self.assertIn('Do not call tools', script.sent[-1][0][-1]['content'])
+        self.assertEqual(self.report('r-t3'), '## 2022\n### Findings\n- n=7 [evaluate].')
+
+    def test_writer_falls_back_to_a_tool_summary_when_the_re_ask_also_fails(self):
+        script = Script({'content': None, 'tool_calls': [call(1, 'evaluate', year=2022)]},
+                        {'content': ''}, {'content': TEXT_CALL.replace('evaluate', 'not_a_tool')})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-t4')
+        report = self.report('r-t4')
+        for bad in ('<tool_call', '<function', '<parameter', 'not_a_tool'):
+            self.assertNotIn(bad, report)
+        self.assertIn(agent.FALLBACK, report)
+        self.assertIn('n=7', report)
+        self.assertIn('balanced_accuracy=0.83', report)  # long float rounded
+        self.assertEqual([s['type'] for s in self.trace('r-t4')][-2:], ['check', 'report'])  # verifier passed it
+        self.assertFalse(any(ch.isdigit() for ch in agent.FALLBACK))
+
+    def test_strip_and_parse_helpers(self):
+        from app import llm_guard
+        prose = 'Here is the plan.\n' + TEXT_CALL + '\nDone.'
+        self.assertEqual(llm_guard.strip_tool_markup(prose), 'Here is the plan.\n\nDone.')
+        self.assertEqual(llm_guard.text_tool_calls(TEXT_CALL, {'evaluate'}), [('evaluate', {'year': 2022})])
+        fenced = '```json\n{"name": "aggregate", "arguments": {"year": "2023"}}\n```'
+        self.assertEqual(llm_guard.text_tool_calls(fenced, {'aggregate'}), [('aggregate', {'year': '2023'})])
+        self.assertEqual(llm_guard.strip_tool_markup(fenced), '')
+        self.assertEqual(llm_guard.text_tool_calls('{"name": "x", "arguments": {}}', {'aggregate'}), [])
+        self.assertFalse(llm_guard.has_tool_markup('| a | b |\n**bold** {not json}', {'aggregate'}))
+
+    # ---- 2. retries
+    def configured(self):
+        return patch.object(agent, 'config', lambda: {'key': 'k', 'base': 'https://x/v1', 'model': 'm', 'thinking': False})
+
+    def test_429_is_retried_with_backoff_and_logged_to_the_trace(self):
+        from app import llm_guard
+        sleeps = []
+        urlopen = scripted_urlopen([http_error(429, {'Retry-After': '3'}), nvidia_reply({'content': 'No tools needed.'})])
+        with self.configured(), patch.object(llm_guard.urllib.request, 'urlopen', urlopen), \
+                patch.object(llm_guard, '_sleep', sleeps.append):
+            agent.run_agent('hello', 'r-r1')
+        steps = self.trace('r-r1')
+        retry = next(s for s in steps if s['type'] == 'retry')
+        self.assertIn('HTTP 429', retry['summary'])
+        self.assertEqual(len(sleeps), 1)
+        self.assertGreaterEqual(sleeps[0], 3)  # Retry-After honoured
+        self.assertEqual(steps[-1]['summary'], 'No tools needed.')
+        self.assertNotIn('Bearer', json.dumps(steps))
+
+    def test_auth_errors_are_not_retried_and_waits_are_capped(self):
+        from app import llm_guard
+        sleeps, attempts = [], []
+        with self.configured(), patch.object(llm_guard.urllib.request, 'urlopen', scripted_urlopen([http_error(401)], attempts)), \
+                patch.object(llm_guard, '_sleep', sleeps.append):
+            agent.run_agent('q', 'r-r2')
+        self.assertEqual((len(attempts), sleeps), (1, []))
+        self.assertIn('rejected the API key', self.report('r-r2'))
+
+        attempts.clear()
+        with self.configured(), \
+                patch.object(llm_guard.urllib.request, 'urlopen', scripted_urlopen([http_error(503, {'Retry-After': '25'})], attempts)), \
+                patch.object(llm_guard, '_sleep', sleeps.append):
+            agent.run_agent('q', 'r-r3')
+        self.assertTrue(sleeps)
+        self.assertLessEqual(sum(sleeps), llm_guard.RETRY_MAX_WAIT)
+        self.assertLessEqual(len(attempts), llm_guard.RETRY_ATTEMPTS)
+        self.assertIn('HTTP 503', self.report('r-r3'))
+
+    def test_timeouts_and_connection_errors_are_retried(self):
+        from app import llm_guard
+        urlopen = scripted_urlopen([TimeoutError('timed out'), urllib.error.URLError(ConnectionResetError()),
+                                    nvidia_reply({'content': 'ok'})])
+        with self.configured(), patch.object(llm_guard.urllib.request, 'urlopen', urlopen), \
+                patch.object(llm_guard, '_sleep', lambda s: None):
+            agent.run_agent('q', 'r-r4')
+        self.assertEqual(sum(s['type'] == 'retry' for s in self.trace('r-r4')), 2)
+        self.assertEqual(self.report('r-r4'), 'ok')
+
+    # ---- 3. bad argument strings
+    def test_null_ish_arguments_are_dropped_and_int_strings_coerced(self):
+        script = Script({'content': None, 'tool_calls': [call(1, 'evaluate', year='2022', as_of='none'),
+                                                          call(2, 'aggregate', year=2022, as_of='N/A')]},
+                        {'content': 'Done.'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-a1')
+        results = [s for s in self.trace('r-a1') if s['type'] == 'tool_result']
+        self.assertEqual([(r['args'], r['ok']) for r in results], [({'year': 2022}, True), ({'year': 2022}, True)])
+
+    def test_clean_args_helper(self):
+        from app import llm_guard
+        self.assertEqual(llm_guard.clean_args({'year': ' 2022 ', 'as_of': 'NULL', 'x': '', 'field_ids': '[231, 252]',
+                                               'q': 'none of it'}, {'year': 'int', 'field_ids': 'list'}),
+                         {'year': 2022, 'field_ids': [231, 252], 'q': 'none of it'})
+
+    # ---- 4. verifier
+    def test_verifier_accepts_percent_rounding_and_interval_levels(self):
+        ev = json.dumps(agent.harvest_tools.call('evaluate', {'year': 2022}))
+        agg = json.dumps(agent.harvest_tools.call('aggregate', {'year': 2022}))
+        counts = json.dumps({'n_fields': 19, 'n_pending': 4, 'tpr': 0.782, 'share': 0.503})
+        ok = ('In 2022, 95% interval 32.3 to 104.8 acres; the Wilson 95% CI; a 90% range. TPR 78.2% and 50.3 percent; '
+              '19 fields, 4 pending. Balanced accuracy 0.83, CV 27%.')
+        self.assertEqual(agent.unsupported_numbers(ok, [ev, agg, counts], ''), [])
+
+    def test_verifier_still_rejects_invented_numbers(self):
+        counts = json.dumps({'n_fields': 19, 'n_pending': 4, 'tpr': 0.782})
+        draft = 'TPR 78.3% and 0.78 is 79 in all; 95 fields; 3/7 correct; 0.5902900420064867; 2041; field 347-ish.'
+        self.assertEqual(agent.unsupported_numbers(draft, [counts], ''),
+                         ['3', '7', '79', '95', '347', '2041', '78.3', '0.5902900420064867'])
+        # A real classify result is full of field ids: they must not make arbitrary integers reachable.
+        cls = json.dumps(agent.harvest_tools.call('classify', {'year': 2022}), default=str)
+        self.assertEqual(agent.unsupported_numbers('Fields 347 and 500 total 612 acres.', [cls], ''), ['347', '500', '612'])
+
+    def test_verifier_rejects_derived_counts_and_free_years(self):
+        # Derived counts are not accepted: a wrong "5 of 7 correct" could be built from 1 + 4 in a confusion matrix.
+        counts = json.dumps({'n': 7, 'confusion_matrix': [[2, 1], [0, 4]]})
+        self.assertEqual(agent.unsupported_numbers('5 of 7 correct; 2031 acres.', [counts], ''), ['5', '2031'])
+        self.assertEqual(agent.unsupported_numbers('In 2022, 7 field-years.', [counts], 'Score 2022'), [])
+
+    # ---- 5. report format
+    def test_long_floats_are_rounded_and_prompt_has_the_report_rules(self):
+        script = Script({'content': None, 'tool_calls': [call(1, 'evaluate', year=2022)]},
+                        {'content': '## 2022\n### Findings\n- Balanced accuracy 0.8333333333333333 [evaluate].'})
+        with patch.object(agent, 'chat', script):
+            agent.run_agent('Score 2022', 'r-f1')
+        self.assertIn('0.83 [evaluate]', self.report('r-f1'))
+        self.assertNotIn('0.8333', self.report('r-f1'))
+        system = script.sent[0][0][0]['content']
+        for rule in ('### Findings', '### Uncertainty', '### Sources (tools used)', 'not available', '2 decimals',
+                     'Bernoulli', 'Never write a tool call as text'):
+            self.assertIn(rule, system)
+        from app import llm_guard
+        self.assertEqual(llm_guard.round_long_floats('p=0.5902900420064867, 12.345678, 0.000012345, 0.1234, 2022-10-12'),
+                         'p=0.59, 12.35, 0.00001, 0.1234, 2022-10-12')
+
+
+
+class ModelCallLimits(unittest.TestCase):
+    """One model call is bounded in total time and never waits forever for a busy slot."""
+
+    def test_busy_slot_times_out_with_a_clear_error(self):
+        import urllib.request
+        from app import llm_guard
+        with patch.object(llm_guard, 'SLOT_WAIT', 0.05), patch.object(llm_guard, 'MODEL_SLOTS', llm_guard.threading.BoundedSemaphore(1)) as slots:
+            slots.acquire()
+            try:
+                with self.assertRaisesRegex(TimeoutError, 'busy'):
+                    llm_guard.post_json(urllib.request.Request('http://127.0.0.1:9/never'), 1)
+            finally:
+                slots.release()
+
+    def test_total_deadline_stops_retrying(self):
+        import urllib.request
+        from app import llm_guard
+        with patch.object(llm_guard, 'RETRY_DEADLINE', 0.0):
+            with self.assertRaisesRegex(TimeoutError, 'within'):
+                llm_guard.post_json(urllib.request.Request('http://127.0.0.1:9/never'), 1)
+
+
+if __name__ == '__main__':
+    unittest.main()

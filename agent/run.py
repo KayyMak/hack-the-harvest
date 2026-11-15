@@ -16,6 +16,10 @@ A run always ends with a `report` line, also when something fails, so the UI nev
 
 Configuration (environment, else the repo-root .env): NVIDIA_API_KEY (required), NEMOTRON_MODEL,
 NEMOTRON_BASE_URL, NEMOTRON_THINKING. The key is only sent to NVIDIA, never logged or returned.
+
+Reliability (app/llm_guard.py, shared with the market report): model calls retry 429/5xx/timeouts with
+backoff (each retry is a trace step), tool calls the model writes as text are parsed or stripped, null-ish
+tool arguments ("none") are dropped, and a report never contains tool-call markup.
 """
 import json
 import os
@@ -23,6 +27,7 @@ import re
 import sys
 import urllib.error
 import urllib.request
+from contextvars import ContextVar
 from pathlib import Path
 from typing import Any, TypedDict
 
@@ -34,6 +39,7 @@ for _p in (ROOT, ROOT / 'backend'):
 from langchain_core.utils.function_calling import convert_to_openai_tool  # noqa: E402
 from langgraph.graph import END, StateGraph  # noqa: E402
 
+from app import llm_guard  # noqa: E402
 from app.tools import log_step, write_report  # noqa: E402
 from harvest import tools as harvest_tools  # noqa: E402
 
@@ -45,6 +51,7 @@ MAX_VERIFY_ROUNDS = 1
 AGENT_TOOLS = [t for t in harvest_tools.TOOLS if t.name != 'write_report']  # the writer node saves the report
 AGENT_TOOL_NAMES = {t.name for t in AGENT_TOOLS}
 NUM = re.compile(r'\d[\d,]*(?:\.\d+)?')
+_RUN_ID: ContextVar[str | None] = ContextVar('agent_run_id', default=None)  # where chat() logs its retries
 
 SYSTEM = """You are the analyst agent for a hackathon project that predicts whether corn fields at the BARC
 research station (Beltsville, Maryland) were harvested for silage or grain, from Sentinel-2 NDVI.
@@ -54,13 +61,37 @@ optionally as of a date so only satellite months complete by then are used), eva
 labels), aggregate (silage acres with a 95% interval), get_fields, get_timeseries, get_quickstats (NASS
 county/state acres, context only, never field labels) and get_chip.
 
+Call tools through the tool-calling interface only. Never write a tool call as text (no <tool_call>, <function=...>
+or {"name": ..., "arguments": ...} in your answer).
+
 Rules:
-- Only use facts from tool results. No outside knowledge. If the tools cannot answer, say so.
-- Copy numbers exactly as a tool returned them; do not compute new ones.
-- After each fact, name the tool it came from in brackets, e.g. [aggregate].
+- Only use facts from tool results. No outside knowledge. If the tools cannot answer, write "not available"; never guess.
+- Quote numbers as a tool returned them. Never compute new ratios, fractions, percentages, differences or counts
+  that no tool returned (if evaluate says 6 of 7 are correct, say that; do not derive your own count).
+- Round probabilities and shares to 2 decimals (0.59, not 0.5902900420064867) and acres to 1 decimal.
+- Field and run IDs exactly as the tool gave them (field 347), never approximate ("347-ish").
+- After each number, name the tool it came from in brackets, e.g. [aggregate].
+- Explain intervals, CV% and other statistics only as the tool's own method/note text describes them (for
+  example aggregate's CV% comes from the field-level Bernoulli variance of the calls; it is not year-to-year
+  variability). If the tool gives no explanation, do not invent one.
 - Keep model predictions and BARC reference labels clearly distinct.
 - BARC is one research station: never present its numbers as Maryland or US totals.
-- Answer in short markdown: a title, the findings, then one line on uncertainty."""
+
+Answer in markdown with exactly this structure:
+## <short title>
+### Findings
+- one bullet per finding, each number followed by its [tool]
+(optional: one compact markdown table of tool values, each column header naming its [tool])
+### Uncertainty
+- one or two bullets: intervals, sample size, what the tools cannot say
+### Sources (tools used)
+- each tool used, with the year/as_of it was called with"""
+
+FINAL_ASK = ('Write the final report now in plain prose/markdown with the required sections (title, Findings, '
+             'Uncertainty, Sources (tools used)), using only the tool results above. Do not call tools and do not '
+             'write any tool-call markup.')
+FALLBACK = ('The model did not return a usable written report (its reply was empty or contained only tool-call '
+            'markup), so this is an automatic summary of the tool results gathered so far, without interpretation.')
 
 
 class AgentState(TypedDict, total=False):
@@ -69,6 +100,7 @@ class AgentState(TypedDict, total=False):
     messages: list[dict]
     pending: list[dict]
     results: list[str]
+    evidence: list[dict]
     draft: str
     flags: list[str]
     tool_rounds: int
@@ -113,15 +145,24 @@ def chat(messages: list[dict], tools: list[dict] | None) -> dict:
         payload.update(tools=tools, tool_choice='auto')
     req = urllib.request.Request(f"{c['base']}/chat/completions", data=json.dumps(payload).encode('utf-8'),
                                  headers={'Authorization': f"Bearer {c['key']}", 'Content-Type': 'application/json'})
+    run_id = _RUN_ID.get()
+
+    def on_retry(attempt: int, wait: float, reason: str) -> None:
+        if run_id:  # reason is e.g. 'HTTP 429' or 'timeout': never headers, body or key
+            log_step(run_id, node='nemotron', type='retry',
+                     summary=f'NVIDIA API {reason}; retry {attempt} of {llm_guard.RETRY_ATTEMPTS - 1} in {wait:.1f} s')
+
     try:
-        with urllib.request.urlopen(req, timeout=120) as r:
-            return json.load(r)['choices'][0]['message']
+        return llm_guard.post_json(req, 120, on_retry)['choices'][0]['message']
     except urllib.error.HTTPError as exc:
         body = exc.read().decode('utf-8', 'replace')[:300]
         if exc.code in (401, 403):
             raise AgentError(f'NVIDIA rejected the API key (HTTP {exc.code}).') from exc
+        if exc.code == 429:
+            raise AgentError("NVIDIA's API is rate-limiting requests right now (HTTP 429), even after retrying "
+                        "for about a minute. Wait a minute and run it again.") from exc
         raise AgentError(f'NVIDIA API error (HTTP {exc.code}): {body}') from exc
-    except (urllib.error.URLError, TimeoutError, OSError, KeyError, ValueError) as exc:
+    except (urllib.error.URLError, TimeoutError, OSError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise AgentError(f'Could not get a reply from the NVIDIA API: {exc}') from exc
 
 
@@ -139,8 +180,17 @@ def _fn(tc) -> dict:
     return fn if isinstance(fn, dict) else {}
 
 
+def _int_params(name) -> dict[str, str]:
+    schema = harvest_tools.SCHEMAS.get(name) if isinstance(name, str) else None
+    if schema is None:
+        return {}
+    return {k: kind for k, f in schema.model_fields.items() if (kind := llm_guard.int_kind(f.annotation))}
+
+
 def _args(tc: dict) -> tuple[dict, str | None]:
-    """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object."""
+    """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object. Null-ish values
+    ("none", "null", "", "n/a") are dropped so the tool uses its default; numeric strings for int
+    parameters (year, field_ids) become ints."""
     raw = _fn(tc).get('arguments') or '{}'
     try:
         args = raw if isinstance(raw, dict) else json.loads(raw)
@@ -148,14 +198,21 @@ def _args(tc: dict) -> tuple[dict, str | None]:
         return {}, 'tool arguments are not valid JSON; send a JSON object'
     if not isinstance(args, dict):
         return {}, 'tool arguments must be a JSON object'
-    return args, None
+    return llm_guard.clean_args(args, _int_params(_fn(tc).get('name'))), None
+
+
+def _text_calls(content: str, rounds: int) -> list[dict]:
+    """Tool calls the model wrote as text, as structured calls (the allow-list in run_tools still applies)."""
+    return [{'id': f'text-{rounds}-{i}', 'type': 'function',
+             'function': {'name': name, 'arguments': json.dumps(args, default=str)}}
+            for i, (name, args) in enumerate(llm_guard.text_tool_calls(content, AGENT_TOOL_NAMES))]
 
 
 def _summary(out: dict) -> str:
     if 'error' in out:
         return f"error: {out['error']}"
     keys = [k for k in ('year', 'as_of', 'n', 'n_pending', 'expected_silage_acres', 'balanced_accuracy') if k in out]
-    return ', '.join(f'{k}={out[k]}' for k in keys) or ', '.join(list(out)[:5])
+    return llm_guard.round_long_floats(', '.join(f'{k}={out[k]}' for k in keys) or ', '.join(list(out)[:5]))
 
 
 # ---------------------------------------------------------------- nodes
@@ -166,24 +223,67 @@ def analyst(state: AgentState) -> AgentState:
         log_step(run_id, node='analyst', type='plan', summary=f"request: {state['query']}")
         state['messages'] = [{'role': 'system', 'content': SYSTEM}, {'role': 'user', 'content': state['query']}]
     rounds = state.get('tool_rounds', 0)
-    msg = chat(state['messages'], tool_specs() if rounds < MAX_TOOL_ROUNDS else None)
-    calls = msg.get('tool_calls') or []
-    if rounds >= MAX_TOOL_ROUNDS:
-        calls = []  # no tools were offered this round: a call the model makes anyway is not run
+    can_call = rounds < MAX_TOOL_ROUNDS
+    msg = chat(state['messages'], tool_specs() if can_call else None)
+    calls = (msg.get('tool_calls') or []) if can_call else []  # no tools offered: a call made anyway is not run
+    content = _clean(msg.get('content'))
+    markup = llm_guard.has_tool_markup(content, AGENT_TOOL_NAMES)
+    if not calls and markup and can_call:
+        calls = _text_calls(content, rounds)  # tool calls written as text in `content`
+        if calls:
+            log_step(run_id, node='analyst', type='plan',
+                     summary=f'the model wrote {len(calls)} tool call(s) as text; running them as tool calls')
     if calls:
         if len(calls) > MAX_CALLS_PER_ROUND:
             log_step(run_id, node='analyst', type='plan',
                      summary=f'only the first {MAX_CALLS_PER_ROUND} of {len(calls)} tool calls in this round are run')
             calls = calls[:MAX_CALLS_PER_ROUND]  # every call kept in the assistant message gets a tool reply
-        state['messages'].append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': calls})
+        state['messages'].append({'role': 'assistant', 'content': llm_guard.strip_tool_markup(content, AGENT_TOOL_NAMES),
+                                  'tool_calls': calls})
         for tc in calls:
             log_step(run_id, node='analyst', type='tool_call', tool=_fn(tc).get('name'), args=_args(tc)[0])
         state['pending'] = calls
         state['tool_rounds'] = rounds + 1
     else:
-        state['draft'] = _clean(msg.get('content'))
+        draft = llm_guard.strip_tool_markup(content, AGENT_TOOL_NAMES)
+        if markup or not draft:
+            draft = _final_report(state, draft)
+        state['draft'] = llm_guard.round_long_floats(draft)
         state['pending'] = []
     return state
+
+
+def _usable(text: str) -> bool:
+    return bool(text) and not llm_guard.has_tool_markup(text, AGENT_TOOL_NAMES)
+
+
+def _final_report(state: AgentState, partial: str) -> str:
+    """The reply was empty or held tool-call markup we could not run: ask once more for the report with no
+    tools offered; if that fails too, fall back to a deterministic summary of the tool results."""
+    run_id = state['run_id']
+    log_step(run_id, node='writer', type='plan',
+             summary='the reply was empty or held tool-call markup; asking once more for the report, with no tools')
+    messages = state['messages'] + ([{'role': 'assistant', 'content': partial}] if partial else [])
+    try:
+        text = _clean(chat(messages + [{'role': 'user', 'content': FINAL_ASK}], None).get('content'))
+    except AgentError as exc:
+        log_step(run_id, node='writer', type='error', summary=str(exc))
+        text = ''
+    if _usable(text):
+        return text
+    log_step(run_id, node='writer', type='plan', summary='still no usable report: writing a summary of the tool results')
+    return fallback_report(state)
+
+
+def fallback_report(state: AgentState) -> str:
+    """Deterministic report from the tool results gathered so far (their own numbers only, nothing computed)."""
+    lines = ['## Summary of tool results', '', FALLBACK, '', '### Findings']
+    found = [(e['tool'], e['summary']) for e in state.get('evidence', []) if e['ok']]
+    lines += [f'- {summary} [{tool}]' for tool, summary in found] or ['- No tool returned a result: not available.']
+    lines += ['', '### Uncertainty', '- Not interpreted: see each tool result in the trace for its intervals and notes.',
+              '', '### Sources (tools used)']
+    lines += [f'- {t}' for t in dict.fromkeys(t for t, _ in found)] or ['- none']
+    return llm_guard.round_long_floats('\n'.join(lines))
 
 
 def run_tools(state: AgentState) -> AgentState:
@@ -193,7 +293,6 @@ def run_tools(state: AgentState) -> AgentState:
         if not isinstance(name, str):  # a malformed reply must be a tool error, never a crash
             name = repr(name)
         args, bad = _args(tc)
-        args = {k: v for k, v in args.items() if v is not None}
         if name not in AGENT_TOOL_NAMES:  # only tools offered to the model run (not write_report: it takes a run_id)
             out = {'error': f'unknown tool {name!r}; available: {sorted(AGENT_TOOL_NAMES)}'}
         elif bad:
@@ -202,6 +301,7 @@ def run_tools(state: AgentState) -> AgentState:
             out = harvest_tools.call(name, args)
         text = json.dumps(out, default=str)
         state.setdefault('results', []).append(text)
+        state.setdefault('evidence', []).append({'tool': name, 'ok': 'error' not in out, 'summary': _summary(out)})
         state['messages'].append({'role': 'tool', 'tool_call_id': tc.get('id', name), 'name': name, 'content': text})
         log_step(run_id, node='tools', type='tool_result', tool=name, args=args, ok='error' not in out,
                  summary=_summary(out))
@@ -214,24 +314,44 @@ def _norm(t: str) -> str:
     return t if '.' in t else (t.lstrip('0') or '0')
 
 
+INTERVAL_AFTER = re.compile(r'\s*(?:%|percent)?\s*[-–]?\s*(?:[A-Za-z]+\s+){0,2}?(?:interval|ci\b|confidence|credible|range|bounds?)',
+                            re.I)
+INTERVAL_BEFORE = re.compile(r'(?:wilson|ci|interval|confidence)\W{0,3}$', re.I)
+PERCENT_AFTER = re.compile(r'\s*(?:%|percent\b)', re.I)
+
+
+
+
 def unsupported_numbers(draft: str, results: list[str], query: str) -> list[str]:
-    """Numbers in the draft that match no tool result (nor the user's own request). A draft number with k
-    decimals counts as supported when some tool value rounds to it at k decimals (0.833 from 0.8333...,
-    40 from 40.13), so sensible rounding passes but invented or altered figures do not."""
+    """Numbers in the draft that match no tool result (nor the user's own request). Supported forms, and only these:
+      * the tool value itself, or rounded to the draft's decimals (0.833 from 0.8333..., 40 from 40.13);
+      * a percent of a tool fraction, at the shown decimals, when followed by % or "percent" (0.782 -> 78.2%);
+      * 95 or 90 as the level of an interval / CI / range ("95% interval", "Wilson 95%");
+    Years and counts must appear in a tool result (or the request) as written: derived sums or differences are
+    not accepted, because a wrong count ("5 of 7 correct") can always be built from two small integers.
+    Invented or altered figures fail."""
     source = ' '.join(results) + ' ' + query
     exact = {_norm(n) for n in NUM.findall(source)}
     values = [float(_norm(n)) for n in NUM.findall(source)]
     text = re.sub(r'\[[^\]]*\]', ' ', draft)  # ignore [tool] tags
 
-    def supported(n: str) -> bool:
+    def supported(m: re.Match) -> bool:
+        n = m.group(0)
         t = _norm(n)
         if t in exact:
             return True
         k = len(t.split('.')[1]) if '.' in t else 0
         d = float(t)
-        return any(round(v, k) == d for v in values)
+        if any(abs(round(v, k) - d) < 1e-9 for v in values):
+            return True
+        after, before = text[m.end():m.end() + 40], text[max(0, m.start() - 12):m.start()]
+        if PERCENT_AFTER.match(after) and any(abs(round(v * 100, k) - d) < 1e-9 for v in values):
+            return True
+        if t in ('95', '90') and (INTERVAL_AFTER.match(after) or INTERVAL_BEFORE.search(before)):
+            return True
+        return False
 
-    return sorted({n for n in NUM.findall(text) if not supported(n)}, key=lambda n: (len(n), n))
+    return sorted({m.group(0) for m in NUM.finditer(text) if not supported(m)}, key=lambda n: (len(n), n))
 
 
 def verifier(state: AgentState) -> AgentState:
@@ -256,7 +376,8 @@ def verifier(state: AgentState) -> AgentState:
 
 def writer(state: AgentState) -> AgentState:
     run_id = state['run_id']
-    report = state.get('draft') or 'The agent could not produce an answer from the tool results.'
+    report = llm_guard.strip_tool_markup(state.get('draft'))  # a report never shows tool-call markup
+    report = llm_guard.round_long_floats(report or fallback_report(state))
     if state.get('flags'):
         report += ('\n\n> **Verifier:** these numbers were not found in any tool result and may be wrong: '
                    + ', '.join(state['flags']))
@@ -294,6 +415,7 @@ GRAPH = build_graph()
 
 def run_agent(query: str, run_id: str) -> None:
     """Run the agent for one request, writing every step to the run's trace. Never raises."""
+    token = _RUN_ID.set(run_id)
     try:
         GRAPH.invoke({'run_id': run_id, 'query': query, 'messages': [], 'results': []},
                      {'recursion_limit': 4 * (MAX_TOOL_ROUNDS + MAX_VERIFY_ROUNDS) + 10})
@@ -301,3 +423,5 @@ def run_agent(query: str, run_id: str) -> None:
         message = str(exc) or type(exc).__name__
         log_step(run_id, node='writer', type='error', summary=message)
         log_step(run_id, node='writer', type='report', summary=f'The agent stopped before finishing: {message}')
+    finally:
+        _RUN_ID.reset(token)
