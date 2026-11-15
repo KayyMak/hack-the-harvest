@@ -553,7 +553,7 @@ function WhyMisses({ data, onSelect }: { data: Forecast; onSelect: (s: string) =
   )
 }
 
-/** Grain view: why grain is close (NASS's own Nov 14 forecast) and where its big percentages come from (small states). */
+/** Grain view: big grain states are within a few percent (NASS's own Nov 14 forecast); the big % misses are tiny states. */
 function WhyGrainClose({ data, onSelect }: { data: Forecast; onSelect: (s: string) => void }) {
   const rows = useMemo(
     () => data.states
@@ -567,17 +567,17 @@ function WhyGrainClose({ data, onSelect }: { data: Forecast; onSelect: (s: strin
     [data],
   )
   if (!rows.length) return null
+  const usGrain = data.us.grain.nass
   const worstBig = Math.max(...top5.map((r) => Math.abs(r.grain!.err!)))
   return (
     <section>
-      <h2 className="rail__title">Why grain is close</h2>
+      <h2 className="rail__title">Where grain misses: only tiny states</h2>
       <p className="rail__note rail__note--keep">
-        Grain is NASS's own Nov 14 forecast, built from its farmer surveys, so the five largest grain states are all within
-        {' '}{(worstBig * 100).toFixed(1)}% of the final. The big percentages are small states, where a few thousand acres move the
-        percentage a lot:
+        Grain is NASS's own Nov 14 forecast, so the five largest grain states are all within {(worstBig * 100).toFixed(1)}% of the
+        final. The biggest percentage misses are states with very little grain corn, where a few thousand acres swing the percentage:
       </p>
       <table className="mini-table whymiss">
-        <thead><tr><th>State</th><th className="num">Ours</th><th className="num">NASS 2025</th><th className="num">Error</th></tr></thead>
+        <thead><tr><th>State</th><th className="num">Ours</th><th className="num">NASS 2025</th><th className="num">Error</th><th className="num">Share of US</th></tr></thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.state} onClick={() => onSelect(r.state)}>
@@ -585,6 +585,7 @@ function WhyGrainClose({ data, onSelect }: { data: Forecast; onSelect: (s: strin
               <td className="num">{fmtAcres(r.grain!.est)}</td>
               <td className="num">{fmtAcres(r.grain!.nass)}</td>
               <td className="num">{fmtPct(r.grain!.err)}</td>
+              <td className="num">{usGrain ? `${((100 * r.grain!.nass!) / usGrain).toFixed(2)}%` : '—'}</td>
             </tr>
           ))}
         </tbody>
