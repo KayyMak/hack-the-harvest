@@ -1,14 +1,11 @@
+import { compact } from '../format'
 /** Number formats and the error color scale for the 2025 estimate view. */
 
-/** 6,886,596 -> "6.89M"; 37,595 -> "37.6k"; 900 -> "900" */
+/** Three significant figures: 6,886,596 -> "6.89M"; 82,697,000 -> "82.7M"; 37,595 -> "37.6k"; 900 -> "900" */
 export function fmtAcres(x: number | null | undefined): string {
   if (x == null || !Number.isFinite(x)) return '—'
   if (x === 0) return '<1k'
-  const a = Math.abs(x)
-  if (a >= 1e6) return `${(x / 1e6).toFixed(2)}M`
-  if (a >= 1e4) return `${(x / 1e3).toFixed(1)}k`
-  if (a >= 1e3) return `${(x / 1e3).toFixed(2)}k`
-  return `${Math.round(x)}`
+  return compact(x)
 }
 
 export const fmtFull = (x: number | null | undefined) => (x == null ? '—' : Math.round(x).toLocaleString('en-US'))

@@ -38,3 +38,9 @@ export function ChartTip({
     </div>
   )
 }
+
+/** Axis titles (with units) for Recharts axes: give the XAxis height ≥ 34 and the YAxis width ≥ 56 so they fit. */
+export const xTitle = (value: string, fill: string) => ({ value, position: 'insideBottom' as const, offset: 0, fill, fontSize: 12 })
+export const yTitle = (value: string, fill: string) => ({
+  value, angle: -90, position: 'insideLeft' as const, offset: 4, fill, fontSize: 12, style: { textAnchor: 'middle' as const },
+})
