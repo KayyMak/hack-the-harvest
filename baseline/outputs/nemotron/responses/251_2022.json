@@ -1,0 +1,84 @@
+{
+  "elapsed_seconds": 0.606,
+  "usage": {
+    "prompt_tokens": 8122,
+    "completion_tokens": 9,
+    "total_tokens": 8131,
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    },
+    "completion_tokens_details": {
+      "reasoning_tokens": 0
+    }
+  },
+  "reported_model": "private/nvidia/nemotron-3.5-super-120b-a12b",
+  "raw_response": "{\"harvest_type\":\"Grain\"}",
+  "status": "ok",
+  "predicted_label": "Grain",
+  "request_sha256": "346b7848d16d2e0c9144857bde53464b51b0c904895d8f77196b57d702ba0bf8",
+  "field_id": 251,
+  "year": 2022,
+  "fold": 2,
+  "training_fields": [
+    24,
+    230,
+    231,
+    238,
+    248,
+    252,
+    254,
+    263,
+    278,
+    279,
+    286,
+    288,
+    291,
+    292,
+    327,
+    328,
+    332,
+    334,
+    347,
+    348,
+    382,
+    383,
+    394,
+    429,
+    511,
+    548,
+    571
+  ],
+  "imputation_medians": {
+    "ndvi_07": 0.8406254053115845,
+    "ndvi_08": 0.8387628197669983,
+    "ndvi_09": 0.561345785856247,
+    "ndvi_10": 0.36060139536857605,
+    "ndvi_11": 0.39146481454372406,
+    "peak_ndvi": 0.8795877695083618,
+    "peak_doy": 195.0,
+    "late_ndvi": 0.40417996048927307,
+    "early_minus_late": 0.42780523002147675
+  },
+  "request": {
+    "model": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "messages": [
+      {
+        "role": "system",
+        "content": "Predict whether a corn field was harvested for Grain or Silage using\nonly its nine numerical satellite vegetation features and the labeled training\nexamples supplied below. NDVI measures greenness. ndvi_07 through ndvi_11 are\nJuly through November monthly median NDVI. peak_ndvi is the maximum observed\nJuly-November NDVI; peak_doy is its day of year. late_ndvi is median NDVI from\nSeptember onward. early_minus_late is the July-August median minus the\nOctober-November median. Values are in original units. Missing values have been\nimputed with training-fold medians (zero for an entirely missing training column).\nInfer the relationship from the examples; no harvest-date rule is definitive.\nReturn exactly one JSON object: {\"harvest_type\":\"Grain\"} or\n{\"harvest_type\":\"Silage\"}. Do not include an explanation or other keys."
+      },
+      {
+        "role": "user",
+        "content": "{\"field_to_classify\":{\"early_minus_late\":0.3539392650127411,\"late_ndvi\":0.43382880091667175,\"ndvi_07\":0.43957921862602234,\"ndvi_08\":0.8333638310432434,\"ndvi_09\":0.7927899360656738,\"ndvi_10\":0.37026726454496384,\"ndvi_11\":0.43410375714302063,\"peak_doy\":228.0,\"peak_ndvi\":0.8546584844589233},\"training_examples\":[{\"features\":{\"early_minus_late\":0.2139977216720581,\"late_ndvi\":0.588287889957428,\"ndvi_07\":0.8537874817848206,\"ndvi_08\":0.8134636878967285,\"ndvi_09\":0.455012708902359,\"ndvi_10\":0.26170164346694946,\"ndvi_11\":0.6197308599948883,\"peak_doy\":195.0,\"peak_ndvi\":0.8723586797714233},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.5576982647180557,\"late_ndvi\":0.3571491837501526,\"ndvi_07\":0.8406254053115845,\"ndvi_08\":0.8354755640029907,\"ndvi_09\":0.6694326996803284,\"ndvi_10\":0.2555582523345947,\"ndvi_11\":0.28676745295524597,\"peak_doy\":195.0,\"peak_ndvi\":0.8710492849349976},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.42608439922332764,\"late_ndvi\":0.41486668586730957,\"ndvi_07\":0.852190375328064,\"ndvi_08\":0.837342381477356,\"ndvi_09\":0.4281498193740845,\"ndvi_10\":0.31852102279663086,\"ndvi_11\":0.42471370100975037,\"peak_doy\":193.0,\"peak_ndvi\":0.8758184909820557},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.5664650052785873,\"late_ndvi\":0.37002281844615936,\"ndvi_07\":0.8547866940498352,\"ndvi_08\":0.8349254131317139,\"ndvi_09\":0.469153568148613,\"ndvi_10\":0.36060139536857605,\"ndvi_11\":0.2721675932407379,\"peak_doy\":195.0,\"peak_ndvi\":0.8790117502212524},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.5868288576602936,\"late_ndvi\":0.3909563720226288,\"ndvi_07\":0.8434296250343323,\"ndvi_08\":0.824577808380127,\"ndvi_09\":0.6329780519008636,\"ndvi_10\":0.34500232338905334,\"ndvi_11\":0.2547950744628906,\"peak_doy\":195.0,\"peak_ndvi\":0.8648905754089355},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.11493727564811707,\"late_ndvi\":0.30628324300050735,\"ndvi_07\":0.8742864429950714,\"ndvi_08\":0.8556461334228516,\"ndvi_09\":0.21501866728067398,\"ndvi_10\":0.17609956860542297,\"ndvi_11\":0.7555403113365173,\"peak_doy\":195.0,\"peak_ndvi\":0.9021859169006348},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.37715594470500946,\"late_ndvi\":0.4950176477432251,\"ndvi_07\":0.7563586235046387,\"ndvi_08\":0.7916661500930786,\"ndvi_09\":0.498914510011673,\"ndvi_10\":0.4206404387950897,\"ndvi_11\":0.3967755436897278,\"peak_doy\":195.0,\"peak_ndvi\":0.826935887336731},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.18940693140029907,\"late_ndvi\":0.4238005205988884,\"ndvi_07\":0.7862657308578491,\"ndvi_08\":0.8261145353317261,\"ndvi_09\":0.21034181118011475,\"ndvi_10\":0.2186347097158432,\"ndvi_11\":0.6884490847587585,\"peak_doy\":195.0,\"peak_ndvi\":0.8671512007713318},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.38842305541038513,\"late_ndvi\":0.4673459827899933,\"ndvi_07\":0.834408700466156,\"ndvi_08\":0.8387628197669983,\"ndvi_09\":0.5578358471393585,\"ndvi_10\":0.23538382351398468,\"ndvi_11\":0.4566658139228821,\"peak_doy\":185.0,\"peak_ndvi\":0.862084150314331},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.42475467920303345,\"late_ndvi\":0.41327837109565735,\"ndvi_07\":0.8261303901672363,\"ndvi_08\":0.8296949565410614,\"ndvi_09\":0.49676553905010223,\"ndvi_10\":0.2214415967464447,\"ndvi_11\":0.4073270410299301,\"peak_doy\":185.0,\"peak_ndvi\":0.8795877695083618},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.35225918889045715,\"late_ndvi\":0.40417996048927307,\"ndvi_07\":0.7808402180671692,\"ndvi_08\":0.7036449909210205,\"ndvi_09\":0.4270416498184204,\"ndvi_10\":0.41153469681739807,\"ndvi_11\":0.36670777201652527,\"peak_doy\":185.0,\"peak_ndvi\":0.7889028191566467},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.4373907148838043,\"late_ndvi\":0.4029116630554199,\"ndvi_07\":0.8326057195663452,\"ndvi_08\":0.812133252620697,\"ndvi_09\":0.567777693271637,\"ndvi_10\":0.3887276351451874,\"ndvi_11\":0.3854590356349945,\"peak_doy\":195.0,\"peak_ndvi\":0.8627392649650574},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.522968053817749,\"late_ndvi\":0.33947068452835083,\"ndvi_07\":0.7427846789360046,\"ndvi_08\":0.7938984632492065,\"ndvi_09\":0.6025604903697968,\"ndvi_10\":0.3378378748893738,\"ndvi_11\":0.263125479221344,\"peak_doy\":195.0,\"peak_ndvi\":0.8224408626556396},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.4376264587044716,\"late_ndvi\":0.4285276383161545,\"ndvi_07\":0.7897672653198242,\"ndvi_08\":0.796527087688446,\"ndvi_09\":0.6119121611118317,\"ndvi_10\":0.36765056848526,\"ndvi_11\":0.3520287722349167,\"peak_doy\":193.0,\"peak_ndvi\":0.8335144519805908},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.40926359593868256,\"late_ndvi\":0.41201864182949066,\"ndvi_07\":0.6816325783729553,\"ndvi_08\":0.7500000596046448,\"ndvi_09\":0.537265807390213,\"ndvi_10\":0.3429372012615204,\"ndvi_11\":0.31543830037117004,\"peak_doy\":223.0,\"peak_ndvi\":0.7809523344039917},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.5511831641197205,\"late_ndvi\":0.26871953904628754,\"ndvi_07\":0.8587823510169983,\"ndvi_08\":0.8642745912075043,\"ndvi_09\":0.24707087129354477,\"ndvi_10\":0.23584025725722313,\"ndvi_11\":0.49299052357673645,\"peak_doy\":200.0,\"peak_ndvi\":0.8953914642333984},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.625904019922018,\"late_ndvi\":0.2508864589035511,\"ndvi_07\":0.8792261481285095,\"ndvi_08\":0.8725167512893677,\"ndvi_09\":0.26074862107634544,\"ndvi_10\":0.23479501530528069,\"ndvi_11\":0.477541983127594,\"peak_doy\":193.0,\"peak_ndvi\":0.9065178632736206},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.23343902826309204,\"late_ndvi\":0.4740245044231415,\"ndvi_07\":0.8691070675849915,\"ndvi_08\":0.8568774163722992,\"ndvi_09\":0.231269471347332,\"ndvi_10\":0.45196112990379333,\"ndvi_11\":0.8075723648071289,\"peak_doy\":200.0,\"peak_ndvi\":0.8964942693710327},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.5645107328891754,\"late_ndvi\":0.32590168714523315,\"ndvi_07\":0.8833660185337067,\"ndvi_08\":0.8831731379032135,\"ndvi_09\":0.3291666805744171,\"ndvi_10\":0.2999465763568878,\"ndvi_11\":0.34996089339256287,\"peak_doy\":193.0,\"peak_ndvi\":0.9327135384082794},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.3494003117084503,\"late_ndvi\":0.3672817349433899,\"ndvi_07\":0.42809930443763733,\"ndvi_08\":0.8315814733505249,\"ndvi_09\":0.8927218616008759,\"ndvi_10\":0.4219280630350113,\"ndvi_11\":0.34185096621513367,\"peak_doy\":258.0,\"peak_ndvi\":0.8947188854217529},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.024415060877799988,\"late_ndvi\":0.7995684742927551,\"ndvi_07\":0.8806197941303253,\"ndvi_08\":0.86330746114254,\"ndvi_09\":0.29104015976190567,\"ndvi_10\":0.7582417130470276,\"ndvi_11\":0.8909608721733093,\"peak_doy\":200.0,\"peak_ndvi\":0.899830162525177},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.3746977597475052,\"late_ndvi\":0.41386258602142334,\"ndvi_07\":0.7752466201782227,\"ndvi_08\":0.8467307090759277,\"ndvi_09\":0.7260302603244781,\"ndvi_10\":0.41386258602142334,\"ndvi_11\":0.39249202609062195,\"peak_doy\":220.0,\"peak_ndvi\":0.8506322503089905},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.485182449221611,\"late_ndvi\":0.453896202147007,\"ndvi_07\":0.6138163357973099,\"ndvi_08\":0.9292037636041641,\"ndvi_09\":0.8583970963954926,\"ndvi_10\":0.4002252072095871,\"ndvi_11\":0.456397145986557,\"peak_doy\":228.0,\"peak_ndvi\":0.9458612203598022},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.17262090742588043,\"late_ndvi\":0.4683645889163017,\"ndvi_07\":0.5750734210014343,\"ndvi_08\":0.6642010509967804,\"ndvi_09\":0.7042809426784515,\"ndvi_10\":0.4834560379385948,\"ndvi_11\":0.4294412434101105,\"peak_doy\":243.0,\"peak_ndvi\":0.7875146269798279},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.5694596767425537,\"late_ndvi\":0.3374972343444824,\"ndvi_07\":0.7466919124126434,\"ndvi_08\":0.8872019648551941,\"ndvi_09\":0.775237500667572,\"ndvi_10\":0.4209585413336754,\"ndvi_11\":0.2828328609466553,\"peak_doy\":228.0,\"peak_ndvi\":0.9188086986541748},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.17706799507141113,\"late_ndvi\":0.710860937833786,\"ndvi_07\":0.8792295306921005,\"ndvi_08\":0.8800647258758545,\"ndvi_09\":0.8050050139427185,\"ndvi_10\":0.4484558552503586,\"ndvi_11\":0.7473455965518951,\"peak_doy\":228.0,\"peak_ndvi\":0.9156829118728638},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.5511734038591385,\"late_ndvi\":0.3204296976327896,\"ndvi_07\":0.8735279440879822,\"ndvi_08\":0.8847545385360718,\"ndvi_09\":0.26029831171035767,\"ndvi_10\":0.3204296976327896,\"ndvi_11\":0.36682000756263733,\"peak_doy\":228.0,\"peak_ndvi\":0.9012346267700195},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.4649539813399315,\"late_ndvi\":0.3892972469329834,\"ndvi_07\":0.8411605954170227,\"ndvi_08\":0.8566103577613831,\"ndvi_09\":0.7461792230606079,\"ndvi_10\":0.3735361397266388,\"ndvi_11\":0.39146481454372406,\"peak_doy\":228.0,\"peak_ndvi\":0.913203775882721},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.42780523002147675,\"late_ndvi\":0.40478505194187164,\"ndvi_07\":0.826903447508812,\"ndvi_08\":0.8697983622550964,\"ndvi_09\":0.7293326556682587,\"ndvi_10\":0.4249328374862671,\"ndvi_11\":0.38900794833898544,\"peak_doy\":218.0,\"peak_ndvi\":0.9157699942588806},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.21367335319519043,\"late_ndvi\":0.662641704082489,\"ndvi_07\":0.8794456720352173,\"ndvi_08\":0.8731844425201416,\"ndvi_09\":0.561345785856247,\"ndvi_10\":0.2783629149198532,\"ndvi_11\":0.6907479912042618,\"peak_doy\":220.0,\"peak_ndvi\":0.8962147533893585},\"harvest_type\":\"Silage\"},{\"features\":{\"early_minus_late\":0.4580454081296921,\"late_ndvi\":0.37860891968011856,\"ndvi_07\":0.7025126218795776,\"ndvi_08\":0.8321009278297424,\"ndvi_09\":0.48880795389413834,\"ndvi_10\":0.39287615567445755,\"ndvi_11\":0.3468779847025871,\"peak_doy\":225.0,\"peak_ndvi\":0.8368304967880249},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.54124815762043,\"late_ndvi\":0.35578233003616333,\"ndvi_07\":0.8635061979293823,\"ndvi_08\":0.8815622627735138,\"ndvi_09\":0.6981087476015091,\"ndvi_10\":0.37873077392578125,\"ndvi_11\":0.31529317796230316,\"peak_doy\":225.0,\"peak_ndvi\":0.8838836550712585},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.6078560948371887,\"late_ndvi\":0.2865641936659813,\"ndvi_07\":0.8703066408634186,\"ndvi_08\":0.8789705634117126,\"ndvi_09\":0.79523666203022,\"ndvi_10\":0.30384611338377,\"ndvi_11\":0.2632724195718765,\"peak_doy\":195.0,\"peak_ndvi\":0.9024670124053955},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.6170584186911583,\"late_ndvi\":0.28979070484638214,\"ndvi_07\":0.878158450126648,\"ndvi_08\":0.8904202729463577,\"ndvi_09\":0.7901232987642288,\"ndvi_10\":0.2998281419277191,\"ndvi_11\":0.26550834625959396,\"peak_doy\":195.0,\"peak_ndvi\":0.904569685459137},\"harvest_type\":\"Grain\"},{\"features\":{\"early_minus_late\":0.27616050094366074,\"late_ndvi\":0.46452246606349945,\"ndvi_07\":0.5512537062168121,\"ndvi_08\":0.7949322164058685,\"ndvi_09\":0.6709151268005371,\"ndvi_10\":0.399997353553772,\"ndvi_11\":0.46452246606349945,\"peak_doy\":230.0,\"peak_ndvi\":0.7950836420059204},\"harvest_type\":\"Grain\"}]}"
+      }
+    ],
+    "temperature": 0,
+    "top_p": 1,
+    "max_tokens": 128,
+    "seed": 42,
+    "stream": false,
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    }
+  },
+  "recorded_utc": "2026-11-14T23:40:18.691037+00:00"
+}

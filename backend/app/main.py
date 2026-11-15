@@ -6,9 +6,11 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_observations,
+from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_fields_geojson,
+    read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
+from .frontend import mount_frontend
 from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
@@ -47,6 +49,13 @@ def rollup_csv() -> PlainTextResponse:
     """Roll-up in QuickStats column shape, for download."""
     return PlainTextResponse(_serve(rollup_quickstats_csv), media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="quickstats_export.csv"'})
+
+
+@app.get('/api/fields.geojson')
+def fields_geojson() -> dict:
+    """All BARC field polygons as GeoJSON (EPSG:4326) with reference labels per year.
+    Join model predictions from /api/baseline/predictions on field_id and year."""
+    return _serve(read_fields_geojson)
 
 
 @app.get('/api/fields', response_model=list[BarcField])
@@ -97,3 +106,7 @@ def agent_trace(run_id: str) -> list[dict]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ArtifactUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+# Keep this last so API routes take precedence over static files.
+mount_frontend(app, tools.artifacts.ROOT / 'frontend' / 'dist')

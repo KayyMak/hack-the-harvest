@@ -24,3 +24,4 @@ Thumbs.db
 # Agent run traces and reports
 agent_runs/
 runs/
+data/raw/

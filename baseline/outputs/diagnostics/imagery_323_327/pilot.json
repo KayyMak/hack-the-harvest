@@ -1,0 +1,12 @@
+{
+  "passed": true,
+  "fingerprint": "3161a631905c5a702b090086f0a079594f6ca434afba7740bc15df79ab918445",
+  "plot": "C:\\Users\\OBMO\\Desktop\\Projects\\hack-the-harvest\\baseline\\outputs\\diagnostics\\imagery_323_327\\field_323_pilot.png",
+  "measured": {
+    "field_pixels": 1031,
+    "clear_pixels": 1031,
+    "clear_fraction": 1.0,
+    "ndvi": 0.8795386552810669
+  },
+  "item_id": "S2A_MSIL2A_20230902T154821_R054_T18SUJ_20241105T121609"
+}

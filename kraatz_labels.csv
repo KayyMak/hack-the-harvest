@@ -1,0 +1,179 @@
+idn,year,plant_type,planting_n_types,planting_date,harvest_type,n_types,harvest_date,label_source,conflict,harvest_doy,OBJECTID,share
+1-30_1-30,2017,Grain,1.0,2017-05-11 10:25:46,Grain,,,planting_record,False,,,
+1-30_1-30,2021,Grain,1.0,2021-05-06 15:17:05,Grain,,,planting_record,False,,,
+APU_1,2021,Grain,1.0,2021-05-01 11:22:08,Grain,1.0,2021-09-21 12:31:00,harvest_record,False,264.0,,
+APU_1-98,2018,Grain,1.0,2018-05-11 05:10:06,Grain,,,planting_record,False,,5.0,0.9963952741632732
+APU_1-98,2020,Silage,1.0,2020-05-17 05:09:17,Silage,,,planting_record,False,,5.0,0.9963952741632732
+APU_18,2018,Grain,1.0,2018-05-12 04:54:40,Grain,,,planting_record,False,,,
+APU_30,2021,Grain,1.0,2021-05-01 11:22:08,Grain,1.0,2021-09-20 07:31:00,harvest_record,False,263.0,,
+APU_4,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,,
+APU_5,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,,
+APU_7,2018,Grain,1.0,2018-05-11 05:10:06,Grain,,,planting_record,False,,,
+APU_7,2020,Silage,1.0,2020-05-17 05:09:17,Silage,1.0,2020-09-08 08:37:00,harvest_record,False,252.0,,
+CentralFarm_1-1,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,230.0,0.9885593437809619
+CentralFarm_1-11,2020,Silage,1.0,2020-05-16 06:34:19,Silage,1.0,2020-09-06 08:37:00,harvest_record,False,250.0,231.0,0.986395821858846
+CentralFarm_1-13,2017,Grain,1.0,2017-05-17 19:05:30,Grain,,,planting_record,False,,,
+CentralFarm_1-13,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,,
+CentralFarm_1-14A,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,,
+CentralFarm_1-14A,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,,
+CentralFarm_1-14B,2018,Silage,1.0,2018-05-26 05:06:42,Silage,,,planting_record,False,,235.0,0.6483384041759611
+CentralFarm_1-14B,2019,Grain,1.0,2019-04-29 17:44:28,Grain,1.0,2019-09-10 11:00:00,harvest_record,False,253.0,235.0,0.6483384041759611
+CentralFarm_1-14B,2021,Grain,1.0,2021-04-30 09:06:20,Grain,1.0,2021-10-04 07:51:00,harvest_record,False,277.0,235.0,0.6483384041759611
+CentralFarm_1-14C,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,,
+CentralFarm_1-14C,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,,
+CentralFarm_1-14D,2018,Silage,1.0,2018-05-26 05:06:42,Silage,,,planting_record,False,,,
+CentralFarm_1-14D,2019,Grain,1.0,2019-04-29 17:44:28,Grain,,,planting_record,False,,,
+CentralFarm_1-14E,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,,
+CentralFarm_1-15,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,238.0,0.9999607652053153
+CentralFarm_1-15,2021,,,,Grain,1.0,2021-10-20 00:00:00,harvest_record,False,293.0,238.0,0.9999607652053153
+CentralFarm_1-20A,2021,Silage,1.0,2021-05-06 15:17:05,Silage,1.0,2021-09-07 12:36:00,harvest_record,False,250.0,,
+CentralFarm_1-20B,2019,,,,Grain,1.0,2019-09-16 10:00:00,harvest_record,False,259.0,240.0,0.9993208092097523
+CentralFarm_1-20C,2019,,,,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,,
+CentralFarm_1-20C,2021,Silage,1.0,2021-05-06 15:17:05,Silage,1.0,2021-09-07 12:36:00,harvest_record,False,250.0,,
+CentralFarm_1-21,2020,Silage,1.0,2020-05-17 05:09:17,Silage,1.0,2020-09-06 08:37:00,harvest_record,False,250.0,,
+CentralFarm_1-2A,2019,Grain,1.0,2019-05-10 14:11:48,Grain,,,planting_record,False,,,
+CentralFarm_1-2B,2021,Silage,1.0,2021-05-06 15:17:05,Silage,1.0,2021-09-13 09:56:00,harvest_record,False,256.0,,
+CentralFarm_1-2C,2019,Silage,1.0,2019-05-08 14:37:15,Silage,,,planting_record,False,,,
+CentralFarm_1-2D,2021,Silage,1.0,2021-05-06 15:17:05,Silage,1.0,2021-09-13 09:56:00,harvest_record,False,256.0,243.0,0.999236602133742
+CentralFarm_1-32,2019,Silage,1.0,2019-05-09 08:45:57,Silage,1.0,2019-08-16 15:08:00,harvest_record,False,228.0,248.0,0.9994003968257871
+CentralFarm_1-33,2020,Grain,1.0,2020-05-17 05:09:17,Grain,,,planting_record,False,,249.0,0.9995188671492256
+CentralFarm_1-34,2021,,,,Grain,1.0,2021-11-05 09:25:00,harvest_record,False,309.0,251.0,0.9972722127931268
+CentralFarm_1-7,2020,Silage,1.0,2020-05-16 06:34:19,Silage,1.0,2020-09-05 08:37:00,harvest_record,False,249.0,,
+CentralFarm_1-7A,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7B,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7C,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7D,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7E,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7F,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7G,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7H,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7I,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-7J,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9,2019,Silage,1.0,2019-05-08 02:37:00,Silage,1.0,2019-08-17 00:00:00,harvest_record,False,229.0,,
+CentralFarm_1-9,2021,Grain,1.0,2021-04-29 14:28:06,Grain,1.0,2021-10-07 18:47:29,harvest_record,False,280.0,,
+CentralFarm_1-9A,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9B,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9C,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9D,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9E,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9F,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_1-9G,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+CentralFarm_2-13,2018,Grain,1.0,2018-05-11 05:10:06,Grain,,,planting_record,False,,271.0,0.9998471878940611
+CentralFarm_2-13,2019,Silage,1.0,2019-05-09 08:45:57,Silage,1.0,2019-08-19 15:08:00,harvest_record,False,231.0,271.0,0.9998471878940611
+CentralFarm_2-32A,2017,Grain,1.0,2017-05-04 06:13:31,Grain,,,planting_record,False,,278.0,0.9997326461016735
+CentralFarm_2-32A,2019,Grain,1.0,2019-04-30 09:36:50,Grain,1.0,2019-09-10 11:00:00,harvest_record,False,253.0,278.0,0.9997326461016735
+CentralFarm_2-32B,2018,Grain,1.0,2018-05-11 05:10:06,Grain,,,planting_record,False,,,
+CentralFarm_2-32C,2019,Grain,1.0,2019-06-19 09:46:39,Grain,,,planting_record,False,,,
+CentralFarm_2-32C,2021,Silage,1.0,2021-05-06 15:17:05,Silage,1.0,2021-09-07 12:36:00,harvest_record,False,250.0,,
+CentralFarm_2-37B,2021,Grain,1.0,2021-04-29 14:28:06,Grain,1.0,2021-10-28 08:15:00,harvest_record,False,301.0,,
+CentralFarm_2-39A,2018,Grain,1.0,2018-05-12 04:54:40,Grain,,,planting_record,False,,,
+CentralFarm_2-39C,2018,Grain,1.0,2018-05-12 00:00:00,Grain,,,planting_record,False,,,
+CentralFarm_2-39C,2021,Grain,1.0,2021-04-29 14:28:06,Grain,1.0,2021-10-28 08:15:00,harvest_record,False,301.0,,
+CentralFarm_2-43,2017,Grain,1.0,2017-05-17 19:05:30,Grain,,,planting_record,False,,285.0,0.9998445772440918
+CentralFarm_2-51,2018,Grain,1.0,2018-05-26 05:06:42,Grain,,,planting_record,False,,286.0,0.9950782528666626
+CentralFarm_2-51,2021,,,,Grain,1.0,2021-10-28 08:15:00,harvest_record,False,301.0,286.0,0.9950782528666626
+CentralFarm_2-66,2018,Grain,1.0,2018-05-10 06:41:45,Grain,,,planting_record,False,,288.0,0.9977232855627475
+CentralFarm_2-66,2021,Grain,1.0,2021-04-29 14:28:06,Grain,1.0,2021-10-28 08:15:00,harvest_record,False,301.0,288.0,0.9977232855627475
+CentralFarm_2-67,2018,Grain,1.0,2018-05-10 06:41:45,Grain,,,planting_record,False,,,
+CentralFarm_2-67,2021,Grain,1.0,2021-04-29 14:28:06,Grain,1.0,2021-10-28 08:15:00,harvest_record,False,301.0,,
+CentralFarm_2-68A,2018,Grain,1.0,2018-05-26 05:06:42,Grain,,,planting_record,False,,,
+CentralFarm_2-68A,2021,Silage,1.0,2021-05-04 11:46:56,Silage,,,planting_record,False,,,
+CentralFarm_2-68B,2018,Grain,1.0,2018-05-26 05:06:42,Grain,,,planting_record,False,,291.0,0.9966229095451076
+CentralFarm_2-68B,2021,Silage,1.0,2021-05-04 11:46:56,Silage,,,planting_record,False,,291.0,0.9966229095451076
+CentralFarm_2-71,2019,Grain,1.0,2019-04-25 14:08:19,Grain,1.0,2019-09-22 09:00:00,harvest_record,False,265.0,,
+CentralFarm_2-71,2020,Grain,1.0,2020-05-14 06:40:16,Grain,1.0,2020-10-19 07:57:59,harvest_record,False,293.0,,
+CentralFarm_2-71A,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-71B,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-71F,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-71H,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-72,2018,Silage,1.0,2018-05-26 05:06:00,Silage,,,planting_record,False,,,
+CentralFarm_2-72,2021,Grain,1.0,2021-04-27 17:00:58,Grain,1.0,2021-09-28 15:26:59,harvest_record,False,271.0,,
+CentralFarm_2-72A,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-72D,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-72E,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_2-72H,2017,Grain,1.0,2017-05-02 13:59:15,Grain,,,planting_record,False,,,
+CentralFarm_4-16,2017,Grain,1.0,2017-05-04 06:13:32,Grain,,,planting_record,False,,317.0,0.9871572603685118
+CentralFarm_4-16,2020,Silage,1.0,2020-05-16 06:34:19,Silage,1.0,2020-09-08 08:37:00,harvest_record,False,252.0,317.0,0.9871572603685118
+CentralFarm_4-25,2018,Silage,1.0,2018-05-25 08:26:00,Silage,,,planting_record,False,,,
+CentralFarm_4-25B,2017,Grain,1.0,2017-05-04 06:13:32,Grain,,,planting_record,False,,,
+CentralFarm_4-7,2017,Grain,1.0,2017-05-04 06:13:32,Grain,,,planting_record,False,,327.0,0.9992328209819707
+CentralFarm_4-7,2020,Silage,1.0,2020-05-16 06:34:19,Silage,1.0,2020-09-05 08:37:00,harvest_record,False,249.0,327.0,0.9992328209819707
+CentralFarm_4-7,2021,Silage,1.0,2021-05-04 11:46:56,Silage,1.0,2021-11-04 01:25:00,harvest_record,False,308.0,327.0,0.9992328209819707
+CentralFarm_4-8,2021,Silage,1.0,2021-05-04 11:46:56,Silage,1.0,2021-09-08 12:36:00,harvest_record,False,251.0,,
+CentralFarm_4-8A,2017,Grain,1.0,2017-05-04 06:13:32,Grain,,,planting_record,False,,,
+EastFarm_5-11,2018,Grain,1.0,2018-05-09 09:43:59,Grain,,,planting_record,False,,332.0,0.9775749985225328
+EastFarm_5-11,2021,Grain,1.0,2021-04-27 17:00:58,Grain,1.0,2021-09-28 15:26:59,harvest_record,False,271.0,332.0,0.9775749985225328
+EastFarm_5-12,2018,Grain,1.0,2018-05-09 09:43:59,Grain,,,planting_record,False,,334.0,0.9994503804576924
+EastFarm_5-12,2021,Grain,1.0,2021-04-27 17:00:58,Grain,1.0,2021-09-28 15:26:59,harvest_record,False,271.0,334.0,0.9994503804576924
+EastFarm_5-21,2020,Grain,1.0,2020-05-14 06:40:16,Grain,,,planting_record,False,,,
+EastFarm_5-21,2021,Grain,1.0,2021-04-28 10:34:31,Grain,1.0,2021-10-13 06:08:00,harvest_record,False,286.0,,
+EastFarm_5-23,2019,Grain,1.0,2019-04-30 09:36:50,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,348.0,0.9989580846198698
+EastFarm_5-23,2021,Grain,1.0,2021-04-28 10:34:31,Grain,1.0,2021-10-13 06:08:00,harvest_record,False,286.0,348.0,0.9989580846198698
+EastFarm_5-2A,2017,Silage,1.0,2017-05-09 18:30:53,Silage,,,planting_record,False,,382.0,0.9893814396964573
+EastFarm_5-2A,2019,Silage,1.0,2019-05-09 08:45:57,Grain,1.0,2019-09-20 09:00:00,harvest_record,True,263.0,382.0,0.9893814396964573
+EastFarm_5-2B,2017,Silage,1.0,2017-05-09 18:30:53,Silage,,,planting_record,False,,383.0,0.9915805095368599
+EastFarm_5-2B,2019,Silage,1.0,2019-05-09 08:45:57,Silage,,,planting_record,False,,383.0,0.9915805095368599
+EastFarm_5-3,2020,Grain,1.0,2020-05-19 15:40:06,Grain,,,planting_record,False,,,
+EastFarm_5-3A,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,392.0,0.9994599807279368
+EastFarm_5-3A,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,392.0,0.9994599807279368
+EastFarm_5-3B,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,393.0,0.9986952712679268
+EastFarm_5-3B,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,393.0,0.9986952712679268
+EastFarm_5-3C,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,394.0,0.9953862686933872
+EastFarm_5-3C,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,394.0,0.9953862686933872
+EastFarm_5-3D,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,395.0,0.9998288281767703
+EastFarm_5-3D,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,395.0,0.9998288281767703
+EastFarm_5-3E,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,,
+EastFarm_5-3E,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,,
+EastFarm_5-3F,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,,
+EastFarm_5-3F,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,,
+EastFarm_5-3G,2019,Grain,1.0,2019-06-08 11:14:00,Grain,1.0,2019-10-04 09:00:00,harvest_record,False,277.0,,
+EastFarm_5-3G,2020,Grain,1.0,2020-05-19 15:40:06,Grain,,,planting_record,False,,,
+EastFarm_5-3H,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,,
+EastFarm_5-3H,2019,Grain,1.0,2019-06-08 11:14:00,Grain,,,planting_record,False,,,
+EastFarm_5-3H,2020,Grain,1.0,2020-05-19 15:40:06,Grain,,,planting_record,False,,,
+EastFarm_5-42C,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,,
+EastFarm_5-45A,2017,Silage,1.0,2017-05-10 10:49:04,Silage,,,planting_record,False,,,
+EastFarm_5-45A,2019,Grain,1.0,2019-04-30 09:36:50,Grain,,,planting_record,False,,,
+EastFarm_5-45A,2021,Grain,1.0,2021-04-28 10:34:31,Grain,1.0,2021-10-13 06:08:00,harvest_record,False,286.0,,
+EastFarm_5-45C,2018,Silage,1.0,2018-06-19 00:00:00,Silage,,,planting_record,False,,,
+EastFarm_5-45D,2018,Silage,1.0,2018-05-24 17:13:43,Silage,,,planting_record,False,,,
+EastFarm_5-5,2017,Grain,1.0,2017-06-10 07:34:01,Grain,,,planting_record,False,,422.0,0.9905390372835194
+EastFarm_5-5,2019,Grain,1.0,2019-06-08 11:14:00,Grain,,,planting_record,False,,422.0,0.9905390372835194
+EastFarm_5-5,2020,Grain,1.0,2020-05-19 15:40:06,Grain,,,planting_record,False,,422.0,0.9905390372835194
+EastFarm_6-57,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,431.0,0.8682647191723225
+EastFarm_6-57,2020,Grain,1.0,2020-05-21 06:05:05,Grain,1.0,2020-10-15 07:57:59,harvest_record,False,289.0,431.0,0.8682647191723225
+EastFarm_6-58,2019,Grain,1.0,2019-05-21 06:16:07,Grain,,,planting_record,False,,,
+EastFarm_6-58,2020,Grain,1.0,2020-05-21 06:05:05,Grain,,,planting_record,False,,,
+EastFarm_6-59,2017,Grain,1.0,2017-06-13 09:38:02,Grain,,,planting_record,False,,,
+EastFarm_6-59,2018,Grain,1.0,2018-05-09 09:43:59,Grain,,,planting_record,False,,,
+EastFarm_6-59,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-09-25 09:00:00,harvest_record,False,268.0,,
+EastFarm_6-59,2020,Grain,1.0,2020-05-21 06:05:05,Grain,1.0,2020-10-18 07:57:59,harvest_record,False,292.0,,
+EastFarm_6-60,2018,Grain,1.0,2018-05-09 09:43:59,Grain,,,planting_record,False,,434.0,0.7315871685716712
+EastFarm_6-60,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-09-20 09:00:00,harvest_record,False,263.0,434.0,0.7315871685716712
+EastFarm_6-60,2020,,,,Grain,1.0,2020-10-18 07:57:59,harvest_record,False,292.0,434.0,0.7315871685716712
+EastFarm_6-62A,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-10-04 09:00:00,harvest_record,False,277.0,,
+EastFarm_6-62B,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-10-04 09:00:00,harvest_record,False,277.0,,
+EastFarm_6-64,2019,Grain,1.0,2019-05-21 06:16:07,Grain,1.0,2019-09-30 09:00:00,harvest_record,False,273.0,437.0,0.9996975190873644
+EastFarm_6-64,2020,Grain,1.0,2020-05-21 06:05:05,Grain,1.0,2020-10-18 07:57:59,harvest_record,False,292.0,437.0,0.9996975190873644
+LinkageFarm_EB-3,2019,Grain,1.0,2019-04-29 17:44:29,Grain,1.0,2019-09-19 09:00:00,harvest_record,False,262.0,,
+LinkageFarm_EB-3,2021,Grain,1.0,2021-05-07 07:01:10,Grain,1.0,2021-11-03 00:00:00,harvest_record,False,307.0,,
+NorthFarm_ND-1-A,2017,Grain,1.0,2017-07-15 14:39:00,Grain,,,planting_record,False,,,
+NorthFarm_ND-5,2021,Grain,1.0,2021-05-07 07:01:10,Grain,1.0,2021-11-16 09:00:00,harvest_record,False,320.0,548.0,0.9941172815140603
+NorthFarm_NE-3,2021,Grain,1.0,2021-05-07 07:01:10,Grain,1.0,2021-11-15 13:11:00,harvest_record,False,319.0,571.0,0.9915403804977196
+NorthFarm_NE-8,2018,Grain,1.0,2018-05-26 09:00:00,Grain,,,planting_record,False,,,
+NorthFarm_NF-1-B,2017,Grain,1.0,2017-05-16 09:30:00,Grain,,,planting_record,False,,,
+NorthFarm_NG-1-6,2017,Grain,1.0,2017-06-27 07:00:00,Grain,,,planting_record,False,,602.0,0.8090930341083472
+NorthFarm_NG-1-6,2021,Grain,1.0,2021-05-07 07:01:10,Grain,1.0,2021-11-15 13:11:00,harvest_record,False,319.0,602.0,0.8090930341083472
+SouthFarm_SD-2,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-11 09:30:00,harvest_record,False,315.0,,
+SouthFarm_SE-1-8-A,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-11 09:30:00,harvest_record,False,315.0,,
+SouthFarm_SE-9-B,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-11 09:30:00,harvest_record,False,315.0,,
+SouthFarm_SF-8&9,2018,Grain,1.0,2018-05-10 07:28:00,Grain,,,planting_record,False,,,
+SouthFarm_SG-11&12,2021,Grain,1.0,2021-06-01 08:00:00,Grain,,,planting_record,False,,,
+SouthFarm_SG-13,2021,Grain,1.0,2021-05-21 09:00:00,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SG-14-16,2017,Grain,1.0,2017-06-06 11:01:00,Grain,,,planting_record,False,,,
+SouthFarm_SG-14-16,2021,Grain,1.0,2021-06-01 08:00:00,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SG-6&7,2021,Grain,1.0,2021-05-21 09:00:00,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SH-3,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SH-4-6,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SH-7,2021,Grain,1.0,2021-05-12 16:25:19,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,
+SouthFarm_SH-8&9,2021,Grain,1.0,2021-06-01 08:00:00,Grain,1.0,2021-11-10 07:37:00,harvest_record,False,314.0,,

@@ -1,5 +1,8 @@
 # Current architecture
 
+Commands for every part (API, dashboard, one command, agent, notebook, static
+fallback) and the required citations are in [HOW_TO_RUN.md](HOW_TO_RUN.md).
+
 ```text
 Source BARC polygons + labels     Public Sentinel-2 L2A COGs
               \                  /
@@ -44,6 +47,7 @@ are separate fields.
 | `GET /api/baseline/predictions` | List of field ID, year, reference/predicted labels, probability, fold, valid dates |
 | `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using acre-weighted rates from the other years (labeled field-years only) |
 | `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
+| `GET /api/fields.geojson` | All 83 field polygons (EPSG:4326, GeoJSON) with `field_id`, farm, field, acres and `reference_<year>` labels (null = unlabeled); from `baseline/outputs/fields.geojson`; 503 if missing |
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |
 | `GET /api/quickstats?state=&year=&crop_use=&level=` | Lab QuickStats rows (domain TOTAL) from optional `QUICKSTATS_CSV`, with value, `cv_percent`, source; suppressed `(D)` values are null; 503 if unset |
@@ -92,9 +96,12 @@ field is Pending. This is a command-line step, not an API route.
 
 ## Deliberate limits
 
-There is no database, login, deployment configuration, uploaded-AOI inference,
+There is no database, login, uploaded-AOI inference,
 model-serving endpoint, or asynchronous worker. The current task needs a shared
 working foundation for existing results. Add those components when a concrete
 feature needs persistence, controlled access, deployment, or long-running jobs.
-The Vite proxy is for local development; a deployed frontend will need an API
-route/reverse proxy selected with its hosting setup.
+The Vite proxy is for local development. In production the API mounts
+`frontend/dist/` after its API routes, so the dashboard and API share one origin.
+The Dockerfile and `render.yaml` host the saved-results app; see
+[DEPLOY_RENDER.md](DEPLOY_RENDER.md). Offline training and the `harvest` CLI
+are not part of that image.

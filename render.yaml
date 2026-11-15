@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: hack-the-harvest
+    runtime: docker
+    plan: free
+    branch: main
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass

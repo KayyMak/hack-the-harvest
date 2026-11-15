@@ -1,5 +1,6 @@
 """Read saved analysis outputs without importing or running the analysis stack."""
 import csv
+import json
 import math
 import os
 import re
@@ -50,6 +51,22 @@ def _num(value: str | None) -> float | None:
     except (TypeError, ValueError):
         return None
     return None if math.isnan(number) else number
+
+
+def read_fields_geojson() -> dict:
+    """Field polygons for maps (EPSG:4326), exported by baseline/export_fields_geojson.py."""
+    try:
+        data = json.loads((OUTPUT_DIR / 'fields.geojson').read_text(encoding='utf-8'))
+        features = data['features']
+        if data.get('type') != 'FeatureCollection' or not features:
+            raise ValueError('Not a non-empty FeatureCollection')
+        for f in features:
+            if f['geometry']['type'] not in ('Polygon', 'MultiPolygon'):
+                raise ValueError('Unexpected geometry type')
+            int(f['properties']['field_id'])
+        return data
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise ArtifactUnavailable('Field polygons are missing or invalid; run baseline/export_fields_geojson.py.') from exc
 
 
 def read_fields() -> list[BarcField]:

@@ -1,0 +1,187 @@
+{
+  "signature": "4b4fdefc9e7b311888cce670b506f58eb4448835bbb11272ce8e40d50429677b",
+  "requested_fields": [
+    1,
+    24,
+    230,
+    231,
+    238,
+    248,
+    251,
+    254,
+    286,
+    288,
+    292,
+    323,
+    347,
+    348,
+    382,
+    383,
+    394,
+    397,
+    400
+  ],
+  "records": [
+    {
+      "OBJECTID": 1,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 667,
+      "clear_pixels": 32,
+      "clear_fraction": 0.047976011994003,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 230,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 1110,
+      "clear_pixels": 0,
+      "clear_fraction": 0.0,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 231,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 394,
+      "clear_pixels": 0,
+      "clear_fraction": 0.0,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 238,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 704,
+      "clear_pixels": 0,
+      "clear_fraction": 0.0,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 248,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 589,
+      "clear_pixels": 0,
+      "clear_fraction": 0.0,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 251,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 473,
+      "clear_pixels": 25,
+      "clear_fraction": 0.052854122621564484,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    },
+    {
+      "OBJECTID": 254,
+      "year": 2023,
+      "item_id": "S2A_MSIL2A_20230905T155821_R097_T18SUJ_20241104T145057",
+      "date": "2023-09-05",
+      "scene_cloud_percent": 48.921388,
+      "field_pixels": 1091,
+      "clear_pixels": 0,
+      "clear_fraction": 0.0,
+      "ndvi": null,
+      "status": "insufficient_clear_pixels",
+      "calibration": {
+        "processing_baseline": 5.1,
+        "red": {
+          "scale": 0.0001,
+          "offset": -0.1
+        },
+        "nir": {
+          "scale": 0.0001,
+          "offset": -0.1
+        }
+      }
+    }
+  ]
+}

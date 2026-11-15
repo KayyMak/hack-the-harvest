@@ -1,0 +1,23 @@
+{
+  "method": "No scene-wide cloud threshold; original per-pixel masking and acceptance unchanged; latest processing per date",
+  "total_dates": 7,
+  "read_errors": 0,
+  "recovered_dates": [
+    {
+      "field_id": 323,
+      "year": 2023,
+      "date": "2023-09-12",
+      "ndvi": 0.25823086500167847,
+      "clear_fraction": 0.6876818622696411,
+      "scene_cloud_percent": 58.974218
+    },
+    {
+      "field_id": 327,
+      "year": 2021,
+      "date": "2021-10-07",
+      "ndvi": 0.41834020614624023,
+      "clear_fraction": 0.9463087248322147,
+      "scene_cloud_percent": 50.245198
+    }
+  ]
+}

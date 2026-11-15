@@ -1,0 +1,17 @@
+{
+  "query_url": "https://quickstats.nass.usda.gov/results/ACC45317-B978-3390-B0A1-BE0EC02A9D63",
+  "download_url": "https://quickstats.nass.usda.gov/data/spreadsheet/ACC45317-B978-3390-B0A1-BE0EC02A9D63.csv",
+  "sha256": "78db6757cf3e90d03468134595b04144c74a23f5d294a8cf48250c3386576972",
+  "snapshot_file_modified_utc": "2026-11-15T00:10:18.034798+00:00",
+  "rows": 92,
+  "year": 2025,
+  "geographic_levels": [
+    "NATIONAL",
+    "STATE"
+  ],
+  "measurements": [
+    "CORN, GRAIN - ACRES HARVESTED",
+    "CORN, SILAGE - ACRES HARVESTED"
+  ],
+  "note": "Judge-provided aggregate reference totals. Not field labels or training targets. Exact scoring geography and metric not confirmed."
+}
