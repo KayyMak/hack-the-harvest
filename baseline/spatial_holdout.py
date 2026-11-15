@@ -6,8 +6,12 @@ The main results hold out fields (all years of a field together) and the submiss
 whole years. The challenge asks for a spatially separated hold-out too, because nearby fields can
 share management and imagery conditions.
 
-Holding out one farm at a time is not possible: 11 of the 12 labeled silage field-years are on
-Central Farm, so leaving it out leaves one silage example to train on. Instead, field centroids
+The submission notebook also holds out one farm at a time. That test fails for silage: 11 of the 12
+labeled silage field-years are on Central Farm, so holding it out leaves one silage example to train on
+and the model then finds none of Central Farm's silage. This script asks a narrower question: does the
+score survive when the test fields are hundreds of metres from every training field, with silage from
+Central Farm still on both sides? It tests leakage between neighbouring fields, not transfer to a new
+farm, and does not contradict the farm result. Field centroids
 (EPSG:32618) are grouped into k spatial blocks with k-means, and each block is held out in turn
 (GroupKFold over blocks). All imputation, scaling and fitting use the baseline pipeline
 (run_baseline.build_model) on the training blocks only. Every k in K is reported; none is chosen
@@ -81,7 +85,9 @@ def main():
     report = {
         'protocol': 'GroupKFold over k-means spatial blocks of field centroids (EPSG:32618); baseline pipeline; '
                     f'k in {list(K)}, all reported; seed {SEED}',
-        'why_not_leave_one_farm_out': 'Central Farm holds 11 of the 12 labeled silage field-years.',
+        'scope': ('Tests leakage between neighbouring fields, not transfer to a new farm. Leave-one-farm-out is in '
+                  'the submission notebook: holding out Central Farm (11 of 12 silage field-years) leaves one silage '
+                  'example for training and no Central Farm silage is found.'),
         'labeled_field_years_by_farm': {f: {c: int(v) for c, v in row.items()} for f, row in by_farm.iterrows()},
         'field_held_out_reference': json.loads((OUT / 'metrics.json').read_text())['logistic'],
         'results': [run(fields, table, k) for k in K],
