@@ -69,9 +69,14 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           </section>
           <section>
             <div className="rail__head">
-              <h2 className="rail__title">Biggest misses, {crop} (acres, ours vs NASS)</h2>
+              <h2 className="rail__title">How close we came, 2025</h2>
               <button className="link" onClick={() => onTable(true)}>All states</button>
             </div>
+            <ul className="closeness">
+              <li><b>{data.scores.silage.inside_95_interval} of {data.scores.silage.states}</b> silage states: NASS final inside our 95% range</li>
+              <li><b>{data.scores.grain.inside_95_interval} of {data.scores.grain.states}</b> grain states: NASS final inside our 95% range</li>
+            </ul>
+            <h3 className="rail__sub">Largest {crop} states (acres, ours vs NASS)</h3>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
           </section>
           <ScoreUpload data={data} crop={crop} />
@@ -218,7 +223,8 @@ function ConvergenceChart({ data }: { data: Forecast }) {
 
 function MissList({ rows, crop, onSelect }: { rows: StateRow[]; crop: Crop; onSelect: (s: string) => void }) {
   const misses = useMemo(
-    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => Math.abs(b[crop]!.est - b[crop]!.nass!) - Math.abs(a[crop]!.est - a[crop]!.nass!)).slice(0, 6),
+    // the states that carry the most acres (what an acre-weighted score weighs most), largest first
+    () => rows.filter((r) => r[crop]?.nass != null).sort((a, b) => b[crop]!.nass! - a[crop]!.nass!).slice(0, 5),
     [rows, crop],
   )
   return (

@@ -2277,3 +2277,47 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 @media (max-width: 900px) { .shell--states .lead, .shell--states .rail, .shell--states .sheet, .shell--states .drawer { top: auto; } }
 /* narrow laptops: headline tiles two per row so nothing is clipped */
 @media (max-width: 1180px) and (min-width: 901px) { .lead .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* the map key is only as wide as its content */
+@media (min-width: 901px) { .shell .mapkey { width: fit-content; } }
+/* fixed map chrome (desktop): the key is a fixed-width bar at bottom-left; zoom sits right beside it,
+   same place on every tab, never moved by the panels on the right */
+@media (min-width: 901px) {
+  .shell .mapkey, .shell--overview .mapkey, .shell:has(.drawer) .mapkey, .shell:has(.sheet) .mapkey {
+    left: 16px; bottom: 16px; width: 520px !important; max-width: 520px !important; box-sizing: border-box;
+  }
+  .shell .leaflet-bottom.leaflet-left { left: 548px; bottom: 16px; }
+  .shell .leaflet-bottom.leaflet-left .leaflet-control-zoom { margin: 0 !important; }
+  .shell .leaflet-control-zoom a { width: 36px !important; height: 36px !important; line-height: 36px !important; font-size: 20px !important; }
+}
+/* narrow laptops: the top bar keeps every control on one line */
+.lbl-short { display: none; }
+@media (max-width: 1180px) and (min-width: 901px) {
+  .lbl-long { display: none; } .lbl-short { display: inline; }
+  .topbar .asof__label { display: none; }
+  .views__btn { padding: 8px 7px; }
+  .topbar .seg__btn { padding: 6px 9px; }
+}
+/* (higher specificity: earlier .shell .topbar rules win otherwise) */
+.shell .topbar .lbl-short { display: none !important; }
+@media (max-width: 1180px) and (min-width: 901px) {
+  .shell .topbar .lbl-long { display: none !important; }
+  .shell .topbar .lbl-short { display: inline !important; }
+  .shell .topbar .asof__label { display: none !important; }
+}
+/* map shapes: no rectangular browser focus box on click; the white outline shows the selection */
+.leaflet-container path.leaflet-interactive:focus,
+.leaflet-container path.leaflet-interactive:focus-visible,
+.leaflet-container .leaflet-interactive:focus { outline: none !important; }
+/* 2025 rail: coverage lines + largest states */
+.closeness { list-style: none; margin: 4px 0 10px; padding: 0; display: grid; gap: 6px; font-size: 14px; color: #c7d2ce; }
+.closeness b { color: #8fd9a5; font-weight: 700; }
+.rail__sub { margin: 4px 0 2px; font-size: 13px; font-weight: 600; color: #a9b8b2; }
+:root[data-mode='light'] .closeness { color: #2c3a35; }
+:root[data-mode='light'] .closeness b { color: #1f7a3f; }
+:root[data-mode='light'] .rail__sub { color: #4a5a55; }
+/* every right-hand panel ends at the same height on every tab, just above the map credits */
+@media (min-width: 901px) {
+  .shell .rail, .shell--states .rail, .shell--overview .rail, .shell .sheet, .shell .drawer {
+    bottom: auto !important; max-height: calc(100vh - 132px) !important;
+  }
+}

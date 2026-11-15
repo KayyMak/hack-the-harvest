@@ -3,6 +3,7 @@ import type { GeoJSON as LeafletGeoJSON, Layer, PathOptions } from 'leaflet'
 import { useEffect, useMemo, useRef } from 'react'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
+import { CloseTipsOnMove, oneTipAtATime } from './mapTips'
 import type { FieldFeature, FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
 import { cdlText, classColor, noCallReason, num } from '../format'
 import { fieldLayerKey } from '../adapter'
@@ -85,6 +86,7 @@ export function MapView({ fields, preds, unlabeled, cover, seasonEnd, selectedId
   const onEachFeature = (feature: Feature, layer: Layer) => {
     const f = feature as FieldFeature
     layer.on('click', () => onSelectRef.current(f.properties.OBJECTID))
+    oneTipAtATime(layer)
     layer.bindTooltip(() => tooltipHtml(f, predsRef.current, unlabeledRef.current, coverRef.current, seasonEndRef.current), { sticky: true, className: 'field-tip', direction: 'top', offset: [0, -8] })
   }
 
@@ -92,7 +94,8 @@ export function MapView({ fields, preds, unlabeled, cover, seasonEnd, selectedId
     <section className="map-wrap" aria-label="Map of BARC fields">
       <MapContainer center={CENTER} zoom={13} zoomSnap={0.25} zoomControl={false} className="map" attributionControl>
         <TileLayer url={ESRI_IMAGERY} attribution={ESRI_ATTRIBUTION} maxZoom={19} />
-        <ZoomControl position="bottomright" />
+        <ZoomControl position="bottomleft" />
+        <CloseTipsOnMove />
         <FitToFields fields={fields} layoutKey={layoutKey} />
         <Pane name="halo" style={{ zIndex: 395 }}>
           {selected && (

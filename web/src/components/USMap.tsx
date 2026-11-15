@@ -3,6 +3,7 @@ import type { Layer, PathOptions } from 'leaflet'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { useEffect, useMemo, useRef } from 'react'
 import { GeoJSON, MapContainer, TileLayer, ZoomControl, useMap } from 'react-leaflet'
+import { CloseTipsOnMove, oneTipAtATime } from './mapTips'
 import type { Crop, StateRow } from './forecastTypes'
 import { errorColor, fmtAcres, fmtPct } from './forecastFormat'
 
@@ -47,6 +48,7 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
   const onEachFeature = (f: Feature, layer: Layer) => {
     const name = (f.properties as { name: string }).name
     layer.on('click', () => selectRef.current(name))
+    oneTipAtATime(layer)
     layer.bindTooltip(() => {
       const cell = rowsRef.current.get(name)?.[cropRef.current]
       const title = name.charAt(0) + name.slice(1).toLowerCase()
@@ -69,7 +71,8 @@ export function USMap({ shapes, rows, crop, selected, onSelect, dark, layoutKey 
     <section className="map-wrap" aria-label="Map of 2025 estimate error by state">
       <MapContainer bounds={CONUS} zoomSnap={0.25} zoomControl={false} className="map" attributionControl scrollWheelZoom>
         <TileLayer key={dark ? 'dark' : 'light'} url={dark ? BASE_DARK : BASE_LIGHT} attribution={ATTRIBUTION} maxZoom={10} />
-        <ZoomControl position="bottomright" />
+        <ZoomControl position="bottomleft" />
+        <CloseTipsOnMove />
         <FitUS layoutKey={layoutKey} />
         {shapes && <GeoJSON key={key} ref={(l) => { layerRef.current = l }} data={shapes} style={(f) => style(f as Feature)} onEachFeature={onEachFeature} />}
       </MapContainer>

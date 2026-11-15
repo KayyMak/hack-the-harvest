@@ -145,7 +145,8 @@ export default function App() {
 
   // Measure where the right-hand panels start so the map key and zoom buttons stay in the visible map.
   const shellRef = useRef<HTMLDivElement>(null)
-  const panelsOpen = `${view}-${selectedId != null}`
+  // re-measure when any right-hand panel can appear or change: tab, field drawer, 2025 data, table, state drawer
+  const panelsOpen = `${view}-${selectedId != null}-${!!byState.data}-${stateTable}-${usState ?? ''}`
   useLayoutEffect(() => {
     const shell = shellRef.current
     if (!shell) return
@@ -158,8 +159,9 @@ export default function App() {
       shell.style.setProperty('--free-right', `${freeRight}px`)
     }
     measure()
+    const raf = requestAnimationFrame(measure)  // after the panels' first layout
     window.addEventListener('resize', measure)
-    return () => window.removeEventListener('resize', measure)
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', measure) }
   }, [panelsOpen])
 
   const downloadCsv = () => {
@@ -272,14 +274,14 @@ export default function App() {
               <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
               </svg>
-              Download 2025 CSV
+              <span className="lbl-long">Download 2025 CSV</span><span className="lbl-short">CSV</span>
             </a>
           </>}
           {BARC_VIEWS.has(view) && <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
             </svg>
-            Download BARC fields CSV
+            <span className="lbl-long">Download BARC fields CSV</span><span className="lbl-short">CSV</span>
           </button>}
           {theme.id === 'glass' && <ModeToggle mode={mode} onToggle={() => setMode((m) => (m === 'dark' ? 'light' : 'dark'))} />}
         </header>
