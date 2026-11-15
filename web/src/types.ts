@@ -103,6 +103,61 @@ export interface RollupResponse {
   note?: string
 }
 
+/** GET /api/forecast_2025: `summary` is forecast/outputs/summary.json as saved (the graded output). */
+export interface ForecastStateRow {
+  state: string
+  silage: number
+  silage_low: number
+  silage_high: number
+  silage_se: number
+  /** null where NASS published no grain area for the state */
+  grain: number | null
+  grain_low: number | null
+  grain_high: number | null
+  grain_se: number | null
+}
+/** Percent errors are already percent (11.5 = 11.5%); coverage is a 0-1 fraction. */
+export interface ForecastBacktest {
+  state_years: number
+  median_abs_pct_error: number
+  mean_abs_pct_error: number
+  covered_by_95_interval: number
+  us_total?: Record<string, { est: number; truth: number; pct_error: number }>
+}
+export interface Forecast2025Summary {
+  method: string
+  answer_key_excluded: string
+  sources: Record<string, { title: string; released: string | null; url: string }>
+  backtest: { silage: ForecastBacktest; grain: ForecastBacktest }
+  /** the US total has no published grain range */
+  us: { silage: number; silage_se: number; silage_low: number; silage_high: number; grain: number; grain_se: number; grain_low?: number | null; grain_high?: number | null }
+  states: ForecastStateRow[]
+  convergence: { as_of: string; source: string }[]
+}
+export interface NassAcres {
+  silage: number | null
+  grain: number | null
+}
+/** One forecast figure next to NASS 2025 acres harvested; null comparison when NASS is unavailable. */
+export interface ForecastCrop {
+  value: number
+  low: number | null
+  high: number | null
+  nass: number | null
+  /** forecast - NASS, in acres */
+  error: number | null
+  /** error / NASS */
+  relative_error: number | null
+}
+export interface Forecast2025 {
+  summary: Forecast2025Summary
+  nass_source: string | null
+  maryland: { silage: ForecastCrop; grain: ForecastCrop }
+  us: { silage: ForecastCrop; grain: ForecastCrop }
+  /** years of the saved US backtest, e.g. ["2023", "2024"] */
+  backtest_years: string[]
+}
+
 /** GET /api/estimate_2025: `summary` is baseline/outputs/estimate_2025/summary.json as saved. */
 export interface EstimateAcres {
   silage_acres: number

@@ -1,56 +1,9 @@
-import type { Estimate2025, EstimateCrop } from '../api'
+import type { Estimate2025 } from '../api'
 import { acres, num, pct, signedAcres, signedPct } from '../format'
 import type { AsyncState } from '../hooks'
 import { Pending } from './Pending'
 
 const reasonName = (raw: string) => raw.replace(/_/g, ' ')
-
-/** Two headline cards for the Overview: our 2025 Maryland silage and grain acres next to NASS. */
-export function EstimateCards({ state }: { state: AsyncState<Estimate2025> }) {
-  if (state.error) {
-    return (
-      <section className="kpis kpis--estimate" aria-label="Maryland 2025 estimate">
-        <article className="glass kpi kpi--wide">
-          <Pending title="Maryland 2025 silage and grain acres">
-            The saved 2025 estimate is not available, so no number is shown. {state.error.message}
-          </Pending>
-        </article>
-      </section>
-    )
-  }
-  const data = state.data
-  const scored = data?.summary.sample.scored_fields
-  return (
-    <section className="kpis kpis--estimate" aria-label="Maryland 2025 estimate">
-      {(['silage', 'grain'] as const).map((crop) => {
-        const c: EstimateCrop | undefined = data?.[crop]
-        return (
-          <article className="glass kpi" key={crop}>
-            <h2 className="kpi__label">Maryland 2025 {crop} acres, model estimate</h2>
-            {!data || !c ? (
-              <div className="skeleton skeleton--chart kpi__skeleton" />
-            ) : (
-              <>
-                <div className="kpi__value">{acres(c.acres)}</div>
-                <div className="kpi__sub">
-                  95% range {acres(c.ci[0])}–{acres(c.ci[1])}, from {acres(scored ?? 0)} sampled fields
-                </div>
-                <div className="kpi__foot">
-                  NASS 2025: {acres(c.nass_acres)} <span className="kpi__err">Error {signedAcres(c.error)} acres ({signedPct(c.relative_error)})</span>
-                </div>
-                <div className="kpi__foot kpi__raw">
-                  {data.calibrated
-                    ? `Raw (uncalibrated): ${acres(c.raw.acres)}, ${signedPct(c.raw.relative_error)} vs NASS`
-                    : 'Raw (uncalibrated) estimate; calibration is unavailable for this run.'}
-                </div>
-              </>
-            )}
-          </article>
-        )
-      })}
-    </section>
-  )
-}
 
 /** Model quality section: how the 2025 Maryland estimate was made and how it compares with NASS. */
 export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }) {

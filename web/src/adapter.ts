@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse } from './types'
+import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, Forecast2025, Forecast2025Summary, ForecastCrop, NassAcres } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -193,4 +193,39 @@ export function adaptEstimate2025(data: SavedEstimate2025): Estimate2025 {
     ...crop(name, shown, errors), nass_acres: s.nass_2025[`${name}_acres`], raw: crop(name, s.raw, s.benchmark?.raw),
   })
   return { summary: s, benchmark: data.benchmark ?? null, calibrated: s.calibrated != null, silage: both('silage'), grain: both('grain') }
+}
+
+export interface SavedForecast2025 {
+  summary: Forecast2025Summary
+  nass_2025: { source: string; maryland: NassAcres; us: NassAcres } | null
+}
+
+function forecastCrop(value: number | null | undefined, low: number | null | undefined, high: number | null | undefined, nass: number | null | undefined): ForecastCrop {
+  if (!finite(value)) throw new Error('The saved 2025 forecast is incomplete.')
+  const ref = finite(nass) && (nass as number) > 0 ? (nass as number) : null
+  const v = value as number
+  return {
+    value: v, low: finite(low) ? (low as number) : null, high: finite(high) ? (high as number) : null,
+    nass: ref, error: ref == null ? null : v - ref, relative_error: ref == null ? null : (v - ref) / ref,
+  }
+}
+
+/** The graded 2025 forecast for Maryland and the US, next to NASS 2025 acres when they could be read. */
+export function adaptForecast2025(data: SavedForecast2025): Forecast2025 {
+  const s = data?.summary
+  const md = s?.states?.find((row) => row.state === 'MARYLAND')
+  if (!s || !md || !s.us) throw new Error('The saved 2025 forecast has no Maryland row.')
+  const nass = data.nass_2025
+  return {
+    summary: s, nass_source: nass?.source ?? null,
+    maryland: {
+      silage: forecastCrop(md.silage, md.silage_low, md.silage_high, nass?.maryland.silage),
+      grain: forecastCrop(md.grain, md.grain_low, md.grain_high, nass?.maryland.grain),
+    },
+    us: {
+      silage: forecastCrop(s.us.silage, s.us.silage_low, s.us.silage_high, nass?.us.silage),
+      grain: forecastCrop(s.us.grain, s.us.grain_low, s.us.grain_high, nass?.us.grain),
+    },
+    backtest_years: Object.keys(s.backtest?.silage?.us_total ?? {}).sort(),
+  }
 }

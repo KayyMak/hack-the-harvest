@@ -1879,11 +1879,11 @@ textarea {
 :root[data-theme='glass'][data-mode='light'] .acres-conv .seg__btn { color: #3b4a44; }
 :root[data-theme='glass'][data-mode='light'] .acres-conv .seg__btn.is-on { background: #12261f; color: #f3f8f5; }
 
-/* ---------- 2025 Maryland estimate: headline cards + model quality section ---------- */
-.lead .kpis--estimate { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+/* ---------- 2025 forecast headline cards + 2025 model quality sections ---------- */
+.lead .kpis--headline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kpi--wide { grid-column: 1 / -1; }
 .kpi__err { display: inline-block; margin-left: 10px; color: #e8eeeb; font-weight: 600; }
-.kpi__raw { margin-top: 2px; }
+.kpi__note { margin-top: 2px; }
 .kpi__skeleton { height: 96px; margin-top: 8px; }
 .est__text { margin: 10px 0 0; font-size: 15px; line-height: 1.55; }
 .est__scroll { overflow-x: auto; }
@@ -1892,16 +1892,19 @@ textarea {
 .est .mini-table td:first-child { min-width: 150px; }
 .est .est__facts .num { white-space: normal; }
 .est__headline td { font-weight: 600; }
+.est__sm-only { display: none; }
 .est__list { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; }
 .est__list li + li { margin-top: 6px; }
 .est a { color: #8fcdf2; overflow-wrap: anywhere; }
 .est .muted.small { margin: 10px 0 0; }
 @media (max-width: 900px) {
-  .lead .kpis--estimate { grid-template-columns: minmax(0, 1fr); }
+  .lead .kpis--headline { grid-template-columns: minmax(0, 1fr); }
   .est .mini-table { font-size: 13px; }
   .est .mini-table th, .est .mini-table td { padding: 6px 4px; }
   .est .mini-table td:first-child { min-width: 0; }
   .est__pct { display: block; }
+  .est .est__lg-only { display: none; }
+  .est .est__sm-only { display: block; }
   .est .mini-table .est__range, .est .mini-table th.num { white-space: normal; }
   .est .mini-table th, .est .mini-table td { padding: 6px 3px; }
 }

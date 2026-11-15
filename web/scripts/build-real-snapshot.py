@@ -14,6 +14,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
   baseline/outputs/estimate_2025/summary.json (+ benchmark.json) -> estimate_2025.json (2025 Maryland estimate)
+  forecast/outputs/summary.json (+ data/reference NASS 2025 acres) -> forecast_2025.json (graded 2025 forecast)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -308,6 +309,15 @@ def main() -> None:
         })
     else:  # not generated yet: the dashboard shows a pending slot instead
         print(f"skipped estimate_2025.json ({edir / 'summary.json'} not found)")
+
+    # ---- graded 2025 forecast: the backend's own reader, so the snapshot matches GET /api/forecast_2025 ----
+    try:
+        import sys
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app.artifacts import read_forecast_2025
+        write('forecast_2025', read_forecast_2025().model_dump(mode='json', exclude_unset=True))
+    except Exception as exc:  # missing forecast or backend deps: the dashboard shows a pending slot instead
+        print(f'skipped forecast_2025.json ({exc})')
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -166,4 +166,44 @@ test('a missing or incomplete 2025 estimate rejects instead of showing numbers',
   const noRange = estimateSummary()
   delete noRange.raw.grain_acres_95ci
   assert.throws(() => adaptEstimate2025({ summary: noRange, benchmark: null }), /incomplete/)
+})
+
+const forecast = JSON.parse(readFileSync(new URL('../../forecast/outputs/summary.json', import.meta.url), 'utf8'))
+// Synthetic reference values for shape checks only; real NASS values are read by the backend.
+const nassFixture = { source: 'synthetic', maryland: { silage: 50000, grain: 400000 }, us: { silage: 6000000, grain: null } }
+
+test('2025 forecast comes from /api/forecast_2025 and picks the Maryland and US rows', async (t) => {
+  const calls = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url)
+    return Response.json({ summary: forecast, nass_2025: nassFixture })
+  })
+  const result = await api.forecast2025()
+  assert.deepEqual(calls, ['/api/forecast_2025'])
+  const md = forecast.states.find((s) => s.state === 'MARYLAND')
+  assert.equal(result.maryland.silage.value, md.silage)
+  assert.deepEqual([result.maryland.silage.low, result.maryland.silage.high], [md.silage_low, md.silage_high])
+  assert.equal(result.maryland.silage.error, md.silage - 50000)
+  assert.equal(result.maryland.silage.relative_error, (md.silage - 50000) / 50000)
+  assert.equal(result.maryland.grain.value, md.grain)
+  assert.equal(result.us.silage.value, forecast.us.silage)
+  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [null, null, null], 'no US grain range or NASS: nothing invented')
+  assert.deepEqual(result.backtest_years, Object.keys(forecast.backtest.silage.us_total).sort())
+})
+
+test('without NASS reference acres the forecast still shows but no error is computed', () => {
+  const result = adaptForecast2025({ summary: forecast, nass_2025: null })
+  assert.equal(result.nass_source, null)
+  for (const c of [result.maryland.silage, result.maryland.grain]) {
+    assert.deepEqual([c.nass, c.error, c.relative_error], [null, null, null])
+    assert.ok(c.value > 0)
+  }
+})
+
+test('a missing forecast or one without Maryland rejects instead of showing numbers', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('{"detail":"missing"}', { status: 503 }))
+  await assert.rejects(api.forecast2025(), (error) => error.status === 503 && /forecast_2025/.test(error.message))
+  const noMaryland = { ...forecast, states: forecast.states.filter((s) => s.state !== 'MARYLAND') }
+  assert.throws(() => adaptForecast2025({ summary: noMaryland, nass_2025: nassFixture }), /no Maryland row/)
+  assert.throws(() => adaptForecast2025({}), /no Maryland row/)
 })

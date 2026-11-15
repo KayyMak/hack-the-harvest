@@ -12,6 +12,7 @@ import type {
   AgentTraceResponse,
   ConvergenceAcres,
   Estimate2025,
+  Forecast2025,
   EvaluateResponse,
   FieldsResponse,
   Pred,
@@ -19,8 +20,8 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
-import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
-import type { SavedAsOf, SavedEstimate2025, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
+import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptFields, adaptForecast2025, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
+import type { SavedAsOf, SavedEstimate2025, SavedFields, SavedForecast2025, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
 
 export * from './types.ts'
 
@@ -106,6 +107,14 @@ export const api = {
    * 2025 Maryland silage and grain acres: a model estimate from a sample of corn fields, next to
    * NASS survey acres harvested. Live: /api/estimate_2025; snapshot: estimate_2025.json (same shape).
    */
+  /**
+   * The graded 2025 forecast (from NASS reports published before January 2026), with NASS 2025
+   * acres for comparison. Live: /api/forecast_2025; snapshot: forecast_2025.json (same shape).
+   */
+  forecast2025: (): Promise<Forecast2025> =>
+    (STATIC ? fromSnapshot<SavedForecast2025>('forecast_2025') : getJson<SavedForecast2025>(`${API_URL}/api/forecast_2025`))
+      .then(adaptForecast2025),
+
   estimate2025: (): Promise<Estimate2025> =>
     (STATIC ? fromSnapshot<SavedEstimate2025>('estimate_2025') : getJson<SavedEstimate2025>(`${API_URL}/api/estimate_2025`))
       .then(adaptEstimate2025),
