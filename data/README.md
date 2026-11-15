@@ -1,3 +1,16 @@
+# Additional data sources
+
+## Candidate field boundaries: USDA Crop Sequence Boundaries
+
+The [fiboa USDA cropland collection](https://source.coop/fiboa/us-usda-cropland)
+is a candidate source of field boundaries and crop codes for the contiguous US.
+Corn crop codes do not distinguish corn harvested for silage from corn harvested
+for grain, so these boundaries cannot supply harvest-type training labels.
+
+This collection has not been integrated into the baseline. No CSB download script
+is included in this repository; consult the source collection for downloads,
+year coverage, metadata, and license details before using it.
+
 # Extra BARC silage/grain labels (Kraatz 2023)
 
 [`kraatz_labels.csv`](../kraatz_labels.csv) adds field-level corn harvest-type labels for BARC (Beltsville, MD)
