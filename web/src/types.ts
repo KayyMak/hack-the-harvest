@@ -169,6 +169,8 @@ export interface ConvergenceAcresPoint {
   cv_percent: number | null
   predicted_silage_acres: number
   reference_silage_acres: number
+  total_acres: number
+  missing_acres_field_years: number
 }
 export interface ConvergenceAcres {
   scope: string

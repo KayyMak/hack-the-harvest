@@ -277,8 +277,13 @@ def main() -> None:
     has_acres_convergence = False
     try:
         sys.path.insert(0, str(ROOT / 'backend'))
-        from app.artifacts import compute_convergence  # needs backend requirements installed
-        write('convergence_acres', json.loads(compute_convergence().model_dump_json()))
+        from app import artifacts  # needs the backend's pydantic dependency installed
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE
+            write('convergence_acres', json.loads(artifacts.compute_convergence().model_dump_json()))
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
         has_acres_convergence = True
     except Exception as exc:  # explicit, never a silent substitute
         print(f'convergence_acres.json NOT written: {exc}')
