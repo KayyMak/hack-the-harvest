@@ -23,15 +23,18 @@ import { useAsync } from './hooks'
 import { THEMES, ThemeContext, applyTheme, modeById, themeById, withMode } from './theme'
 import type { Mode } from './theme'
 
+// Number keys 1–6 follow this order; the graded 2025 answer is the landing view.
 const VIEWS = [
-  { id: 'overview', label: 'Overview' },
   { id: 'states', label: '2025 by state' },
+  { id: 'overview', label: 'BARC validation' },
   { id: 'fields', label: 'Fields' },
   { id: 'quality', label: 'Model quality' },
   { id: 'agent', label: 'Agent' },
   { id: 'market', label: 'Market' },
 ] as const
 type ViewId = (typeof VIEWS)[number]['id']
+/** Views driven by the BARC As-of date and Year controls; on the others those controls have no effect. */
+const BARC_VIEWS: ReadonlySet<ViewId> = new Set(['overview', 'fields', 'quality'])
 
 const SHOW_DESIGN = new URLSearchParams(window.location.search).has('design')
 const LIVE_YEARS = [2021, 2022, 2023]
@@ -64,7 +67,7 @@ export default function App() {
   const [year, setYear] = useState(2022)
   const [asOfIdx, setAsOfIdx] = useState(2) // Oct 12, the demo date
   const [selectedId, setSelectedId] = useState<number | null>(null)
-  const [view, setView] = useState<ViewId>('overview')
+  const [view, setView] = useState<ViewId>('states')
   const [crop, setCrop] = useState<Crop>('silage')
   const [usState, setUsState] = useState<string | null>(null)
   const [stateTable, setStateTable] = useState(false)
@@ -162,7 +165,7 @@ export default function App() {
     URL.revokeObjectURL(url)
   }
 
-  // Presenter shortcuts: 1–5 switch views, ←/→ step the as-of date, Esc closes a field.
+  // Presenter shortcuts: 1–6 switch views (in tab order), ←/→ step the as-of date, Esc closes a field.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const el = e.target as HTMLElement
@@ -217,7 +220,8 @@ export default function App() {
             ))}
           </nav>
           <div className="topbar__spacer" />
-          <div className="asof" role="group" aria-label="As-of date" hidden={view === 'states'}>
+          {BARC_VIEWS.has(view) && <>
+          <div className="asof" role="group" aria-label="As-of date">
             <span className="asof__label">{seasonEnd ? 'Calls' : 'As of'}</span>
             {seasonEnd ? (
               <span className="season-pill" title="Mid-season calls are pending">End of season {year}</span>
@@ -241,6 +245,7 @@ export default function App() {
               ))}
             </select>
           </label>
+          </>}
           {SHOW_DESIGN && (
             <label className="yearpick">
               Design
@@ -268,7 +273,6 @@ export default function App() {
             asOf={asOf}
             counts={counts}
             rollup={rollup.data}
-            forecast={forecast}
             unlabeled={unlabeled.data}
             unlabeledError={unlabeled.error}
             unlabeledAtSeasonEnd={atSeasonEnd}
