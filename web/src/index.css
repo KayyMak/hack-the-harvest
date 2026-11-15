@@ -2224,3 +2224,50 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 }
 
 .nowrap { white-space: nowrap; }
+
+/* ---------- final pass: crop toggle, all-states table ---------- */
+.statecrop { display: flex; gap: 4px; padding: 5px; border-radius: 14px; background: rgba(8, 16, 14, 0.78); border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35); }
+.statecrop .seg__btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 20px; border: 0; border-radius: 10px; background: transparent; color: #c9d6d1; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.statecrop .seg__btn + .seg__btn { border-left: 0; }
+.statecrop .seg__btn:hover { background: rgba(255, 255, 255, 0.07); color: #fff; }
+.statecrop .seg__btn.is-on { background: #eef3f1; color: #0d1715; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3); }
+.dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.dot--silage { background: #5cbf7a; }
+.dot--grain { background: #e2a43a; }
+:root[data-mode='light'] .statecrop { background: rgba(255, 255, 255, 0.9); border-color: rgba(13, 23, 21, 0.12); box-shadow: 0 6px 18px rgba(13, 23, 21, 0.12); }
+:root[data-mode='light'] .statecrop .seg__btn { color: #3b4a45; }
+:root[data-mode='light'] .statecrop .seg__btn:hover { background: rgba(13, 23, 21, 0.06); color: #0d1715; }
+:root[data-mode='light'] .statecrop .seg__btn.is-on { background: #0d1715; color: #fff; }
+
+.sheet__actions { display: flex; gap: 8px; flex: none; }
+.sheet:has(.ftable--states) { display: flex; flex-direction: column; overflow: hidden; padding-bottom: 20px; }
+.sheet:has(.ftable--states) .sheet__lede { margin-bottom: 12px; font-size: 14px; }
+.ftable--states { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
+.ftable--states .ftable__scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+.ftable--states table { font-size: 14px; font-variant-numeric: tabular-nums; }
+.ftable--states th { z-index: 2; }
+.ftable--states .ftable__groups th { top: 0; height: 30px; padding: 6px 10px 0; text-align: left; font-size: 13px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; color: #e8eeeb; border-bottom: 0; }
+.ftable--states .ftable__groups .grp { border-left: 1px solid rgba(255, 255, 255, 0.1); }
+.ftable--states .ftable__groups .grp .dot { margin-right: 8px; vertical-align: 0; }
+.ftable--states .ftable__groups .grp--silage { box-shadow: inset 0 3px 0 #5cbf7a; }
+.ftable--states .ftable__groups .grp--grain { box-shadow: inset 0 3px 0 #e2a43a; }
+.ftable--states .ftable__cols th { top: 30px; }
+.ftable--states th button, .ftable--states .th__plain { padding: 6px 10px 8px; display: inline-flex; }
+.ftable--states td { padding: 7px 10px; white-space: nowrap; }
+.ftable--states .grp-start { border-left: 1px solid rgba(255, 255, 255, 0.08); }
+.ftable--states .ftable__nass { color: #a9b8b2; }
+.ftable--states tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.025); }
+.ftable--states tbody tr:hover { background: rgba(143, 205, 242, 0.08); }
+.ftable--states .ftable__state .link { font-weight: 600; }
+.ftable__flag { color: #ffb4a6; }
+:root[data-mode='light'] .ftable--states .ftable__groups th { color: #0d1715; }
+:root[data-mode='light'] .ftable--states .ftable__nass { color: #4a5a55; }
+:root[data-mode='light'] .ftable--states tbody tr:nth-child(even) { background: rgba(13, 23, 21, 0.03); }
+:root[data-mode='light'] .ftable--states .grp-start, :root[data-mode='light'] .ftable--states .ftable__groups .grp { border-left-color: rgba(13, 23, 21, 0.1); }
+/* the table sheet takes the right side: the headline cards keep the left, two per row */
+.shell:has(.sheet) .lead { right: calc(min(780px, 56vw - 16px) + 32px); }
+.shell:has(.sheet) .lead .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (max-width: 900px) { .shell:has(.sheet) .lead { right: auto; } .sheet:has(.ftable--states) { overflow: visible; } }
+/* selects never run their text under the chevron */
+.yearpick select { padding-right: 34px !important; text-overflow: ellipsis; }
+:root[data-mode='light'] .ftable__flag { color: #b3261e; }
