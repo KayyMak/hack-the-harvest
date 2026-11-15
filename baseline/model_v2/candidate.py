@@ -33,7 +33,8 @@ HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
 import run_baseline as rb  # noqa: E402
-from features import BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, build_table, daily_series, timing_features  # noqa: E402
+from features import (BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, base_features, build_table,  # noqa: E402
+                      daily_series, timing_features)
 from experiment import BY_NAME, REFERENCE_SEED, fit, heldout  # noqa: E402
 
 SPEC = BY_NAME['H']
@@ -83,6 +84,29 @@ def build_model():
     return CandidateModel()
 
 
+YIELD_CONFIRMED_GRAIN_2021 = [22, 23, 234, 235, 602]
+
+
+def yield_confirmed_check(table, y, final):
+    """Post-selection evidence only (never used for selection or training): the five unlabeled
+    2021 corn field-years that the 2021 combine yield coverage marks as grain. Features come from
+    their committed per-scene caches. Reports A at 0.5, G (A's probability at the training
+    prevalence), and H."""
+    import json as _json
+    current = rb.build_model().fit(table[rb.FEATURES], y)
+    out = []
+    for f in YIELD_CONFIRMED_GRAIN_2021:
+        path = HERE.parent / 'cache_unlabeled' / f'{f}_2021.json'
+        obs = _json.loads(path.read_text())['observations']
+        row = pd.DataFrame([{**base_features(daily_series(obs)), **timing_from_observations(obs)}])
+        pa, ph = current.predict_proba(row[rb.FEATURES])[0, 1], final.predict_proba(row[FEATURES])[0, 1]
+        out.append(dict(OBJECTID=f, year=2021, evidence='2021 combine yield coverage: grain',
+                        A_probability=float(pa), A_call='Silage' if pa >= 0.5 else 'Grain',
+                        G_call='Silage' if pa >= y.mean() else 'Grain',
+                        H_probability=float(ph), H_call='Silage' if ph >= 0.5 else 'Grain'))
+    return dict(G_threshold=float(y.mean()), rows=out)
+
+
 def main():
     rb.verify_originals()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -109,7 +133,8 @@ def main():
                   full_fit=dict(C=final.C_, **final.coefficients()),
                   changed_calls_vs_baseline=[dict(OBJECTID=int(r.OBJECTID), year=int(r.year), label=r.label,
                       baseline=b, candidate=c) for r, b, c in zip(saved.itertuples(), saved.predicted_label,
-                      out.predicted_label) if b != c])
+                      out.predicted_label) if b != c],
+                  post_selection_yield_confirmed_grain=yield_confirmed_check(table, y, final))
     (OUT / 'candidate_metrics.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
     print(json.dumps({k: report[k] for k in ['C_by_fold', 'full_fit', 'changed_calls_vs_baseline']}, indent=2))
     print({k: report['heldout_seed42'][k] for k in ['balanced_accuracy', 'silage_recall', 'silage_precision',

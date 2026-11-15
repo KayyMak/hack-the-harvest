@@ -272,6 +272,13 @@ def main():
     nested_brier = np.array([n[1]['brier_score'] for n in nested])
     pick_counts = pd.Series([p for n in nested for p in n[2]]).value_counts().to_dict()
     best_apparent = max(summary[n]['mean']['balanced_accuracy'] for n in summary)
+    a_ba = np.array([per_seed[s]['A']['score']['balanced_accuracy'] for s in SELECTION_SEEDS])
+    nested_diff = nested_ba - a_ba
+    pairwise = {f'{x}-{z}': dict(mean=float(d.mean()), sd=float(d.std(ddof=1)), better=int((d > 1e-12).sum()),
+                                 worse=int((d < -1e-12).sum()))
+                for x, z in [('H', 'G'), ('H', 'C'), ('H', 'D'), ('G', 'B')]
+                for d in [np.array([per_seed[s][x]['score']['balanced_accuracy'] -
+                                    per_seed[s][z]['score']['balanced_accuracy'] for s in SELECTION_SEEDS])]}
 
     # Sensitivity only: 327/2021 removed from training and scoring.
     keep = ~((table.OBJECTID == SUSPECT[0]) & (table.year == SUSPECT[1]))
@@ -312,7 +319,12 @@ def main():
                       nested_selection_mean_brier=float(nested_brier.mean()),
                       current_A_mean_ba=summary['A']['mean']['balanced_accuracy'],
                       estimated_optimism=float(best_apparent - nested_ba.mean()),
+                      nested_ba_by_seed=dict(zip(SELECTION_SEEDS, map(float, nested_ba))),
+                      nested_minus_A=dict(mean=float(nested_diff.mean()), sd=float(nested_diff.std(ddof=1)),
+                                          better=int((nested_diff > 1e-12).sum()),
+                                          worse=int((nested_diff < -1e-12).sum())),
                       inner_pick_counts=pick_counts),
+        pairwise_ba_diff=pairwise,
         sensitivity_excl_327_2021=dict(note='Sensitivity only; never used for selection. Folds differ.',
                                        n=int(len(t2)), summary=summary2,
                                        seed42={n: ref2[n]['score'] for n in ref2}),
@@ -334,6 +346,8 @@ def main():
     print('excl 327:', {n: round(d['mean']['balanced_accuracy'], 3) for n, d in summary2.items()})
     print('excl 327 dBA:', {n: round(d['paired_diff_vs_A_mean']['balanced_accuracy'], 3) for n, d in summary2.items()})
     print('bootstrap:', report['posthoc_field_bootstrap_vs_A'])
+    print('nested - A:', report['optimism']['nested_minus_A'])
+    print('pairwise:', pairwise)
     rb.verify_originals()
 
 

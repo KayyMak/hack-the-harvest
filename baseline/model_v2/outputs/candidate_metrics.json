@@ -144,5 +144,60 @@
       "baseline": "Grain",
       "candidate": "Silage"
     }
-  ]
+  ],
+  "post_selection_yield_confirmed_grain": {
+    "G_threshold": 0.2727272727272727,
+    "rows": [
+      {
+        "OBJECTID": 22,
+        "year": 2021,
+        "evidence": "2021 combine yield coverage: grain",
+        "A_probability": 0.426756622175966,
+        "A_call": "Grain",
+        "G_call": "Silage",
+        "H_probability": 0.14476805217620164,
+        "H_call": "Grain"
+      },
+      {
+        "OBJECTID": 23,
+        "year": 2021,
+        "evidence": "2021 combine yield coverage: grain",
+        "A_probability": 0.49326095828251204,
+        "A_call": "Grain",
+        "G_call": "Silage",
+        "H_probability": 0.21139278433426736,
+        "H_call": "Grain"
+      },
+      {
+        "OBJECTID": 234,
+        "year": 2021,
+        "evidence": "2021 combine yield coverage: grain",
+        "A_probability": 0.21084419567856388,
+        "A_call": "Grain",
+        "G_call": "Grain",
+        "H_probability": 0.0674876102387875,
+        "H_call": "Grain"
+      },
+      {
+        "OBJECTID": 235,
+        "year": 2021,
+        "evidence": "2021 combine yield coverage: grain",
+        "A_probability": 0.20798348989059548,
+        "A_call": "Grain",
+        "G_call": "Grain",
+        "H_probability": 0.07082301772305812,
+        "H_call": "Grain"
+      },
+      {
+        "OBJECTID": 602,
+        "year": 2021,
+        "evidence": "2021 combine yield coverage: grain",
+        "A_probability": 0.03941245313643543,
+        "A_call": "Grain",
+        "G_call": "Grain",
+        "H_probability": 0.03148472061891857,
+        "H_call": "Grain"
+      }
+    ]
+  }
 }

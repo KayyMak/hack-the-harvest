@@ -91,19 +91,22 @@ scores BA 0.5. One silage row is worth 0.042 BA; one grain row 0.016.
 
 - Brier guard (mean Brier <= 0.083 + 0.01): E fails (0.118); B, C, D, F, G, H pass.
 - Winner: **H** (highest mean BA, 0.925). Paired ΔBA +0.123 vs a seed-to-seed sd of 0.040, so it
-  clears the bar; ΔBrier -0.0215 (better calibrated, not worse). **H counts as better than A.**
-- Two simpler changes also clear the bar and are worth knowing: G (same model, threshold at the
-  training silage prevalence, about 0.27; Brier unchanged by construction) gives +0.102, and C
-  (timing features, ordinary L2) gives +0.098 with better Brier. The common thread: the current
-  model's 0.5 threshold is too high for a 27% class, and the timing features add real signal.
+  clears the bar; ΔBrier -0.0215 (lower Brier, not worse). **H counts as better than A.**
+- B, C, D and G also clear the bar. **The data cannot order H against C, D or G**: paired H-G
+  +0.021 ± 0.020 (H better in 17 seeds, worse in 3), H-C +0.025 ± 0.034 (13/3), H-D +0.017 ±
+  0.020 (17/3), each less than one silage row (0.042). The rule picks H; the ranking among the
+  top four is not supported. The common thread: the current 0.5 threshold is too high for a 27%
+  class (B, G), and the timing features appear to help (C, D, H), though every bootstrap
+  interval below reaches or crosses zero.
 
 ### How much of this is optimism
 
 - **Selection optimism.** Running the whole selection rule inside each outer training fold
   (inner grouped CV over all 8 candidates, pick by the same rule, score the pick on the outer
   test fold) gives a mean BA of **0.869 ± 0.054** (Brier 0.079) over seeds 0-19, versus the
-  winner's apparent 0.925: estimated optimism **0.056**. The honest expectation for "pick the
-  best of these 8 the same way" is therefore about 0.87, still about +0.07 over A (0.803).
+  winner's apparent 0.925: estimated optimism **0.056**. Paired against A on the same seeds,
+  the selection-corrected procedure gains **+0.067 ± 0.057** (better in 16 seeds, worse in 2):
+  the mean exceeds the sd, so the gain survives selection under the same bar, but only just.
   The inner rule picked H in 31 of 100 outer folds, C 22, D 18, A 8, others fewer.
 - **Row-sampling uncertainty (post hoc, added after scores were seen).** The seed sd only
   measures split noise on the same 44 rows, so the pre-registered bar is lenient. A field-level
@@ -128,9 +131,26 @@ scores BA 0.5. One silage row is worth 0.042 BA; one grain row 0.016.
 | G | 0.952 ± 0.030 | 0.986 ± 0.061 | 0.054 | +0.091 ± 0.045 | +0.0000 |
 | H | 0.968 ± 0.031 | 0.968 ± 0.044 | 0.024 | +0.107 ± 0.046 | -0.0300 |
 
-The ranking and the size of the gain over A do not depend on 327/2021. Every model calls
-327/2021 Grain in every seed (H's probability about 0.00), consistent with the yield evidence
-that its label is wrong; it stays Silage in the data.
+The size of the gain over A does not depend on 327/2021 (D and H swap first place here). All
+eight candidates call 327/2021 Grain in all 20 seeds (`row_calls.csv`; H's probability about
+0.00), consistent with the yield evidence that its label is wrong; it stays Silage in the data.
+
+### Post-selection check: yield-confirmed grain (never used for selection or training)
+
+The five unlabeled 2021 corn field-years that the 2021 combine yield coverage marks as grain,
+scored by models fitted on all 44 rows, features from their committed per-scene caches
+(`candidate_metrics.json`):
+
+| Field | A probability (call at 0.5) | G call (threshold 0.273) | H probability (call) |
+| --- | ---: | --- | ---: |
+| 22/2021 | 0.427 (Grain) | **Silage** | 0.145 (Grain) |
+| 23/2021 | 0.493 (Grain) | **Silage** | 0.211 (Grain) |
+| 234/2021 | 0.211 (Grain) | Grain | 0.067 (Grain) |
+| 235/2021 | 0.208 (Grain) | Grain | 0.071 (Grain) |
+| 602/2021 | 0.039 (Grain) | Grain | 0.031 (Grain) |
+
+H calls all five Grain with lower probabilities than A; G would call two of them Silage. Five
+rows from one year; supporting evidence only.
 
 ### What H changes, in plain words
 
@@ -160,6 +180,10 @@ Brier 0.065 (A: 7/12, 7/8, 0.776, 0.083).
 - H relies on **November** NDVI and a full-season series. It cannot be used as-is for as-of
   dates before Nov 30; the Jul-Oct candidate (E) was worse and failed the Brier guard.
 - The selection bar (seed sd) understates uncertainty; the bootstrap interval touches zero.
+- `drop_size` is the largest change between consecutive clear looks, so it grows with the gap
+  between them. BARC fields share scenes and cloud gaps within a year; the 2025 statewide
+  sample will not, so this feature may shift there.
+- The four newly caught silage field-years are all 2022-2023; 2022 has only 7 labeled rows.
 - All 8 candidates were run once; no candidate was added or changed after scores were seen.
   The bootstrap is the only post hoc addition and was not used for selection.
 
@@ -176,8 +200,9 @@ CV), unlike `run_baseline.build_model()`; `predict_proba` is sklearn-shaped. To 
 2. `baseline/export_contributions.py` (reads `logit.coef_`; works per fold but must pass groups).
 3. `harvest/asof.py` hard-codes the baseline pipeline, `>= 0.5`, and month-only features. Before
    Nov 30 it should keep the current month-feature refit (H needs November); from Nov 30 it reads
-   the saved predictions. Then `python -m harvest.export_asof` regenerates `asof.json`, and the
-   rollup that reads it.
+   the saved predictions. Then `python -m harvest.export_asof` regenerates `asof.json`. The
+   rollup (`backend/app/artifacts.py` `compute_rollup`) is computed per request from the saved
+   predictions, so it follows automatically; its backend tests need rerunning.
 4. `baseline/unlabeled_calls.py predict` calls `rb.build_model().fit(X, y)`; timing features
    for blank field-years come from the per-scene observations in `baseline/cache_unlabeled/`.
 5. The 2025 satellite estimate (`baseline/estimate_2025/estimate.py` on role/estimate-2025)
@@ -187,7 +212,10 @@ CV), unlike `run_baseline.build_model()`; `predict_proba` is sklearn-shaped. To 
    `inspect_field_cases.py`, `export_chips.py`, the backend artifact tests
    (`backend/tests`), and `scripts/smoke_test.py` should be rerun.
 
-Lowest-risk alternative if the full swap is too much before the deadline: G changes only the
+Smallest code change, if the full swap is too much before the deadline: G changes only the
 decision threshold (to the training silage prevalence) and keeps every probability, coefficient,
 and Brier score identical; it needs a threshold change in `run_baseline.evaluate`,
-`harvest/asof.py`, and the unlabeled/2025 callers.
+`harvest/asof.py`, and the unlabeled/2025 callers. It is lowest-risk for code only: at seed 42
+it goes from 1 to 4 false silage calls (15 silage calls for 12 true), and it would call two of
+the five yield-confirmed grain fields Silage. Acreage totals built from probabilities
+(`bernoulli(p, acres)`) do not change under G; only the hard calls do.
