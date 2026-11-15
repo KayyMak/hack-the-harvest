@@ -84,6 +84,7 @@ test('live client uses existing /api routes and the published response shapes', 
       '/api/baseline/summary': metrics,
       '/api/baseline/predictions': [{ field_id: 327, year: 2021, predicted_label: 'Grain', silage_probability: 0.01 }],
       '/api/baseline/asof': asof,
+      '/api/baseline/convergence': { scope: 'Labeled BARC field-years only', method: 'm', years: [{ year: 2022, points: [] }] },
       '/api/baseline/rollup': { scope: 's', years: [{ year: 2022, reference_silage_acres: 74.44, expected_silage_acres: 54.1,
         expected_silage_acres_95ci: [40.2, 68.0], cv_percent: 13.1 }] },
       '/api/fields/327/observations?year=2021': [
@@ -106,6 +107,7 @@ test('live client uses existing /api routes and the published response shapes', 
   await assert.rejects(api.rollup(2019), /No saved roll-up/)
   assert.equal((await api.predict(2022, '2022-10-12')).length, 7)
   assert.equal((await api.evaluate('strict', 2022)).convergence.length, 5)
+  assert.equal((await api.convergenceAcres()).years[0].year, 2022)
   const meta = await api.meta()
   assert.equal(meta.season_end_only, false)
   assert.equal(meta.as_of_dates.length, 15)

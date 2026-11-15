@@ -10,6 +10,7 @@
 import type {
   AgentRunResponse,
   AgentTraceResponse,
+  ConvergenceAcres,
   EvaluateResponse,
   FieldsResponse,
   Pred,
@@ -37,6 +38,7 @@ export const snap = {
   series: (id: number, year: number) => `series_${id}_${year}`,
   agentRun: () => 'agent_run',
   agentTrace: (runId: string) => `agent_trace_${runId}`,
+  convergenceAcres: () => 'convergence_acres',
 }
 
 export class ApiError extends Error {
@@ -103,6 +105,11 @@ export const api = {
     STATIC
       ? fromSnapshot<RollupResponse>(snap.rollup(year))
       : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`).then((data) => adaptRollup(data, year)),
+
+  convergenceAcres: () =>
+    STATIC
+      ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
+      : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
 
   series: (id: number, year: number) =>
     STATIC

@@ -9,6 +9,7 @@ import { MapView } from './components/MapView'
 import { MetricsPanel } from './components/MetricsPanel'
 import { Overview, type ReviewItem } from './components/Overview'
 import { Pending } from './components/Pending'
+import { AcresConvergence } from './components/AcresConvergence'
 import { RollupPanel } from './components/RollupPanel'
 import { shortDate } from './format'
 import { useAsync } from './hooks'
@@ -79,6 +80,7 @@ export default function App() {
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
   const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
+  const acresConv = useAsync(() => api.convergenceAcres(), [])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
@@ -254,6 +256,8 @@ export default function App() {
                     </Pending>
                   </>
                 )}
+                <h2 className="sheet__h2">Silage acres through the season</h2>
+                <AcresConvergence data={acresConv.data} error={acresConv.error} year={year} onYear={setYear} />
                 <h2 className="sheet__h2">Acreage roll-up</h2>
                 {rollup.error ? (
                   <Pending title="Silage acres roll-up">
