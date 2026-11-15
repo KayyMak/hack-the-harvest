@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { adaptAsOfPredictions, adaptConvergence, adaptEstimate2025, adaptForecast2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey, adaptUnlabeled, unlabeledCallsAt } from '../src/adapter.ts'
-import { api, traceStatus } from '../src/api.ts'
+import { api, keyMissing, recordedAgentRun, traceStatus } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
 const fields = artifact('fields.geojson')
@@ -313,4 +313,26 @@ test('Cropland Data Layer cover comes from /api/fields/landcover for the asked y
     return Response.json(rows)
   })
   assert.deepEqual(await api.landcover(2022), [rows[0]])
+})
+
+test('the recorded agent run loads from the static file, ends in a report and is never live', async (t) => {
+  const file = readFileSync(new URL('../public/agent_recorded_run.json', import.meta.url), 'utf8')
+  assert.doesNotMatch(file, /nvapi-|api[_-]?key|authorization|bearer|[A-Z]:\\|\/Users\/|\/home\//i, 'no key, header or local path in the recording')
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    assert.equal(url, '/agent_recorded_run.json')
+    return new Response(file, { headers: { 'Content-Type': 'application/json' } })
+  })
+  const run = await recordedAgentRun()
+  assert.equal(run.status, 'done')
+  assert.equal(run.lines.at(-1).type, 'report')
+  assert.ok(run.lines.every((l) => Number.isInteger(l.step)))
+  assert.match(run.query, /2022/)
+  assert.match(run.recorded_at, /^\d{4}-\d{2}-\d{2}T/)
+})
+
+test('a missing NVIDIA key is recognised so the recorded run can stand in', () => {
+  assert.ok(keyMissing('NVIDIA_API_KEY is not set (environment or the repo-root .env).'))
+  assert.ok(keyMissing('The agent stopped before finishing: NVIDIA_API_KEY is not set'))
+  assert.ok(!keyMissing('NVIDIA API error (HTTP 500)'))
+  assert.ok(!keyMissing(null))
 })
