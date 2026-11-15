@@ -1,11 +1,17 @@
-import { useEffect, useRef, useState } from 'react'
-import { api, STATIC } from '../api'
+import { useEffect, useState } from 'react'
+import { api, keyMissing, recordedAgentRun, STATIC } from '../api'
 import type { AgentTraceResponse, TraceLine } from '../api'
+import { useAsync } from '../hooks'
 import { Markdown } from './Markdown'
 
 const DEFAULT_QUERY =
-  "Classify BARC's 2022 fields as of October 12, score them against the labels, and roll Maryland up against the 2022 Census."
+  "Score BARC's 2022 fields as of October 12 against the labels. Then look up NASS 2025 Maryland corn acres harvested for silage and for grain, and say whether BARC's labeled fields look more silage-heavy than Maryland as a whole."
 const POLL_MS = 1000
+/** A typical run: plan, a few tool calls and results, the Verifier check and the report. */
+const TYPICAL_STEPS = 8
+
+/** "2026-11-15T12:17:43Z" -> "2026-11-15 12:17 UTC" (the recording's own timestamp, never the current time). */
+const recordedTime = (ts: string | null) => (ts ? `${ts.slice(0, 10)} ${ts.slice(11, 16)} UTC` : 'time not recorded')
 
 export function AgentPanel() {
   const [query, setQuery] = useState(DEFAULT_QUERY)
@@ -13,11 +19,14 @@ export function AgentPanel() {
   const [trace, setTrace] = useState<AgentTraceResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [starting, setStarting] = useState(false)
-  const listRef = useRef<HTMLOListElement>(null)
+  // The live agent needs the server's NVIDIA key (the market status route reports whether one is configured).
+  const keyStatus = useAsync(() => api.marketStatus(), [])
+  const recorded = useAsync(() => recordedAgentRun(), [])
 
   const run = async () => {
     setError(null)
     setTrace(null)
+    setRunId(null)
     setStarting(true)
     try {
       const res = await api.agentRun(query)
@@ -51,73 +60,105 @@ export function AgentPanel() {
     }
   }, [runId])
 
-  useEffect(() => {
-    listRef.current?.lastElementChild?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
-  }, [trace?.lines.length])
-
-  const status = starting ? 'starting' : (trace?.status ?? (runId ? 'running' : 'idle'))
-  const flags = trace?.lines.filter((l) => l.type === 'flag').length ?? 0
-  const report = trace?.lines.findLast((l) => l.type === 'report')
-
-  if (STATIC) return <p role="status">Agent execution is unavailable in this saved snapshot. No live agent or verifier has run.</p>
+  const status = starting ? 'starting' : error ? 'error' : (trace?.status ?? (runId ? 'running' : 'idle'))
+  const liveKeyMissing = keyMissing(error) || (trace?.lines.some((l) => l.type === 'error' && keyMissing(l.summary)) ?? false)
+  const noKey = STATIC || keyStatus.data?.configured === false || liveKeyMissing
+  const showRecorded = noKey && !!recorded.data && (!runId || liveKeyMissing)
 
   return (
     <div className="agent">
-      <form
-        className="agent__form"
-        onSubmit={(e) => {
-          e.preventDefault()
-          void run()
-        }}
-      >
-        <label htmlFor="agent-q" className="eyebrow">
-          Ask the analyst agent
-        </label>
-        <textarea id="agent-q" value={query} onChange={(e) => setQuery(e.target.value)} rows={3} />
-        <div className="agent__actions">
-          <button className="button" type="submit" disabled={starting || status === 'running' || !query.trim()}>
-            {status === 'running' ? 'Running…' : 'Run'}
-          </button>
-          <span className={`status status--${status}`}>
-            <span className="status__dot" />
-            {status}
-          </span>
-          {trace && (
-            <span className="muted">
-              {trace.lines.length} steps · {flags} Verifier flag{flags === 1 ? '' : 's'}
-            </span>
-          )}
-        </div>
-      </form>
+      {!STATIC && (
+        <form
+          className="agent__form"
+          onSubmit={(e) => {
+            e.preventDefault()
+            void run()
+          }}
+        >
+          <label htmlFor="agent-q" className="eyebrow">
+            Ask the analyst agent
+          </label>
+          <textarea id="agent-q" value={query} onChange={(e) => setQuery(e.target.value)} rows={3} />
+          <div className="agent__actions">
+            <button className="button" type="submit" disabled={starting || status === 'running' || !query.trim()}>
+              {status === 'running' ? 'Running…' : 'Run'}
+            </button>
+            {status !== 'idle' && (
+              <span className={`status status--${status}`}>
+                <span className="status__dot" />
+                {status}
+              </span>
+            )}
+          </div>
+        </form>
+      )}
 
-      {error && (
+      {error && !liveKeyMissing && (
         <p className="inline-error" role="alert">
           {error}
         </p>
       )}
-
-      {report && (
-        <article className="agent__report" aria-label="Agent report">
-          <p className="eyebrow">Report</p>
-          <Markdown text={String(report.summary ?? '')} className="md agent__md" />
-        </article>
+      {liveKeyMissing && (
+        <p className="inline-error" role="alert">
+          The live run could not start: the NVIDIA key is not configured on this server. A recorded run is shown below.
+        </p>
       )}
 
-      {trace ? (
-        <ol className="trace" ref={listRef} aria-live="polite">
-          {trace.lines.map((l) => (
-            <TraceItem key={l.step} line={l} />
-          ))}
-        </ol>
-      ) : (
-        !error && <p className="muted">The trace shows each plan step, tool call and Verifier check as the agent runs. Every number comes from a tool.</p>
+      {trace && !liveKeyMissing && <RunView trace={trace} running={status === 'running'} />}
+
+      {showRecorded && recorded.data && (
+        <section className="agent__recorded" aria-label="Recorded agent run">
+          <p className="agent__badge" role="note">
+            Recorded run · {recordedTime(recorded.data.recorded_at)} · {STATIC ? 'live agent not available in this static build' : 'live Nemotron key not configured on this server'}
+          </p>
+          <p className="muted small">Question: {recorded.data.query}</p>
+          <RunView trace={recorded.data} running={false} />
+        </section>
+      )}
+
+      {!trace && !showRecorded && !error && (
+        <p className="muted">The answer appears here first; the agent's plan, tool calls and Verifier checks are listed below it. Every number comes from a tool.</p>
       )}
     </div>
   )
 }
 
+/** Results first: the report card, then the step-by-step trace collapsed underneath. */
+function RunView({ trace, running }: { trace: AgentTraceResponse; running: boolean }) {
+  const report = trace.lines.findLast((l) => l.type === 'report')
+  const flags = trace.lines.filter((l) => l.type === 'flag').length
+  const last = trace.lines.at(-1)
+  return (
+    <>
+      {running && (
+        <p className="agent__working" role="status">
+          Working… step {trace.lines.length + 1} of ~{Math.max(TYPICAL_STEPS, trace.lines.length + 1)}
+          {last ? `: ${last.tool ? `calling ${last.tool}` : last.type.replace('_', ' ')}` : ': planning'}
+        </p>
+      )}
+      {report && (
+        <article className={`agent__report${trace.status === 'error' ? ' is-error' : ''}`} aria-label="Agent report">
+          <p className="eyebrow">{trace.status === 'error' ? 'Run failed' : 'Report'}</p>
+          <Markdown text={String(report.summary ?? '')} className="md agent__md" />
+        </article>
+      )}
+      <details className="more section agent__steps">
+        <summary>
+          Show the agent's steps ({trace.lines.length}){flags ? ` · ${flags} Verifier flag${flags === 1 ? '' : 's'}` : ''}
+        </summary>
+        <ol className="trace">
+          {trace.lines.map((l, i) => (
+            <TraceItem key={`${l.step}-${i}`} line={l} />
+          ))}
+        </ol>
+      </details>
+    </>
+  )
+}
+
 function TraceItem({ line }: { line: TraceLine }) {
   const isFlag = line.type === 'flag'
+  const args = line.args
   return (
     <li className={`trace__item${isFlag ? ' flag' : ''}`}>
       <div className="trace__step">{line.step}</div>
@@ -128,7 +169,7 @@ function TraceItem({ line }: { line: TraceLine }) {
           {line.tool && <code className="trace__tool">{line.tool}</code>}
         </div>
         <p className="trace__summary">{line.type === 'report' ? reportTitle(String(line.summary ?? '')) : line.summary}</p>
-        {line.args && <code className="trace__args">{JSON.stringify(line.args)}</code>}
+        {args && <code className="trace__args">{typeof args.args === 'string' && Object.keys(args).length === 1 ? args.args : JSON.stringify(args)}</code>}
       </div>
     </li>
   )

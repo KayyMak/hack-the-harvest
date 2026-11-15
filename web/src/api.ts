@@ -11,9 +11,11 @@ import type {
   AgentRunResponse,
   AgentTraceResponse,
   ConvergenceAcres,
+  DeclineRuleBaseline,
   Estimate2025,
   Forecast2025,
   EvaluateResponse,
+  FieldLandcover,
   FieldsResponse,
   MarketOutlook,
   MarketReport,
@@ -93,6 +95,45 @@ const post = <T>(path: string, body: unknown) =>
 const LIVE_YEARS = [2021, 2022, 2023]
 const LIVE_MONTH_DAYS = ['08-12', '09-12', '10-12', '11-12', '11-30']
 const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
+
+/** A live run that could not start because the server has no NVIDIA key. */
+export const keyMissing = (text: string | null | undefined) => /NVIDIA_API_KEY is not set/.test(text ?? '')
+
+/**
+ * A recorded agent run shipped as a static file (web/public/agent_recorded_run.json). Shown, labelled as a
+ * recording, only when the live agent cannot run here. Steps and flags are normalised from the saved trace.
+ */
+export async function recordedAgentRun(): Promise<AgentTraceResponse & { recorded_at: string | null; query: string }> {
+  const lines = await getJson<Record<string, unknown>[]>(`${env.BASE_URL ?? '/'}agent_recorded_run.json`)
+  const norm = lines.map((l, i) => ({
+    ...l,
+    step: Number(l.step ?? i + 1),
+    node: String(l.node ?? ''),
+    type: String(l.type ?? ''),
+    tool: (l.tool as string | undefined) ?? null,
+    args: (typeof l.args === 'string' ? { args: l.args } : (l.args as Record<string, unknown> | undefined)) ?? null,
+    summary: String(l.summary ?? ''),
+  })) as AgentTraceResponse['lines']
+  const plan = norm.find((l) => l.type === 'plan')?.summary ?? ''
+  const ts = lines.map((l) => l.ts).filter((t): t is string => typeof t === 'string').at(-1) ?? null
+  return {
+    run_id: String(lines[0]?.run_id ?? 'recorded'),
+    lines: norm,
+    status: traceStatus(norm),
+    recorded_at: ts,
+    query: plan.replace(/^request:\s*/, ''),
+  }
+}
+
+/**
+ * Run status from its trace. The agent always ends a trace with a report line, even when it fails;
+ * a failed run logs an `error` line right before that report ("The agent stopped before finishing: …").
+ */
+export function traceStatus(lines: AgentTraceResponse['lines']): AgentTraceResponse['status'] {
+  const last = lines.findLastIndex((line) => line.type === 'report')
+  if (last < 0) return 'running'
+  return last > 0 && lines[last - 1].type === 'error' ? 'error' : 'done'
+}
 // The signal breakdown is optional: without it the field panel shows its pending state.
 const contributions = () =>
   getJson<SavedContribution[]>(`${API_URL}/api/baseline/contributions`).catch((): SavedContribution[] => [])
@@ -114,6 +155,10 @@ export const api = {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ year, as_of: asOf }),
         }),
+
+  /** Saved decline-rule vs model comparison (live backend only; the static snapshot does not carry it). */
+  declineRule: (): Promise<DeclineRuleBaseline> =>
+    STATIC ? Promise.reject(new ApiError('Not in this static snapshot.', 501)) : getJson<DeclineRuleBaseline>(`${API_URL}/api/baseline/decline_rule`),
 
   /** Static mode only: describes the snapshot (stub or real, which years / dates exist). */
   meta: (): Promise<SnapshotMeta | null> =>
@@ -176,6 +221,11 @@ export const api = {
       ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
       : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
 
+  /** USDA Cropland Data Layer cover per BARC field-year (land cover, not a label or a call); same shape live and static. */
+  landcover: (year: number): Promise<FieldLandcover[]> =>
+    (STATIC ? fromSnapshot<FieldLandcover[]>('landcover') : getJson<FieldLandcover[]>(`${API_URL}/api/fields/landcover?year=${year}`))
+      .then((rows) => rows.filter((r) => r.year === year)),
+
   /** Model calls on blank-label field-years CDL marks as corn: same saved shape live and static. */
   unlabeled: (year: number): Promise<UnlabeledYearView> =>
     (STATIC ? fromSnapshot<SavedUnlabeled>(snap.unlabeled()) : getJson<SavedUnlabeled>(`${API_URL}/api/unlabeled`))
@@ -195,7 +245,7 @@ export const api = {
   agentTrace: async (runId: string): Promise<AgentTraceResponse> => {
     if (STATIC) throw new ApiError('No agent ran for this static snapshot.', 501)
     const lines = await getJson<AgentTraceResponse['lines']>(`${API_URL}/api/agent/trace/${encodeURIComponent(runId)}`)
-    return { run_id: runId, lines, status: lines.some((line) => line.type === 'report') ? 'done' : 'running' }
+    return { run_id: runId, lines, status: traceStatus(lines) }
   },
 
   /** Before/after image chip URL for a field-year. */

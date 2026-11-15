@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, STATIC } from '../api'
 import type { MarketOutlook, MarketReport } from '../api'
-import { shortDate } from '../format'
+import { compactText, shortDate } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
+import { xTitle, yTitle } from './charts'
 import { Markdown } from './Markdown'
 import { Pending } from './Pending'
 
@@ -15,7 +16,10 @@ const SEASONS = [
   { season: 2022, label: '2022 (BARC model)' },
   { season: 2021, label: '2021 (BARC model)' },
 ]
+const NASS_RELEASE_TIP = '2025 NASS releases: Jun 30 Acreage; Aug 12, Sep 12, Nov 14 Crop Production (no October report in 2025)'
 const str = (v: unknown) => (typeof v === 'string' || typeof v === 'number' ? String(v) : '—')
+/** Backend figures arrive preformatted ("187,176,856 bu"); show them to three significant figures ("187M bu"). */
+const big = (v: unknown) => compactText(str(v))
 
 /** Optional sample market outlook: month by month, using only what was known on each date. Nemotron reads
  *  our forecasts, model calls and NASS data through server-side tools and writes the report. */
@@ -65,12 +69,15 @@ export function MarketPanel() {
           </select>
         </label>
         {o && (
-          <div className="seg" role="group" aria-label="Outlook as of">
+          <div className="market__dates" title={season === 2025 ? NASS_RELEASE_TIP : 'Satellite checkpoint dates for the BARC model'}>
+          <span className="asof__label">{season === 2025 ? 'NASS release' : 'Satellite checkpoint'}</span>
+          <div className="seg" role="group" aria-label={season === 2025 ? 'NASS release' : 'Satellite checkpoint'}>
             {o.dates.map((d) => (
               <button key={d} className={`seg__btn${d === o.as_of ? ' is-on' : ''}`} aria-pressed={d === o.as_of} onClick={() => setAsOf(d)}>
                 {shortDate(d)}
               </button>
             ))}
+          </div>
           </div>
         )}
       </div>
@@ -81,8 +88,8 @@ export function MarketPanel() {
         <div className="skeleton skeleton--chart" />
       ) : (
         <>
-          <OutlookCards outlook={o} />
           <OutlookChart outlook={o} />
+          <OutlookCards outlook={o} />
           <p className="muted small">{str(o.timeline.what_is_ours ?? o.timeline.scope)} {str(o.timeline.next_official_numbers)}</p>
         </>
       )}
@@ -121,32 +128,28 @@ function OutlookCards({ outlook }: { outlook: MarketOutlook }) {
   const latest = (t.latest_release as Dict | undefined) ?? {}
   const date = shortDate(outlook.as_of)
   if (t.kind === 'statewide_and_us_outlook') {
-    const moves = (latest.us_price_pressure_from_supply_change as Dict[] | undefined) ?? []
     const base = t.baseline_2024_official as Dict
     return (
       <section className="kpis market__kpis" aria-label="Outlook figures">
-        <Kpi label={`US grain supply vs 2024, as of ${date}`} value={str(latest.us_grain_supply_change_vs_2024 ?? 'Not yet')}
-          sub={latest.us_grain_production_forecast ? `${str(latest.us_grain_production_forecast)} forecast` : 'NASS yield forecasts start in August'}
-          foot={`2024: ${str(base?.us_grain_production)}`} />
-        <Kpi label="Price pressure from that supply" value={moves.length ? `${str(moves[moves.length - 1].price_change)} to ${str(moves[0].price_change)}` : '—'}
-          sub={moves.length ? `${str(moves[moves.length - 1].implied_price)} to ${str(moves[0].implied_price)} vs ${str(base?.us_grain_price_received)}` : 'Needs a production forecast'}
-          foot="Assumed elasticity −1.0 to −0.2" />
-        <Kpi label="Our US silage estimate" value={str(latest.us_silage_acres_estimate)} sub={`95%: ${str(latest.us_silage_95pct_range)} acres`}
-          foot={latest.change_in_grain_kept_off_market_vs_2024 ? `${str(latest.change_in_grain_kept_off_market_vs_2024)} kept off grain market vs 2024` : `2024: ${str(base?.us_silage_acres)} acres`} />
-        <Kpi label="Our Maryland silage share" value={str(latest.md_silage_share_estimate)} sub={`${str(latest.md_silage_acres_estimate)} acres (95%: ${str(latest.md_silage_95pct_range)})`}
-          foot={`2024: ${str(base?.md_silage_acres)} silage acres`} />
+        <Kpi label="US grain supply" value={str(latest.us_grain_supply_change_vs_2024 ?? 'Not yet')}
+          sub={latest.us_grain_production_forecast ? `vs 2024, as of ${date}: ${big(latest.us_grain_production_forecast)} forecast` : `vs 2024, as of ${date}: NASS yield forecasts start in August`}
+          foot={`2024: ${big(base?.us_grain_production)}`} />
+        <Kpi label="US silage acres" value={big(latest.us_silage_acres_estimate)} sub={`Our estimate, 95%: ${big(latest.us_silage_95pct_range)}`}
+          foot={latest.change_in_grain_kept_off_market_vs_2024 ? `${big(latest.change_in_grain_kept_off_market_vs_2024)} kept off grain market vs 2024` : `2024: ${big(base?.us_silage_acres)} acres`} />
+        <Kpi label="Maryland silage share" value={str(latest.md_silage_share_estimate)} sub={`Our estimate: ${big(latest.md_silage_acres_estimate)} acres (95%: ${big(latest.md_silage_95pct_range)})`}
+          foot={`2024: ${big(base?.md_silage_acres)} silage acres`} />
       </section>
     )
   }
   const baseline = (t.latest_official_baseline ?? {}) as Dict
   return (
     <section className="kpis market__kpis" aria-label="Outlook figures">
-      <Kpi label={`BARC model silage estimate, as of ${date}`} value={`${str(latest.barc_expected_silage_acres)} ac`}
-        sub={`95%: ${str(latest.range_95pct)} acres`} foot={`${str(latest.fields_decided)} labeled fields decided`} />
-      <Kpi label={`Latest official Maryland silage share (${str(baseline.year)})`} value={str(baseline.maryland_silage_share_of_harvested_corn)}
-        sub={`${str(baseline.maryland_silage_acres_harvested)} silage vs ${str(baseline.maryland_grain_acres_harvested)} grain acres`} foot="USDA NASS, prior season" />
-      <Kpi label={`Grain kept off the market by silage (${str(baseline.year)})`} value={`${str(baseline.grain_bushels_not_produced_because_of_silage_acres)} bu`}
-        sub={`at ${str(baseline.maryland_grain_price_received)}`} foot="Prior season, official" />
+      <Kpi label="BARC silage acres" value={`${big(latest.barc_expected_silage_acres)} ac`}
+        sub={`Model estimate as of ${date}, 95%: ${big(latest.range_95pct)} acres`} foot={`${str(latest.fields_decided)} labeled fields decided`} />
+      <Kpi label={`Maryland silage share, ${str(baseline.year)}`} value={str(baseline.maryland_silage_share_of_harvested_corn)}
+        sub={`${big(baseline.maryland_silage_acres_harvested)} silage vs ${big(baseline.maryland_grain_acres_harvested)} grain acres`} foot="USDA NASS, prior season (official)" />
+      <Kpi label={`Grain kept off market, ${str(baseline.year)}`} value={`${big(baseline.grain_bushels_not_produced_because_of_silage_acres)} bu`}
+        sub={`Bushels not grown because of silage acres, at ${str(baseline.maryland_grain_price_received)}`} foot="Prior season, official" />
     </section>
   )
 }
@@ -156,19 +159,22 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   const tl = outlook.timeline as Dict
   const series = (tl.series as Dict[]) ?? []
   const grid = <CartesianGrid stroke={t.grid} vertical={false} />
-  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} />
+  const x = <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(tl.kind === 'statewide_and_us_outlook' ? 'NASS release date, 2025' : 'Satellite checkpoint', t.muted)} />
   const tip = <Tooltip contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
+  const legend = <Legend verticalAlign="top" align="left" height={40} iconType="plainline" wrapperStyle={{ fontSize: 12, color: t.ink, paddingBottom: 8 }} />
   if (tl.kind === 'statewide_and_us_outlook') {
     const rows = series.map((r) => ({ label: shortDate(String(r.as_of)), supply: r.us_production_change_pct, md: r.md_silage_share_pct }))
+    // The June Acreage report carries no grain production forecast, so the supply line starts at the first one.
+    const firstNoSupply = rows.length > 0 && rows[0].supply == null
     return (
       <figure className="market__chart" role="img" aria-label="US grain supply change versus 2024 and our Maryland silage share, by release date">
-        <ResponsiveContainer width="100%" height={240}>
-          <ComposedChart data={rows} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+        <ResponsiveContainer width="100%" height={280}>
+          <ComposedChart data={rows} margin={{ top: 4, right: 16, bottom: 4, left: 4 }}>
             {grid}{x}
-            <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={44} unit="%" />
+            <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={60} unit="%" label={yTitle('Percent', t.muted)} />
             {tip}
-            <Legend wrapperStyle={{ fontSize: 12 }} />
-            <Line type="monotone" dataKey="supply" name="US grain supply vs 2024 (NASS forecast)" stroke={DATA.grain} strokeWidth={2.5} dot={{ r: 3 }} connectNulls isAnimationActive={false} unit="%" />
+            {legend}
+            <Line type="monotone" dataKey="supply" name={`US grain supply vs 2024 (NASS forecast${firstNoSupply ? `; none in the ${rows[0].label} Acreage report` : ''})`} stroke={DATA.grain} strokeWidth={2.5} dot={{ r: 3 }} connectNulls isAnimationActive={false} unit="%" />
             <Line type="monotone" dataKey="md" name="Maryland silage share (our estimate)" stroke={DATA.silage} strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} unit="%" />
           </ComposedChart>
         </ResponsiveContainer>
@@ -181,15 +187,15 @@ function OutlookChart({ outlook }: { outlook: MarketOutlook }) {
   }))
   return (
     <figure className="market__chart" role="img" aria-label="BARC model silage acre estimate with 95% range, by date">
-      <ResponsiveContainer width="100%" height={240}>
-        <ComposedChart data={rows} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+      <ResponsiveContainer width="100%" height={280}>
+        <ComposedChart data={rows} margin={{ top: 4, right: 16, bottom: 4, left: 4 }}>
           {grid}{x}
-          <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={44} />
+          <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={60} label={yTitle('Silage acres', t.muted)} />
           {tip}
           <Area type="monotone" dataKey="lo" stackId="b" stroke="none" fill="transparent" isAnimationActive={false} legendType="none" tooltipType="none" />
           <Area type="monotone" dataKey="band" stackId="b" stroke="none" fill={DATA.silage} fillOpacity={0.14} isAnimationActive={false} name="95% range" tooltipType="none" />
           <Line type="monotone" dataKey="est" name="BARC silage acres (our model)" stroke={DATA.silage} strokeWidth={2.5} dot={{ r: 3 }} isAnimationActive={false} />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
+          {legend}
         </ComposedChart>
       </ResponsiveContainer>
     </figure>

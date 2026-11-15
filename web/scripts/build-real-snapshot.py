@@ -16,6 +16,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/estimate_2025/summary.json (+ benchmark.json) -> estimate_2025.json (2025 Maryland estimate)
   forecast/outputs/summary.json (+ data/reference NASS 2025 acres) -> forecast_2025.json (graded 2025 forecast)
   baseline/outputs/unlabeled/                -> unlabeled.json (model calls on blank-label corn fields)
+  baseline/outputs/unlabeled/corn_check.csv  -> landcover.json (USDA Cropland Data Layer cover per field-year)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -333,6 +334,17 @@ def main() -> None:
             artifacts.OUTPUT_DIR = previous_output
     except Exception as exc:  # explicit, never a silent substitute; the dashboard shows Pending
         print(f'unlabeled.json NOT written: {exc}')
+
+    # ---- USDA Cropland Data Layer cover per BARC field-year (same reader as GET /api/fields/landcover) ----
+    try:
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE
+            write('landcover', [json.loads(r.model_dump_json()) for r in artifacts.read_landcover()])
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
+    except Exception as exc:  # explicit, never a silent substitute; the dashboard shows no CDL cover
+        print(f'landcover.json NOT written: {exc}')
 
     # ---- optional: before/after chips ----
     has_chips = False

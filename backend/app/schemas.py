@@ -478,6 +478,17 @@ class Forecast2025(BaseModel):
     nass_2025: Nass2025 | None
 
 
+class FieldLandcover(BaseModel):
+    """USDA Cropland Data Layer cover inside one BARC field-year (baseline/outputs/unlabeled/corn_check.csv).
+    Satellite land cover, never a BARC reference label and never a model call."""
+    field_id: int
+    year: int
+    crop: str = Field(description='Most common CDL class inside the field (top_class_name)')
+    crop_share: float = Field(ge=0, le=1, description='Share of the CDL pixels in the field in that class')
+    corn_share: float = Field(ge=0, le=1, description='Share of the CDL pixels in the field that are corn')
+    category: Literal['likely_corn', 'mixed', 'not_corn']
+
+
 class UnlabeledCall(BaseModel):
     """Model call on a field-year with a blank BARC label. Not a reference label."""
     field_id: int
