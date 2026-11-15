@@ -4,7 +4,7 @@ import { unlabeledCallsAt } from './adapter'
 import type { FieldLandcover, Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { Estimate2025Panel } from './components/Estimate2025'
-import { DeclineRulePanel } from './components/DeclineRule'
+import { DeclineRulePanel, PerYearPanel } from './components/DeclineRule'
 import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
@@ -301,7 +301,7 @@ export default function App() {
                 <p className="sheet__lede">BARC-labeled fields for {year}, called as of {shortDate(asOf)}; tick "Show unlabeled" for the rest. Click a row for its evidence.</p>
                 <details className="more">
                   <summary>What the columns mean</summary>
-                  <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. Land cover (CDL) is the USDA Cropland Data Layer's satellite crop map for that year: context only, never a BARC label or a model call.</p>
+                  <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. CDL crop is the USDA Cropland Data Layer's satellite crop map for that year (hover a cell for detail): context only, never a BARC label or a model call.</p>
                 </details>
                 <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} coverError={landcover.error} seasonEnd={atSeasonEnd} onSelect={select} selectedId={selectedId} />
               </>
@@ -315,6 +315,10 @@ export default function App() {
                     Calls as of Aug 12, Sep 12, Oct 12 and Nov 12, showing how many fields are decided and how accurate those calls are at each date.
                   </Pending>
                 )}
+                <details className="more section">
+                  <summary>Per-year results</summary>
+                  <PerYearPanel state={declineRule} />
+                </details>
                 <details className="more section">
                   <summary>Silage acres through the season</summary>
                   <AcresConvergence data={acresConv.data} error={acresConv.error} year={year} onYear={setYear} />

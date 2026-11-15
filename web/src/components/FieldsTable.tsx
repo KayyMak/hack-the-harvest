@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
-import { cdlText, classColor, noCallReason, num } from '../format'
+import { cdlShort, cdlText, classColor, noCallReason, num } from '../format'
 
 type SortKey = 'id' | 'acres' | 'label' | 'call' | 'p' | 'result' | 'cover'
 
@@ -15,6 +15,7 @@ interface Row {
   unlabeledCall: boolean
   /** USDA Cropland Data Layer cover in words ('' when not available): land cover, not a label */
   cover: string
+  coverLong: string
   landcover?: FieldLandcover
 }
 
@@ -23,7 +24,7 @@ export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred
     const p = preds.get(f.properties.OBJECTID)
     const label = f.properties.label ?? 'Unlabeled'
     const lc = cover.get(f.properties.OBJECTID)
-    const land = { cover: lc ? cdlText(lc) : '', landcover: lc }
+    const land = { cover: lc ? cdlShort(lc) : '', coverLong: lc ? cdlText(lc) : '', landcover: lc }
     const u = !f.properties.label && !p ? unlabeled.get(f.properties.OBJECTID) : undefined
     if (u) return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call: u.label, p: u.p_silage, result: '', unlabeledCall: true, ...land }
     const none = !f.properties.label ? noCallReason(lc, seasonEnd)?.short : undefined
@@ -51,7 +52,7 @@ const COLS: { key: SortKey; label: string; num?: boolean }[] = [
   { key: 'call', label: 'Model call' },
   { key: 'p', label: 'P(silage)', num: true },
   { key: 'result', label: 'Result' },
-  { key: 'cover', label: 'Land cover (CDL)' },
+  { key: 'cover', label: 'CDL crop' },
 ]
 
 export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seasonEnd, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; cover: Map<number, FieldLandcover>; coverError?: Error | null; seasonEnd: boolean; onSelect: (id: number) => void; selectedId: number | null }) {
@@ -118,7 +119,7 @@ export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seaso
                 </td>
                 <td className="is-num">{r.p == null ? <span className="muted">n/a</span> : num(r.p)}</td>
                 <td className={r.result === 'Disagrees' ? 'is-bad' : r.result === 'Agrees' ? 'is-ok' : undefined}>{r.result || (r.label === 'Unlabeled' ? <span className="muted">Not scored</span> : '—')}</td>
-                <td className="ftable__cover" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">{r.cover || '—'}</td>
+                <td className="ftable__cover" title={`${r.coverLong || 'No cover saved'}. USDA Cropland Data Layer: satellite land cover, not a BARC label.`}>{r.cover || '—'}</td>
               </tr>
             ))}
           </tbody>

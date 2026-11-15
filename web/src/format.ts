@@ -50,12 +50,19 @@ export function noCallReason(c: FieldLandcover | undefined, seasonEnd: boolean):
   if (!c) return null
   const corn = pct(c.corn_share)
   if (c.category === 'not_corn')
-    return { short: `No call: ${c.crop}, not corn`, text: `${c.crop} (${corn} corn): not corn this year, so no silage/grain call.`, na: 'Not applicable: no model call for a non-corn field-year.' }
+    return { short: 'No call (not corn)', text: `${c.crop} (${corn} corn): not corn this year, so no silage/grain call.`, na: 'Not applicable: no model call for a non-corn field-year.' }
   if (c.category === 'mixed')
-    return { short: `No call: mixed (${corn} corn)`, text: `Partly corn (${corn}): too mixed to call reliably.`, na: 'Not applicable: no model call for a field-year this mixed.' }
+    return { short: 'No call (mixed)', text: `Partly corn (${corn}): too mixed to call reliably.`, na: 'Not applicable: no model call for a field-year this mixed.' }
   return seasonEnd
-    ? { short: 'No call: too few clear looks', text: `Corn (${corn} of the field), but too few clear satellite looks to make a call.`, na: 'Not applicable: no model call for this field-year.' }
-    : { short: 'No call before Nov 30', text: `Corn (${corn} of the field). Calls on unlabeled corn fields are made at season end (Nov 30).`, na: 'Not applicable until the season-end call (Nov 30).' }
+    ? { short: 'No call (too few looks)', text: `Corn (${corn} of the field), but too few clear satellite looks to make a call.`, na: 'Not applicable: no model call for this field-year.' }
+    : { short: 'No call until Nov 30', text: `Corn (${corn} of the field). Calls on unlabeled corn fields are made at season end (Nov 30).`, na: 'Not applicable until the season-end call (Nov 30).' }
+}
+
+/** Table-cell form of the Cropland Data Layer cover: "Corn 96%", "Mixed, 35% corn", "Soybeans". */
+export function cdlShort(c: FieldLandcover): string {
+  if (c.category === 'likely_corn') return `Corn ${pct(c.corn_share)}`
+  if (c.category === 'mixed') return `Mixed, ${pct(c.corn_share)} corn`
+  return c.crop
 }
 
 export const classColor = (c: PredClass | Label | null | undefined) =>

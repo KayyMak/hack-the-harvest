@@ -391,6 +391,8 @@ export interface DeclineRuleBaseline {
   decline_rule: RuleMetrics
   logistic_same_rows: RuleMetrics
   always_grain_same_rows: RuleMetrics
+  /** per year: the decline rule and the saved model on the same held-out rows */
+  by_year: Record<string, { decline_rule: RuleMetrics; logistic: RuleMetrics }>
   limitations: string[]
 }
 

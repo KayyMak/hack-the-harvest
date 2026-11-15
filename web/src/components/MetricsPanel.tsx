@@ -73,19 +73,6 @@ export function MetricsPanel({ data, error, asOf }: Props) {
       </section>
 
       <h2 className="sheet__h2">Details</h2>
-      {data.by_year && (
-        <details className="more section">
-          <summary>Per-year results</summary>
-          <table className="mini-table">
-            <thead><tr><th>Year</th><th className="num">Field-years</th><th className="num">Balanced acc.</th><th className="num">Always grain</th><th className="num">Silage recall</th><th className="num">Silage precision</th></tr></thead>
-            <tbody>
-              {Object.entries(data.by_year).map(([y, v]) => (
-                <tr key={y}><td>{y}</td><td className="num">{v.model.n}</td><td className="num">{num(v.model.balanced_accuracy)}</td><td className="num">{num(v.baseline.balanced_accuracy)}</td><td className="num">{num(v.model.silage_recall)}</td><td className="num">{num(v.model.silage_precision)}</td></tr>
-              ))}
-            </tbody>
-          </table>
-        </details>
-      )}
       <details className="more section">
         <summary>Precision and recall with 95% ranges</summary>
         <PrecisionRecall data={data} />
