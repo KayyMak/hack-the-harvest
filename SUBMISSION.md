@@ -34,6 +34,7 @@ index), was **not tested**: the index was not extracted in time.
 | --- | --- | --- |
 | US corn for grain, 2025 | 90,047,000 vs NASS 90,948,000 acres: **-1.0%** | `forecast_v2/outputs/benchmark.json` |
 | US corn for silage, 2025 | 6,507,289 vs NASS 6,187,000 acres: **+5.2%** (first forecast: +11.3%) | `forecast_v2/outputs/benchmark.json` |
+| Margin of error, NASS reliability format | US silage **±7.7%** at 90% (root-mean-square error 3.9%, 2018-2024); US grain **±1.7%** (RMSE 0.9%, 2013-2024). 2025 fell inside both | `web/public/forecast_2025.json` (`reliability`), from `forecast_v2/outputs/summary.json` |
 | Maryland grain, 2025 | 405,000 vs 410,000: **-1.2%** | `forecast_v2/outputs/benchmark.json` |
 | Maryland silage, 2025 | 36,648 vs 40,000: **-8.4%** (first forecast: -6.0%) | `forecast_v2/outputs/benchmark.json` |
 | States within 10% of NASS | grain **33 of 41**, silage **22 of 48** | `forecast_v2/outputs/compare_2025.json` |
@@ -42,7 +43,10 @@ index), was **not tested**: the index was not extracted in time.
 | BARC classifier, held out by field | **41 of 44** field-years right (10 of 12 silage, 1 false alarm in 32 grain), balanced accuracy **0.90** | `baseline/outputs/metrics.json` |
 | Same, corrected for model selection | balanced accuracy about **0.87** (the first model, v1, scores 0.80 on the same splits) | `baseline/outputs/metrics.json` (`selection`) |
 
-`benchmark.json` reports per-row errors only; the judges' exact scoring formula was not published to us.
+`benchmark.json` reports per-row errors only; the judges' exact scoring formula was not published to us. The margin of
+error follows NASS's "Reliability" sections: Student t on n-1 degrees of freedom times the root-mean-square percent error
+of the US forecast in the backtest, each year forecast with only what was known then, so 9 years in 10 the miss is no
+larger (`forecast_v2/export_dashboard.py`).
 
 ## Reproduce (from the repo root)
 
@@ -92,6 +96,32 @@ the forecast's backtest, not a classifier split.
   against 10.49% for the chosen NASS-only method (`forecast/outputs/summary.json`, `silage_method`).
 - **NDVI only.** The residue index (second hypothesis) and double-crop handling are not in the model.
 - **Thresholds reflect Maryland timing.** Early harvest is not always silage elsewhere, for example summer grain in Texas.
+
+## Data citation
+
+The BARC field polygons in `BARC_Corn.2021-2023.gpkg` come from the studies below, cited as the organizers' README asks.
+
+**Publications**
+
+- Dulaney, W., Anderson, M., Gao, F., Stern, A., Moglen, G., Meyers, G., Daughtry, C., White, W., Akumaga, U., &
+  Showalter, J. (2024). Development of a gridded yield data archive for farm management and research at the USDA
+  Beltsville Agricultural Research Center. *Agrosystems, Geosciences & Environment*, 7(1), e20474.
+  https://doi.org/10.1002/agg2.20474
+- Kraatz, S., Lamb, B., Hively, W., Jennewein, J., Gao, F., Cosh, M., & Siqueira, P. (2023). Comparing NISAR (Using
+  Sentinel-1), USDA/NASS CDL, and Ground Truth Crop/Non-Crop Areas in an Urban Agricultural Region. *Sensors*, 23(20),
+  8595. https://doi.org/10.3390/s23208595
+
+**Datasets**
+
+- USDA Beltsville Agricultural Research Center (BARC) Gridded Yield Data Archive, version 1. USDA National Agricultural
+  Library, Ag Data Commons.
+  https://agdatacommons.nal.usda.gov/articles/dataset/USDA_Beltsville_Agricultural_Research_Center_BARC_Gridded_Yield_Data_Archive_version_1/28950746
+- Kraatz, S. (2023). Validating NISAR's cropland mapping approach and the USDA/NASS Cropland Data Layer against ground
+  truth data in a fragmented urban agricultural region (Version 1.0.0) [Data set]. Zenodo.
+  https://doi.org/10.5281/zenodo.8087301
+
+Other public sources: Sentinel-2 Level-2A (Microsoft Planetary Computer), USDA NASS Quick Stats and Crop Production
+reports (URLs and checksums in `forecast/sources.json`), USDA Cropland Data Layer.
 
 ## Key files
 
