@@ -48,7 +48,7 @@ export function adaptFields(data: SavedFields, year: number): FieldsResponse {
     features: data.features.map((f) => ({
       type: 'Feature', geometry: f.geometry,
       properties: { OBJECTID: f.properties.field_id, label: f.properties[reference] ?? null,
-        FIELD: f.properties.field ?? undefined, ACRES: f.properties.acres ?? undefined },
+        FIELD: f.properties.field ?? undefined, ACRES: f.properties.acres == null ? undefined : Math.round(f.properties.acres * 10) / 10 },
     })),
   }
 }

@@ -254,3 +254,8 @@ test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-
   assert.deepEqual(unlabeledCallsAt(view, 2023, '2023-11-30'), [], 'another year\'s calls are never shown')
   assert.deepEqual(unlabeledCallsAt(null, 2022, '2022-11-30'), [])
 })
+
+test('field acres are rounded to one decimal for display', () => {
+  const f = adaptFields(fields, 2022).features.find((x) => x.properties.OBJECTID === 231)
+  assert.equal(f.properties.ACRES, 9.8)
+})
