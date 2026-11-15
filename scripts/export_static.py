@@ -19,7 +19,7 @@ from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parents[1]
 ROUTES = ['/api/health', '/api/baseline/summary', '/api/baseline/predictions', '/api/baseline/rollup',
-          '/api/fields', '/api/quickstats?state=MARYLAND']
+          '/api/fields', '/api/fields.geojson', '/api/quickstats?state=MARYLAND']
 
 
 def file_for(out: Path, url: str) -> Path:

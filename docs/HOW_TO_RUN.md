@@ -105,6 +105,10 @@ python baseline/test_baseline.py
 python baseline/run_baseline.py evaluate     # offline, from versioned caches
 ```
 
+Field polygons for the map (`baseline/outputs/fields.geojson`, served at `/api/fields.geojson`)
+are regenerated with `python baseline/export_fields_geojson.py` (needs the baseline
+environment: geopandas, pyproj).
+
 Full extraction and the pilot gate are described in [baseline/README.md](../baseline/README.md).
 
 ## Sources

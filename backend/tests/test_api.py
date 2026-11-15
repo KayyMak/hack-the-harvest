@@ -190,6 +190,26 @@ class ApiChecks(unittest.TestCase):
             rows = (Path(directory) / 'early' / 'predictions.csv').read_text().splitlines()[1:]
             self.assertTrue(all(',Pending,' in r for r in rows))
 
+    def test_field_polygons(self):
+        shapes = self.client.get('/api/fields.geojson')
+        self.assertEqual(shapes.status_code, 200)
+        features = shapes.json()['features']
+        ids = {f['properties']['field_id'] for f in features}
+        self.assertEqual(ids, {f['field_id'] for f in self.client.get('/api/fields').json()})
+        for f in features:
+            for ring in [c for poly in (f['geometry']['coordinates'] if f['geometry']['type'] == 'MultiPolygon'
+                                        else [f['geometry']['coordinates']]) for c in poly]:
+                for lon, lat in ring:
+                    self.assertTrue(-77.5 < lon < -76.0 and 38.5 < lat < 39.5)  # Beltsville, MD
+        labels = {(f['properties']['field_id'], y): f['properties'][f'reference_{y}']
+                  for f in features for y in (2021, 2022, 2023) if f['properties'][f'reference_{y}']}
+        for p in self.client.get('/api/baseline/predictions').json():
+            self.assertEqual(labels[(p['field_id'], p['year'])], p['reference_label'])
+        self.assertEqual(len(labels), len(self.client.get('/api/baseline/predictions').json()))
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/fields.geojson').status_code, 503)
+
 
 if __name__ == '__main__':
     unittest.main()
