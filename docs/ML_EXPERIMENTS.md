@@ -17,6 +17,24 @@ same-input model comparison. The scene-filter change preserves field-pixel
 masking, feature definitions, model setup, and saved field groups; coefficients
 and preprocessing are refitted inside each training fold.
 
+## Transparent rule baseline
+
+The challenge names a rule on the date of sustained NDVI decline as the baseline to beat.
+`python baseline/decline_rule_baseline.py` scores that rule on the same 44 held-out field-years
+and saved field folds, from the saved observations only (standard library, no satellite access).
+The NDVI drop (0.25) was fixed beforehand; the day-of-year threshold is fitted on training fields.
+
+| Run | Silage precision | Recall | F1 | Balanced accuracy |
+| --- | ---: | ---: | ---: | ---: |
+| Decline-date rule | 39.3% | 91.7% | 55.0% | 69.3% |
+| Original logistic baseline | 87.5% | 58.3% | 70.0% | 77.6% |
+
+The rule finds 11 of 12 Silage field-years but calls 17 of 32 Grain field-years Silage: an early
+decline alone does not separate the classes here. The logistic regression is ahead on F1 and
+balanced accuracy and behind on recall. Results:
+[decline_rule/results.md](../baseline/outputs/decline_rule/results.md). Same limits as below:
+already-inspected data, twelve Silage rows.
+
 ## Evidence and commands
 
 - [Numerical Nemotron protocol](../baseline/NEMOTRON_COMPARISON.md) and

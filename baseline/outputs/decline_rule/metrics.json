@@ -1,0 +1,247 @@
+{
+  "protocol": "Saved field-grouped folds; threshold fitted on training fields only; DROP fixed at 0.25 before any result was computed",
+  "drop": 0.25,
+  "threshold_grid": [
+    200,
+    330
+  ],
+  "thresholds_by_fold": {
+    "1": 260,
+    "2": 261,
+    "3": 261,
+    "4": 261,
+    "5": 261
+  },
+  "evaluated_field_years": 44,
+  "no_sustained_decline": 0,
+  "decline_rule": {
+    "n": 44,
+    "silage_precision": 0.39285714285714285,
+    "silage_recall": 0.9166666666666666,
+    "silage_f1": 0.55,
+    "false_positive_rate": 0.53125,
+    "balanced_accuracy": 0.6927083333333333,
+    "confusion_matrix": [
+      [
+        15,
+        17
+      ],
+      [
+        1,
+        11
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "logistic_same_rows": {
+    "n": 44,
+    "silage_precision": 0.875,
+    "silage_recall": 0.5833333333333334,
+    "silage_f1": 0.7,
+    "false_positive_rate": 0.03125,
+    "balanced_accuracy": 0.7760416666666667,
+    "confusion_matrix": [
+      [
+        31,
+        1
+      ],
+      [
+        5,
+        7
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "always_grain_same_rows": {
+    "n": 44,
+    "silage_precision": 0.0,
+    "silage_recall": 0.0,
+    "silage_f1": 0.0,
+    "false_positive_rate": 0.0,
+    "balanced_accuracy": 0.5,
+    "confusion_matrix": [
+      [
+        32,
+        0
+      ],
+      [
+        12,
+        0
+      ]
+    ],
+    "matrix_order": [
+      "Grain",
+      "Silage"
+    ],
+    "matrix_rows": "true",
+    "matrix_columns": "predicted"
+  },
+  "by_year": {
+    "2021": {
+      "decline_rule": {
+        "n": 18,
+        "silage_precision": 0.25,
+        "silage_recall": 1.0,
+        "silage_f1": 0.4,
+        "false_positive_rate": 0.8571428571428572,
+        "balanced_accuracy": 0.5714285714285714,
+        "confusion_matrix": [
+          [
+            2,
+            12
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "logistic": {
+        "n": 18,
+        "silage_precision": 0.75,
+        "silage_recall": 0.75,
+        "silage_f1": 0.75,
+        "false_positive_rate": 0.0714285714285714,
+        "balanced_accuracy": 0.8392857142857143,
+        "confusion_matrix": [
+          [
+            13,
+            1
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    "2022": {
+      "decline_rule": {
+        "n": 7,
+        "silage_precision": 0.8,
+        "silage_recall": 1.0,
+        "silage_f1": 0.8888888888888888,
+        "false_positive_rate": 0.33333333333333337,
+        "balanced_accuracy": 0.8333333333333333,
+        "confusion_matrix": [
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            4
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "logistic": {
+        "n": 7,
+        "silage_precision": 1.0,
+        "silage_recall": 0.5,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.75,
+        "confusion_matrix": [
+          [
+            3,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    },
+    "2023": {
+      "decline_rule": {
+        "n": 19,
+        "silage_precision": 0.42857142857142855,
+        "silage_recall": 0.75,
+        "silage_f1": 0.5454545454545454,
+        "false_positive_rate": 0.2666666666666667,
+        "balanced_accuracy": 0.7416666666666667,
+        "confusion_matrix": [
+          [
+            11,
+            4
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      },
+      "logistic": {
+        "n": 19,
+        "silage_precision": 1.0,
+        "silage_recall": 0.5,
+        "silage_f1": 0.6666666666666666,
+        "false_positive_rate": 0.0,
+        "balanced_accuracy": 0.75,
+        "confusion_matrix": [
+          [
+            15,
+            0
+          ],
+          [
+            2,
+            2
+          ]
+        ],
+        "matrix_order": [
+          "Grain",
+          "Silage"
+        ],
+        "matrix_rows": "true",
+        "matrix_columns": "predicted"
+      }
+    }
+  },
+  "limitations": [
+    "Exploratory comparison on already-inspected BARC data; not an independent test.",
+    "Twelve Silage field-years: differences of one or two rows are not distinguishable.",
+    "An early NDVI decline is a hypothesis about harvest timing, not proof of silage.",
+    "Cloud gaps can delay or hide the decline date; no residue (SWIR) evidence is used."
+  ]
+}
