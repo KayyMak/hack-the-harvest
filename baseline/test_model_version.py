@@ -84,6 +84,14 @@ class Switch(unittest.TestCase):
         self.assertEqual(metrics['features'], mv.features(version))
         self.assertIn('logistic', metrics)  # the API schema reads this key for either version
 
+    def test_downstream_summaries_record_the_saved_version(self):
+        """A partial regeneration must not ship a 2025 estimate or unlabeled calls from another model."""
+        for folder in (OUT, BACKUP):
+            saved = mv.saved_version(folder / 'metrics.json')
+            for rel in ('estimate_2025/summary.json', 'unlabeled/summary.json'):
+                model = json.loads((folder / rel).read_text(encoding='utf-8'))['model']
+                self.assertEqual(model.get('model_version', 'v1'), saved, f'{folder.name}/{rel}')
+
     def test_v1_switch_reproduces_the_backup(self):
         with tempfile.TemporaryDirectory() as directory:
             code = ('import sys; from pathlib import Path; import run_baseline as rb; '
