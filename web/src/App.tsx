@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { api } from './api'
+import { unlabeledCallsAt } from './adapter'
 import type { Pred, UnlabeledCallView } from './api'
 import { AgentPanel } from './components/AgentPanel'
 import { FieldPanel } from './components/FieldPanel'
@@ -82,7 +83,9 @@ export default function App() {
   const rollup = useAsync(() => api.rollup(year), [year])
   const acresConv = useAsync(() => api.convergenceAcres(), [])
   const unlabeled = useAsync(() => api.unlabeled(year), [year])
-  const unlabeledMap = useMemo(() => new Map<number, UnlabeledCallView>((unlabeled.data?.calls ?? []).map((c) => [c.OBJECTID, c])), [unlabeled.data])
+  // Season-end calls: shown only when Nov 30 is selected, never on a mid-season date.
+  const atSeasonEnd = asOf === `${year}-11-30`
+  const unlabeledMap = useMemo(() => new Map<number, UnlabeledCallView>(unlabeledCallsAt(unlabeled.data, year, asOf).map((c) => [c.OBJECTID, c])), [unlabeled.data, year, asOf])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
@@ -230,6 +233,7 @@ export default function App() {
             rollup={rollup.data}
             unlabeled={unlabeled.data}
             unlabeledError={unlabeled.error}
+            unlabeledAtSeasonEnd={atSeasonEnd}
             evaluation={evaluation.data}
             review={review}
             onSelect={select}
@@ -244,7 +248,7 @@ export default function App() {
             {view === 'fields' && (
               <>
                 <h1 className="sheet__title">Fields</h1>
-                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.{unlabeled.data && unlabeled.data.called > 0 ? ` Rows marked "no label" are season-end model calls on fields BARC did not label but the Cropland Data Layer shows as corn; there is nothing to check them against.` : ''}</p>
+                <p className="sheet__lede">Every BARC field for {year}, called as of {shortDate(asOf)}. Click a row to open its evidence.{unlabeledMap.size > 0 ? ` Rows marked "no label" are season-end model calls on fields BARC did not label but the Cropland Data Layer shows as corn; there is nothing to check them against.` : ''}</p>
                 <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} onSelect={select} selectedId={selectedId} />
               </>
             )}

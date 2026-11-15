@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { ConvergencePoint, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, UnlabeledYearView } from './types'
+import type { ConvergencePoint, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, UnlabeledCallView, UnlabeledYearView } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -190,6 +190,14 @@ export interface SavedUnlabeled {
     predicted_label: Label | null
     silage_probability: number | null
   }[]
+}
+
+/**
+ * Unlabeled calls are season-end calls: show them only when the selected date is Nov 30 of that year,
+ * so a mid-season view never implies a mid-season result for these fields.
+ */
+export function unlabeledCallsAt(view: UnlabeledYearView | null | undefined, year: number, asOf: string): UnlabeledCallView[] {
+  return view && view.year === year && asOf === `${year}-11-30` ? view.calls : []
 }
 
 /** One year's unlabeled calls. Field-years without usable satellite dates are counted, never called. */

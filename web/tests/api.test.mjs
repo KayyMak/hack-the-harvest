@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSummary, adaptUnlabeled, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSummary, adaptUnlabeled, fieldLayerKey, unlabeledCallsAt } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -144,4 +144,12 @@ test('unlabeled calls come from /api/unlabeled; a missing artifact is an error, 
   assert.equal((await api.unlabeled(2022)).silage, 1)
   status = 503
   await assert.rejects(api.unlabeled(2022), (error) => error.status === 503)
+})
+
+test('unlabeled calls are season-end only: shown on Nov 30, hidden on every mid-season date', () => {
+  const view = adaptUnlabeled(unlabeledFixture, 2022)
+  assert.equal(unlabeledCallsAt(view, 2022, '2022-11-30').length, 2)
+  for (const asOf of ['2022-08-12', '2022-09-12', '2022-10-12', '2022-11-12']) assert.deepEqual(unlabeledCallsAt(view, 2022, asOf), [])
+  assert.deepEqual(unlabeledCallsAt(view, 2023, '2023-11-30'), [], 'another year\'s calls are never shown')
+  assert.deepEqual(unlabeledCallsAt(null, 2022, '2022-11-30'), [])
 })

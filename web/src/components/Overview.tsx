@@ -20,6 +20,8 @@ interface Props {
   /** season-end model calls on blank-label fields that CDL marks as corn */
   unlabeled?: UnlabeledYearView | null
   unlabeledError?: Error | null
+  /** the selected date is Nov 30; unlabeled calls are season-end calls and get no numbers before it */
+  unlabeledAtSeasonEnd?: boolean
   evaluation: EvaluateResponse | null
   review: ReviewItem[]
   onSelect: (id: number) => void
@@ -32,7 +34,7 @@ interface Props {
 const REVIEW_ROWS = 3
 
 /** The one-glance screen: four key figures across the top and a rail of season, accuracy and review items. */
-export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
+export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError, unlabeledAtSeasonEnd = false, evaluation, review, onSelect, onOpenQuality, onOpenFields, seasonEnd }: Props) {
   const chart = useTheme().chart
   const decided = counts.Grain + counts.Silage
   const S = evaluation?.per_class.Silage
@@ -127,7 +129,9 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
 
         <section>
           <h2 className="rail__title">Unlabeled corn fields, {year}</h2>
-          {unlabeled ? <UnlabeledNote data={unlabeled} /> : unlabeledError ? (
+          {!unlabeledAtSeasonEnd ? (
+            <p className="unl"><span className="unl__tag">Model call, no label</span> Season-end calls on unlabeled corn fields are shown on Nov 30.</p>
+          ) : unlabeled ? <UnlabeledNote data={unlabeled} /> : unlabeledError ? (
             <Pending title="Calls on unlabeled fields">{unlabeledError.message}</Pending>
           ) : <p className="rail__note">Loading…</p>}
         </section>
