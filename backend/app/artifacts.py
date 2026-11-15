@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, Convergence, ConvergencePoint, ConvergenceYear, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow, SignalContribution,
     Rollup, UnlabeledCall, UnlabeledCalls, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -38,6 +38,21 @@ def read_decline_rule() -> DeclineRuleBaseline:
     except (OSError, ValueError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved decline-rule baseline (baseline/outputs/decline_rule/metrics.json) '
             'is missing or invalid.') from exc
+
+
+def read_contributions() -> list[SignalContribution]:
+    """Per-field signal breakdown of the saved season-end calls (baseline/export_contributions.py)."""
+    try:
+        with (OUTPUT_DIR / 'feature_contributions.csv').open(encoding='utf-8', newline='') as file:
+            rows = list(csv.DictReader(file))
+        if not rows:
+            raise ValueError('Empty contributions file')
+        return [SignalContribution(field_id=r['OBJECTID'], year=r['year'], feature=r['feature'],
+            value=_num(r['value']), contribution=r['contribution'], intercept=r['intercept'], fold=r['fold'])
+            for r in rows if not (r.get('as_of') or '').strip()]
+    except (OSError, ValueError, KeyError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved signal breakdown (baseline/outputs/feature_contributions.csv) is missing '
+            'or invalid; run python baseline/export_contributions.py.') from exc
 
 
 def read_predictions() -> list[Prediction]:

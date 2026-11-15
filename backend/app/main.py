@@ -6,12 +6,12 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
+from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_contributions, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
     read_predictions, read_quickstats, read_summary, read_unlabeled)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Observation, Prediction, QuickStatsRow, Rollup, UnlabeledCalls
+from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Observation, Prediction, QuickStatsRow, Rollup, SignalContribution, UnlabeledCalls
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -44,6 +44,12 @@ def convergence() -> Convergence:
 def decline_rule() -> DeclineRuleBaseline:
     """Saved organizer decline-date rule, scored on the same field-years as the logistic model."""
     return _serve(read_decline_rule)
+
+
+@app.get('/api/baseline/contributions', response_model=list[SignalContribution])
+def contributions() -> list[SignalContribution]:
+    """Per-field signal breakdown of the saved season-end calls (log-odds; positive = toward Silage)."""
+    return _serve(read_contributions)
 
 
 @app.get('/api/baseline/predictions', response_model=list[Prediction])
