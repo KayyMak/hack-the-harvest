@@ -299,10 +299,14 @@ def main() -> None:
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:
-        import sys
         sys.path.insert(0, str(ROOT / 'backend'))
-        from app.artifacts import compute_rollup  # same code as GET /api/baseline/rollup
-        write('barc_rollup', compute_rollup().model_dump())
+        from app import artifacts  # same code as GET /api/baseline/rollup
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE  # honour CUTLINE_BASE, like the convergence chart above
+            write('barc_rollup', artifacts.compute_rollup().model_dump())
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
     except Exception as exc:  # backend deps missing: the dashboard shows a pending slot instead
         print(f'skipped barc_rollup.json ({exc})')
 
