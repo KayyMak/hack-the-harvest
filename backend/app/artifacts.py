@@ -75,7 +75,8 @@ def compute_convergence() -> Convergence:
     for d in sorted(results.dates, key=lambda x: (x.year, x.as_of)):
         known = [(p, acres[p.field_id]) for p in d.predictions if acres.get(p.field_id) is not None]
         if not known:
-            continue
+            raise ArtifactUnavailable(f'No scored fields with known acreage for {d.as_of}; '
+                                      'the silage-acre estimate is unavailable.')
         expected = sum(p.silage_probability * a for p, a in known)
         sd = math.sqrt(sum(a * a * p.silage_probability * (1 - p.silage_probability) for p, a in known))
         by_year.setdefault(d.year, []).append(ConvergencePoint(as_of=d.as_of, mode=d.mode,

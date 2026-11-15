@@ -9,6 +9,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app import artifacts
 
 ROOT = Path(__file__).resolve().parents[2]
 JUDGES = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
@@ -66,10 +67,6 @@ class DeclineRuleRoute(unittest.TestCase):
         self.assertIn('decline_rule/metrics.json', response.json()['detail'])
 
 
-if __name__ == '__main__':
-    unittest.main()
-
-
 class ConvergenceRoute(unittest.TestCase):
     def setUp(self):
         self.client = TestClient(app)
@@ -99,3 +96,20 @@ class ConvergenceRoute(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
                 self.assertEqual(self.client.get('/api/baseline/convergence').status_code, 503)
+
+    def test_missing_acreage_is_explicit(self):
+        fields = artifacts.read_fields()
+        with patch('app.artifacts.read_fields', return_value=[f.model_copy(update={'acres': None}) for f in fields]):
+            response = self.client.get('/api/baseline/convergence')
+        self.assertEqual(response.status_code, 503)
+        self.assertIn('known acreage', response.json()['detail'])
+        partial = [f.model_copy(update={'acres': None}) if f.field_id == 1 else f for f in fields]
+        with patch('app.artifacts.read_fields', return_value=partial):
+            response = self.client.get('/api/baseline/convergence')
+        self.assertEqual(response.status_code, 200)
+        point = next(y for y in response.json()['years'] if y['year'] == 2021)['points'][0]
+        self.assertEqual(point['missing_acres_field_years'], 1)
+
+
+if __name__ == '__main__':
+    unittest.main()
