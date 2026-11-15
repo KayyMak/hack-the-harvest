@@ -1,0 +1,112 @@
+{
+ "note": "USDA NASS reports via ESMIS (esmis.nal.usda.gov). All released before Jan 2026. cropan26 (Jan 2026 Annual Summary) contains the 2025 answer and is deliberately excluded.",
+ "reports": {
+  "acrg0625": {
+   "title": "Acreage",
+   "released": "June 30, 2025",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/j098zb09z/4455bc157/4x51kh779/acrg0625.txt",
+   "sha256": "dc9af487792b2feab3ffbe7c60eda8dbc224a3b953d39fc420182beb04989663"
+  },
+  "crop0825": {
+   "title": "Crop Production",
+   "released": "August 12, 2025",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/tm70mv177/6m313n48h/w0894b04t/crop0825.txt",
+   "sha256": "b9e7c8e815ee60b7c71b1a89ed5a84f249252b642485c2534404d92453b0453a"
+  },
+  "crop0925": {
+   "title": "Crop Production",
+   "released": "September 12, 2025",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/tm70mv177/sx61gm45w/ws85cg70g/crop0925.txt",
+   "sha256": "ef745e9fd0c3d690fc26533f595171c703ece99e8731252432b550b7fe7a42f8"
+  },
+  "crop1125": {
+   "title": "Crop Production",
+   "released": "November 14, 2025",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/795644/crop1125.txt",
+   "sha256": "f639d9a47b1baac780fced6a94d8ad3338078d67f554d4f1480cbfd40272c29e"
+  },
+  "crop1123": {
+   "title": "Crop Production (backtest)",
+   "released": "November 9, 2023",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/tm70mv177/5x21w011c/sf269r71s/crop1123.txt",
+   "sha256": "7c01fa2200792615e7e5a263eafb8df0d9231f623a8010c34b4d13bca474f3d4"
+  },
+  "crop1124": {
+   "title": "Crop Production (backtest)",
+   "released": "November 8, 2024",
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/tm70mv177/bz60fp33t/fj237w71q/crop1124.txt",
+   "sha256": "3cbff7d8836d24a683245ff9bce4cb2cb070f8f2c6cf4ccc94328f4df3b502f8"
+  },
+  "cropan23": {
+   "title": "Crop Production Annual Summary (history)",
+   "released": null,
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/9306v916d/69700b71k/cropan23.txt",
+   "sha256": "efebc1ec18581b9464afa6f8ca90b21d9786a1ec4b1b85c2522f69fcfcc6c9da",
+   "years": [
+    2020,
+    2021,
+    2022
+   ]
+  },
+  "cropan24": {
+   "title": "Crop Production Annual Summary (history)",
+   "released": null,
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/ns065v292/wd377h97d/cropan24.txt",
+   "sha256": "2b9ec957ea496e7b363b531af43d8fbbb7b8167f252dad405590c74cd377ab11",
+   "years": [
+    2021,
+    2022,
+    2023
+   ]
+  },
+  "cropan25": {
+   "title": "Crop Production Annual Summary (history)",
+   "released": null,
+   "url": "https://esmis.nal.usda.gov/sites/default/release-files/k3569432s/nk324887m/vx023905r/cropan25.txt",
+   "sha256": "d0f902548f924e6c14b56ff0f485174dffe643a46d0c95c710395e46a39b6f41",
+   "years": [
+    2022,
+    2023,
+    2024
+   ]
+  }
+ },
+ "fsa": [
+  {
+   "year": 2021,
+   "as_of": "2021-12-01",
+   "url": "https://www.fsa.usda.gov/sites/default/files/documents/2021_fsa_acres_web_as_of_120121.zip",
+   "file": "fsa_2021_dec.zip",
+   "sha256": "197074e25ac9efca2186e1207a35988c83e6b7ffa7a28e345da7b2375e92f890"
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-12-01",
+   "url": "https://www.fsa.usda.gov/sites/default/files/documents/DkSrOxeWEvkEdt2.zip",
+   "file": "fsa_2022_dec.zip",
+   "sha256": "2d645dca506f951036c120f8fec9ca2ad0fe7f2682ecbfeda1ba17c7de3ef317"
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-12-01",
+   "url": "https://www.fsa.usda.gov/sites/default/files/documents/Ph8ZGICAsuKH.zip",
+   "file": "fsa_2023_dec.zip",
+   "sha256": "9d798e0133ca3a280a677072400b11bf6d1fe0d3be9962c3a132fe5d5d2f9dc5"
+  },
+  {
+   "year": 2024,
+   "as_of": "2024-12-02",
+   "url": "https://www.fsa.usda.gov/sites/default/files/2024-12/kUE2Z66bQlHK.zip",
+   "file": "fsa_2024_dec.zip",
+   "sha256": "87983e70f479e5986b1bb55d41fc5bc071fbadb897d48dca93c893f9fdb3eeeb"
+  },
+  {
+   "year": 2025,
+   "as_of": "2025-12-01",
+   "url": "https://www.fsa.usda.gov/sites/default/files/2025-12/UhYA3k5AKxVM.zip",
+   "file": "fsa_2025_dec.zip",
+   "sha256": "d845b98080bee7ab11fa78dd0080a41911fb5487aa24057df3c9330d2c418461"
+  }
+ ],
+ "fsa_note": "FSA Crop Acreage Data, December release of each crop year (published before NASS January Annual Summary). The January 12, 2026 FSA release is after the cutoff and excluded."
+}

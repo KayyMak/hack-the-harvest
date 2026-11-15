@@ -292,6 +292,15 @@ def main() -> None:
             shutil.copy2(png, OUT / 'chips' / png.name)
             has_chips = True
 
+    # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
+    try:
+        import sys
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app.artifacts import compute_rollup  # same code as GET /api/baseline/rollup
+        write('barc_rollup', compute_rollup().model_dump())
+    except Exception as exc:  # backend deps missing: the dashboard shows a pending slot instead
+        print(f'skipped barc_rollup.json ({exc})')
+
     write('_meta', {
         'stub': False,
         'note': 'Real BARC data: field outlines and labels from BARC_Corn.2021-2023.gpkg; held-out predictions and metrics from baseline/outputs (logistic regression, field-held-out folds).',
