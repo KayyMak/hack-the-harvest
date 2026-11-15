@@ -28,15 +28,7 @@ for _p in (_ROOT, _ROOT / 'backend'):
 
 from app import artifacts, tools  # noqa: E402
 from app.artifacts import ArtifactUnavailable  # noqa: E402
-from harvest.asof import EARLY, REFIT_V1, predictions_as_of  # noqa: E402
-
-
-def model_label(mode: str) -> str:
-    """The as-of mode with the model version named, e.g. 'saved full-season model (model v2)'."""
-    if mode in (EARLY, REFIT_V1):  # no model yet / already says v1
-        return mode
-    version = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8')).get('model_version', 'v1')
-    return f'{mode} (model {version})'
+from harvest.asof import model_label, predictions_as_of  # noqa: E402
 
 
 def run(year: int, as_of: str, out: Path) -> dict:
