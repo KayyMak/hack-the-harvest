@@ -4,13 +4,12 @@ complete by then. Shared by the one command (harvest.run) and the agent tools (h
 Monthly NDVI medians are complete at month end. Before Nov 30 the baseline's logistic
 pipeline is refit on the saved field folds with just those features (needs scikit-learn);
 from Nov 30 the saved full-season predictions are used; before Jul 31 every field is Pending.
-Results are cached per feature set, so repeated calls (the as-of slider, the agent) are instant.
+Artifacts are read on each call so regenerated outputs take effect immediately.
 """
 import csv
 import json
 import sys
 from datetime import date
-from functools import lru_cache
 from pathlib import Path
 
 _BACKEND = Path(__file__).resolve().parents[1] / 'backend'
@@ -28,14 +27,18 @@ REFIT = 'refit on months complete by as-of'
 
 
 def features_as_of(year: int, as_of: date) -> tuple[list[str], str]:
-    full = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
+    try:
+        full = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
+        if not isinstance(full, list) or not full or not all(isinstance(f, str) for f in full):
+            raise ValueError('Invalid feature list')
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        raise artifacts.ArtifactUnavailable('Saved model features are missing or invalid.') from exc
     if as_of >= date(year, 11, 30):
         return full, FULL
     usable = [f for f, (m, d) in MONTH_END.items() if as_of >= date(year, m, d)]
     return usable, REFIT if usable else EARLY
 
 
-@lru_cache(maxsize=16)
 def _refit(features: tuple[str, ...]) -> tuple[Prediction, ...]:
     """Same pipeline as baseline/run_baseline.py, same saved folds, fewer features."""
     try:
@@ -46,12 +49,23 @@ def _refit(features: tuple[str, ...]) -> tuple[Prediction, ...]:
         from sklearn.preprocessing import StandardScaler
     except ImportError as exc:
         raise RuntimeError('as-of dates before Nov 30 need scikit-learn: pip install scikit-learn') from exc
-    with (artifacts.OUTPUT_DIR / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
-        rows = list(csv.DictReader(f))
-    num = lambda v: np.nan if artifacts._num(v) is None else artifacts._num(v)
-    X = np.array([[num(r[c]) for c in features] for r in rows])
-    y = np.array([r['label'] == 'Silage' for r in rows], dtype=int)
-    folds = np.array([int(r['fold']) for r in rows])
+    # Validate labels and grouped folds before any training, including blank labels.
+    saved = artifacts.read_predictions()
+    try:
+        with (artifacts.OUTPUT_DIR / 'heldout_predictions.csv').open(encoding='utf-8', newline='') as f:
+            rows = list(csv.DictReader(f))
+        num = lambda v: np.nan if artifacts._num(v) is None else artifacts._num(v)
+        X = np.array([[num(r[c]) for c in features] for r in rows])
+        field_folds = {}
+        for p in saved:
+            if field_folds.setdefault(p.field_id, p.fold) != p.fold:
+                raise ValueError('A field crosses validation folds')
+        y = np.array([p.reference_label == 'Silage' for p in saved], dtype=int)
+        folds = np.array([p.fold for p in saved])
+        if len(set(folds)) < 2 or any(len(set(y[folds != k])) != 2 for k in set(folds)):
+            raise ValueError('Each training fold needs both classes')
+    except (OSError, KeyError, TypeError, ValueError) as exc:
+        raise artifacts.ArtifactUnavailable('Saved as-of training data is missing or invalid.') from exc
     prob = np.zeros(len(rows))
     for k in sorted(set(folds)):
         model = make_pipeline(SimpleImputer(strategy='median', keep_empty_features=True), StandardScaler(),

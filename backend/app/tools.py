@@ -76,7 +76,7 @@ def classify_predictions(predictions, year: int | None = None, field_ids: list[i
     for p in predictions:
         if year is not None and p.year != year:
             continue
-        if field_ids and p.field_id not in field_ids:
+        if field_ids is not None and p.field_id not in field_ids:
             continue
         rows.append({**p.model_dump(), 'evidence': feats.get((p.field_id, p.year), {})})
     return {'model': model, 'n': len(rows), 'predictions': rows}

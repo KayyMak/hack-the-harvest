@@ -23,20 +23,22 @@ from harvest.asof import predictions_as_of  # noqa: E402
 
 try:
     from langchain_core.tools import StructuredTool
-    from pydantic import create_model
+    from pydantic import ConfigDict, ValidationError, create_model
 except ImportError as exc:  # pragma: no cover
     raise ImportError('harvest.tools needs langchain-core: pip install langchain-core') from exc
 
 
-def classify(year: int, as_of: str | None = None, field_ids: list[int] | None = None) -> dict:
+def classify(year: int | None = None, as_of: str | None = None, field_ids: list[int] | None = None) -> dict:
     """Silage/Grain call per field for a year with silage probability and the NDVI evidence
     behind it. With as_of (YYYY-MM-DD) only satellite months complete by that date are used and
     undecided fields are Pending. Reference labels are returned separately as reference_label."""
     if as_of is None:
         return core.classify(year, field_ids)
+    if year is None:
+        return {'error': 'as_of needs year'}
     s = predictions_as_of(year, as_of)
     out = core.classify_predictions(s['predictions'], year, field_ids, s['mode'], only=s['features'])
-    pending = [f for f in s['pending'] if not field_ids or f in field_ids]
+    pending = [f for f in s['pending'] if field_ids is None or f in field_ids]
     out.update(as_of=as_of, features=s['features'], pending=pending, n_pending=len(pending))
     return out
 
@@ -74,32 +76,40 @@ def aggregate(year: int | None = None, as_of: str | None = None) -> dict:
 AGENT_TOOLS = {**core.TOOLS, 'classify': classify, 'evaluate': evaluate, 'aggregate': aggregate}
 
 
+def _schema(name, fn):
+    fields = {}
+    for param in inspect.signature(fn).parameters.values():
+        default = ... if param.default is inspect.Parameter.empty else param.default
+        fields[param.name] = (param.annotation, default)
+    return create_model(f'{name}_args', __config__=ConfigDict(extra='forbid', strict=True), **fields)
+
+
+SCHEMAS = {name: _schema(name, fn) for name, fn in AGENT_TOOLS.items()}
+
+
 def call(name: str, args: dict | None = None) -> dict:
     """Run an agent tool by name; never raises."""
     fn = AGENT_TOOLS.get(name)
     if fn is None:
         return {'error': f'unknown tool {name!r}; available: {sorted(AGENT_TOOLS)}'}
     try:
-        return fn(**(args or {}))
+        validated = SCHEMAS[name].model_validate({} if args is None else args)
+        return fn(**validated.model_dump())
     except (ArtifactUnavailable, RuntimeError) as exc:
         return {'error': str(exc)}
-    except (TypeError, ValueError) as exc:
+    except (TypeError, ValueError, ValidationError) as exc:
         return {'error': f'bad arguments for {name}: {exc}'}
 
 
 def _wrap(name: str, fn) -> StructuredTool:
-    fields = {}
-    for param in inspect.signature(fn).parameters.values():
-        default = ... if param.default is inspect.Parameter.empty else param.default
-        fields[param.name] = (param.annotation, default)
-    schema = create_model(f'{name}_args', **fields)
+    schema = SCHEMAS[name]
 
     def run(**kwargs) -> str:
         args = {k: v for k, v in kwargs.items() if v is not None}
         return json.dumps(call(name, args), default=str)
 
     return StructuredTool.from_function(func=run, name=name, args_schema=schema,
-        description=inspect.getdoc(fn) or name)
+        description=inspect.getdoc(fn) or name, handle_validation_error=True)
 
 
 TOOLS = [_wrap(name, fn) for name, fn in AGENT_TOOLS.items()]
