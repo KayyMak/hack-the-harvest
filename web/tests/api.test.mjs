@@ -1,12 +1,13 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptFields, adaptPredictions, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSummary, fieldLayerKey } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
 const fields = artifact('fields.geojson')
 const metrics = artifact('metrics.json')
+const asof = artifact('asof.json')
 
 test('real API polygons select reference labels by year, preserving unknown labels', () => {
   const a = adaptFields(fields, 2022)
@@ -35,6 +36,30 @@ test('saved predictions do not imply mid-season inference or score other years',
   assert.throws(() => adaptPredictions(rows, 2021, '2021-10-12'), /end-of-season/)
 })
 
+test('mid-season calls come only from saved as-of results, never from season-end predictions', () => {
+  const oct = adaptAsOfPredictions(asof, 2022, '2022-10-12')
+  assert.equal(oct.length, 7)  // the seven labeled 2022 field-years
+  assert.ok(oct.every((p) => p.year === 2022 && p.as_of === '2022-10-12' && ['Grain', 'Silage'].includes(p.class)))
+  assert.throws(() => adaptAsOfPredictions(asof, 2022, '2022-10-01'), /No saved calls/)
+  assert.throws(() => adaptAsOfPredictions(asof, 2024, '2024-10-12'), /No saved calls/)
+  const season = adaptConvergence(asof, 2022)
+  assert.deepEqual(season.map((p) => p.as_of), ['2022-08-12', '2022-09-12', '2022-10-12', '2022-11-12', '2022-11-30'])
+  assert.equal(season[0].bal_acc, 0.5)  // July alone is no better than always-Grain
+  assert.equal(season.at(-1).bal_acc, metrics.logistic.balanced_accuracy)
+  assert.deepEqual(adaptSummary(metrics, season).convergence, season)
+})
+
+test('the roll-up is labeled as BARC fields and compared with BARC labels, not the Census', () => {
+  const saved = { scope: 's', years: [{ year: 2022, reference_silage_acres: 74.44, expected_silage_acres: 54.1,
+    expected_silage_acres_95ci: [40.2, 68.0], cv_percent: 13.1 }] }
+  const r = adaptRollup(saved, 2022)
+  assert.equal(r.region, 'Labeled BARC fields')
+  assert.equal(r.reference_name, 'BARC reference labels')
+  assert.equal(r.census_acres, 74.44)
+  assert.match(r.note, /not a Maryland statewide estimate/)
+  assert.throws(() => adaptRollup(saved, 2021), /No saved roll-up/)
+})
+
 test('live client uses existing /api routes and the published response shapes', async (t) => {
   const calls = []
   t.mock.method(globalThis, 'fetch', async (url, init) => {
@@ -43,6 +68,9 @@ test('live client uses existing /api routes and the published response shapes', 
       '/api/fields.geojson': fields,
       '/api/baseline/summary': metrics,
       '/api/baseline/predictions': [{ field_id: 327, year: 2021, predicted_label: 'Grain', silage_probability: 0.01 }],
+      '/api/baseline/asof': asof,
+      '/api/baseline/rollup': { scope: 's', years: [{ year: 2022, reference_silage_acres: 74.44, expected_silage_acres: 54.1,
+        expected_silage_acres_95ci: [40.2, 68.0], cv_percent: 13.1 }] },
       '/api/fields/327/observations?year=2021': [
         { date: '2021-08-01', ndvi: 0.8, status: 'ok' },
         { date: '2021-08-02', ndvi: null, status: 'cloud_or_nodata' },
@@ -59,6 +87,11 @@ test('live client uses existing /api routes and the published response shapes', 
   assert.deepEqual(series.points, [{ date: '2021-08-01', ndvi: 0.8, ndti: null }])
   await assert.rejects(api.agentRun('test'), (error) => error.status === 501)
   assert.deepEqual(calls.at(-1), ['/api/agent/run', 'POST'])
-  await assert.rejects(api.rollup(2022), /BARC fields only/)
-  assert.equal((await api.meta()).season_end_only, true)
+  assert.equal((await api.rollup(2022)).reference_name, 'BARC reference labels')
+  await assert.rejects(api.rollup(2019), /No saved roll-up/)
+  assert.equal((await api.predict(2022, '2022-10-12')).length, 7)
+  assert.equal((await api.evaluate('strict', 2022)).convergence.length, 5)
+  const meta = await api.meta()
+  assert.equal(meta.season_end_only, false)
+  assert.equal(meta.as_of_dates.length, 15)
 })

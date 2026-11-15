@@ -77,7 +77,7 @@ export default function App() {
   const seasonEnd = meta.data?.season_end_only === true || asOfDates.length === 1
   const fields = useAsync(() => api.fields(year), [year])
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
-  const evaluation = useAsync(() => api.evaluate('strict'), [])
+  const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
@@ -254,9 +254,9 @@ export default function App() {
                     </Pending>
                   </>
                 )}
-                <h2 className="sheet__h2">Maryland roll-up</h2>
+                <h2 className="sheet__h2">Acreage roll-up</h2>
                 {rollup.error ? (
-                  <Pending title="Maryland silage acres vs the Census">
+                  <Pending title="Silage acres roll-up">
                     {rollup.error.message}
                   </Pending>
                 ) : (

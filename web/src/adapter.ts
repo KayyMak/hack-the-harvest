@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { EvaluateResponse, FieldsResponse, Label, Pred, SeriesResponse } from './types'
+import type { ConvergencePoint, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -61,6 +61,64 @@ export function adaptPredictions(data: SavedPrediction[], year: number, asOf: st
   }))
 }
 
+/** GET /api/baseline/asof: calls saved once by `python -m harvest.export_asof`. */
+export interface SavedAsOf {
+  dates: {
+    year: number
+    as_of: string
+    mode: string
+    predictions: { field_id: number; predicted_label: Label; silage_probability: number; reference_label: Label }[]
+    pending_field_ids: number[]
+  }[]
+  pooled: { month_day: string; share_decided: number | null; accuracy_decided: number | null; balanced_accuracy: number | null }[]
+}
+
+/** One year's calls on one saved date. A date that was never saved is an error, never a guess. */
+export function adaptAsOfPredictions(data: SavedAsOf, year: number, asOf: string): Pred[] {
+  const entry = data.dates.find((d) => d.year === year && d.as_of === asOf)
+  if (!entry) throw new Error(`No saved calls for ${asOf}.`)
+  return [
+    ...entry.predictions.map((p): Pred => ({
+      OBJECTID: p.field_id, year, as_of: asOf, p_silage: p.silage_probability,
+      class: p.predicted_label, abstain: false, top_features: '[]',
+    })),
+    ...entry.pending_field_ids.map((id): Pred => ({
+      OBJECTID: id, year, as_of: asOf, p_silage: null, class: 'Pending', abstain: false, top_features: '[]',
+    })),
+  ]
+}
+
+/** Scores pooled over all saved years, dated in `year` so the selected as-of date can be marked. */
+export function adaptConvergence(data: SavedAsOf, year: number): ConvergencePoint[] {
+  return data.pooled.filter((p) => p.share_decided != null).map((p) => ({
+    as_of: `${year}-${p.month_day}`, share_decided: p.share_decided ?? 0,
+    acc_decided: p.accuracy_decided ?? 0, bal_acc: p.balanced_accuracy,
+  }))
+}
+
+export interface SavedRollup {
+  scope: string
+  years: {
+    year: number
+    reference_silage_acres: number
+    expected_silage_acres: number
+    expected_silage_acres_95ci: [number, number]
+    cv_percent: number | null
+  }[]
+}
+
+/** The saved roll-up covers labeled BARC fields only: compare it with their labels, never the Census. */
+export function adaptRollup(data: SavedRollup, year: number): RollupResponse {
+  const y = data.years.find((row) => row.year === year)
+  if (!y) throw new Error(`No saved roll-up for ${year}.`)
+  return {
+    year, region: 'Labeled BARC fields', acres: y.expected_silage_acres, ci: y.expected_silage_acres_95ci,
+    cv_pct: y.cv_percent ?? 0, census_acres: y.reference_silage_acres, csv_url: 'api/baseline/rollup.csv',
+    reference_name: 'BARC reference labels',
+    note: 'Labeled BARC fields only, scored held out by field. This is not a Maryland statewide estimate and is not compared with the Census.',
+  }
+}
+
 function wilson(k: number, n: number) {
   if (!n) return { value: 0, lo: 0, hi: 0 }
   const z = 1.959964
@@ -71,7 +129,7 @@ function wilson(k: number, n: number) {
   return { value: p, lo: Math.max(0, c - h), hi: Math.min(1, c + h) }
 }
 
-export function adaptSummary(data: SavedSummary): EvaluateResponse {
+export function adaptSummary(data: SavedSummary, convergence: ConvergencePoint[] = []): EvaluateResponse {
   const m = data.logistic
   const cm = m.confusion_matrix
   const perClass = (label: Label) => {
@@ -84,7 +142,7 @@ export function adaptSummary(data: SavedSummary): EvaluateResponse {
     split: 'field', split_label: 'held out by field', protocol: data.protocol,
     labels: m.matrix_order, confusion: cm,
     per_class: { Grain: perClass('Grain'), Silage: perClass('Silage') },
-    convergence: [], abstained: data.excluded_field_years,
+    convergence, abstained: data.excluded_field_years,
     n_evaluated: data.evaluated_field_years, n_fields: data.evaluated_fields,
     model_name: 'Logistic regression on NDVI', balanced_accuracy: m.balanced_accuracy,
     baseline: { ...data.always_grain, name: 'Always grain' },

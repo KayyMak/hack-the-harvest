@@ -13,7 +13,9 @@ export function RollupPanel({ data, error }: Props) {
   if (!data) return <div className="skeleton skeleton--panel" />
   const [lo, hi] = data.ci
   const inside = data.census_acres >= lo && data.census_acres <= hi
-  const diff = (data.acres - data.census_acres) / data.census_acres
+  const diff = data.census_acres ? (data.acres - data.census_acres) / data.census_acres : null
+  const refName = data.reference_name ?? `Census of Agriculture ${data.year}`
+  const refShort = data.reference_name ?? 'Census'
   return (
     <div className="rollup">
       <div className="eyebrow">{data.region} · corn for silage · {data.year}</div>
@@ -28,13 +30,12 @@ export function RollupPanel({ data, error }: Props) {
           </div>
         </div>
         <div>
-          <div className="rollup__label">Census of Agriculture {data.year}</div>
+          <div className="rollup__label">{refName}</div>
           <div className="rollup__value rollup__value--ref">
             {acres(data.census_acres)} <span className="rollup__unit">acres</span>
           </div>
           <div className="rollup__ci">
-            {diff >= 0 ? '+' : ''}
-            {(diff * 100).toFixed(1)}% vs. Census
+            {diff == null ? 'No reference acres to compare' : `${diff >= 0 ? '+' : ''}${(diff * 100).toFixed(1)}% vs. ${refShort}`}
           </div>
         </div>
       </div>
@@ -42,13 +43,13 @@ export function RollupPanel({ data, error }: Props) {
       <DotWhisker data={data} />
 
       <p className={`rollup__verdict ${inside ? 'is-ok' : 'is-off'}`}>
-        {inside ? '✓ The Census value falls inside our 95% interval.' : '✗ The Census value falls outside our 95% interval.'}
+        {inside ? `✓ The ${refShort} value falls inside our 95% interval.` : `✗ The ${refShort} value falls outside our 95% interval.`}
       </p>
 
       <a className="button" href={api.csvUrl(data.csv_url)} download>
         Download QuickStats CSV
       </a>
-      <p className="muted small">County totals are a sanity check on the roll-up, never field-level truth.</p>
+      <p className="muted small">{data.note ?? 'County totals are a sanity check on the roll-up, never field-level truth.'}</p>
     </div>
   )
 }
@@ -68,7 +69,7 @@ function DotWhisker({ data }: { data: RollupResponse }) {
   const x = (v: number) => L + ((v - a) / (b - a)) * (W - L - R)
   const ticks = niceTicks(a, b, 4)
   return (
-    <svg className="dotwhisker" viewBox={`0 0 ${W} 132`} role="img" aria-label="Our estimate with 95% interval compared with the Census value">
+    <svg className="dotwhisker" viewBox={`0 0 ${W} 132`} role="img" aria-label={`Our estimate with 95% interval compared with ${data.reference_name ?? 'the Census value'}`}>
       {ticks.map((v) => (
         <g key={v}>
           <line x1={x(v)} x2={x(v)} y1={14} y2={104} stroke={t.grid} />
@@ -82,7 +83,7 @@ function DotWhisker({ data }: { data: RollupResponse }) {
       <line x1={x(lo)} x2={x(lo)} y1={32} y2={48} stroke={t.ink} strokeWidth={2} />
       <line x1={x(hi)} x2={x(hi)} y1={32} y2={48} stroke={t.ink} strokeWidth={2} />
       <circle cx={x(data.acres)} cy={40} r={7} fill={t.ink} stroke={t.surface} strokeWidth={2} />
-      <text x={0} y={84} fontSize={15} fill={t.ink} fontWeight={600}>Census {data.year}</text>
+      <text x={0} y={84} fontSize={15} fill={t.ink} fontWeight={600}>{data.reference_name ? 'Labels' : `Census ${data.year}`}</text>
       <rect x={x(data.census_acres) - 6} y={74} width={12} height={12} transform={`rotate(45 ${x(data.census_acres)} 80)`} fill={t.surface} stroke={t.ink} strokeWidth={2} />
     </svg>
   )

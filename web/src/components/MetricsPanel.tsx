@@ -208,7 +208,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
         <Legend verticalAlign="top" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
         <Line dataKey="share_decided" name="Share of fields decided" stroke={t.share} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: t.surface }} activeDot={{ r: 6 }} isAnimationActive={false} />
-        <Line dataKey="acc_decided" name="Accuracy on decided" stroke={t.accuracy} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: t.surface }} activeDot={{ r: 6 }} isAnimationActive={false} />
+        <Line dataKey={rows.some((r) => r.bal_acc != null) ? 'bal_acc' : 'acc_decided'} name={rows.some((r) => r.bal_acc != null) ? 'Balanced accuracy (pooled 2021–2023)' : 'Accuracy on decided'} stroke={t.accuracy} strokeWidth={2} dot={{ r: 4, strokeWidth: 2, fill: t.surface }} activeDot={{ r: 6 }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
   )
