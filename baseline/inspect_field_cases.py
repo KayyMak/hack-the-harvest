@@ -18,6 +18,8 @@ import pandas as pd
 from run_baseline import FEATURES, build_model, verify_originals
 
 INPUT = HERE / 'outputs'
+# This diagnostic explains the v1 (nine-feature) calls; model v2 kept byte-identical v1 files here.
+V1 = INPUT / 'v1_backup'
 OUT = INPUT / 'diagnostics' / 'field_323_and_327'
 CASES = [(323, 2023), (327, 2021)]
 
@@ -25,14 +27,14 @@ CASES = [(323, 2023), (327, 2021)]
 def main():
     verify_originals()
     OUT.mkdir(parents=True, exist_ok=True)
-    features = pd.read_csv(INPUT / 'features.csv')
-    predictions = pd.read_csv(INPUT / 'heldout_predictions.csv')
+    features = pd.read_csv(V1 / 'features.csv')
+    predictions = pd.read_csv(V1 / 'heldout_predictions.csv')
     observations = pd.read_csv(INPUT / 'observations.csv')
-    metadata = json.loads((INPUT / 'metrics.json').read_text())
+    metadata = json.loads((V1 / 'metrics.json').read_text())
     assert metadata['features'] == FEATURES
     fig, axes = plt.subplots(2, 2, figsize=(15, 10), layout='constrained')
     summaries, contribution_tables, daily_tables = [], [], []
-    provenance = {name: hashlib.sha256((INPUT / name).read_bytes()).hexdigest()
+    provenance = {name: hashlib.sha256(((INPUT if name == 'observations.csv' else V1) / name).read_bytes()).hexdigest()
                   for name in ['features.csv', 'heldout_predictions.csv', 'metrics.json', 'observations.csv']}
     for column, (field_id, year) in enumerate(CASES):
         saved = predictions[(predictions.OBJECTID == field_id) & (predictions.year == year)].iloc[0]

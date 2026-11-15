@@ -9,15 +9,17 @@ Paths below are relative to `baseline/outputs/`, except `web_snapshot/`, which m
 top-level JSON files of `web/public/snapshot/` (the per-field `series_*.json` files and chips
 do not depend on the model and are not copied).
 
-Nothing reads this folder at run time. It exists so reverting is trivial and so tests can
-check that the v1 code path still reproduces these files.
+Do not delete this folder. Besides making a revert trivial, it is read by the experiments that
+were run against v1 and stay frozen against it (`compare_nemotron.py`, `experiment_scene_filter.py`,
+`inspect_field_cases.py`, `model_v2/` candidate A) and by tests that check the v1 code path still
+reproduces these files (`test_model_version.py`). The API and the web app never read it.
 
 ## Switch back to v1
 
 Either restore the files:
 
 ```sh
-cp -r baseline/outputs/v1_backup/{features.csv,heldout_predictions.csv,metrics.json,results.md,missing_features.csv,asof.json,feature_contributions.csv} baseline/outputs/
+cp baseline/outputs/v1_backup/{features.csv,heldout_predictions.csv,metrics.json,results.md,missing_features.csv,excluded_no_observations.csv,asof.json,feature_contributions.csv} baseline/outputs/
 cp baseline/outputs/v1_backup/unlabeled/* baseline/outputs/unlabeled/
 cp baseline/outputs/v1_backup/estimate_2025/* baseline/outputs/estimate_2025/
 cp baseline/outputs/v1_backup/decline_rule/* baseline/outputs/decline_rule/
