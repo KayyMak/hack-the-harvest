@@ -195,5 +195,37 @@ class Round3(unittest.TestCase):
         self.assertEqual(g['winner'], 'GB5' if gp['G1']['acre_weighted_mape'] - gp['GB5']['acre_weighted_mape'] >= 0.05 else 'G1')
 
 
+class Round4(unittest.TestCase):
+    def test_round4_code_never_names_the_answer_key(self):
+        text = (HERE / 'backtest_round4.py').read_text(encoding='utf-8')
+        for banned in ('quickstats_2025_judges', 'cropan26', 'benchmark', 'compare_2025', 'judges'):
+            self.assertNotIn(banned, text, f'backtest_round4.py names {banned}')
+
+    def test_yield_file_holds_no_2025_final_or_2026_row(self):
+        import backtest_round4 as b4
+        with open(b4.YIELD_CSV, encoding='utf-8-sig', newline='') as f:
+            for r in csv.DictReader(f):
+                self.assertFalse(r['Year'] == '2025' and r['Period'] == 'YEAR')
+                self.assertNotEqual(r['Year'], '2026')
+
+    def test_beta_ignores_finals_from_t_on(self):
+        import backtest_round4 as b4
+        fin, fc = b4.load_yields()
+        rows = b4.add_anomalies(bt.silage_rows(FINALS, INSEASON, bt.SILAGE_ROBUST_YEARS), fin, fc)
+        for t in (2018, 2021, 2024):
+            bad = [dict(r, truth=r['truth'] * 1.37 + 11) if r['year'] >= t else r for r in rows]
+            for key in ('a1', 'a2'):
+                self.assertEqual(b4.fit_beta(rows, t, key), b4.fit_beta(bad, t, key))
+
+    def test_round4_follows_its_preregistered_rule(self):
+        s = json.loads((HERE / 'outputs/round4/backtest_round4.json').read_text(encoding='utf-8'))['silage']
+        p = s['pooled']
+        floor = min(p['Y1']['acre_weighted_mape'], p['Y2']['acre_weighted_mape'])
+        w = 'Y2' if p['Y2']['acre_weighted_mape'] <= floor + 0.20 else 'Y1'
+        ok = (p['R2']['acre_weighted_mape'] - p[w]['acre_weighted_mape'] >= 0.50
+              and p[w]['median_ape'] - p['R2']['median_ape'] <= 0.50)
+        self.assertEqual(s['winner'], w if ok else 'R2')
+
+
 if __name__ == '__main__':
     unittest.main()
