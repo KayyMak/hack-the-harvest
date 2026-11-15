@@ -10,6 +10,7 @@ const tint = (pct: number) => `color-mix(in srgb, currentColor ${pct}%, transpar
 const S: Record<string, CSSProperties> = {
   box: { border: `1px solid ${tint(16)}`, borderRadius: 14, padding: 14, display: 'flex', flexDirection: 'column', gap: 10, minWidth: 0 },
   note: { margin: 0 },
+  muted: { opacity: 0.72, fontSize: 13 },
   drop: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, padding: '12px 12px', borderRadius: 10, border: `1.5px dashed ${tint(30)}` },
   dropOver: { borderStyle: 'solid', borderColor: tint(60), background: tint(8) },
   hiddenInput: { position: 'absolute', width: 1, height: 1, opacity: 0, overflow: 'hidden', pointerEvents: 'none' },
@@ -19,8 +20,9 @@ const S: Record<string, CSSProperties> = {
   line: { margin: 0, fontSize: 14 },
   cropBtn: { border: `1px solid ${tint(22)}`, background: 'none', color: 'inherit', font: 'inherit', fontSize: 13, padding: '3px 10px', cursor: 'pointer' },
   cropOn: { background: tint(16), fontWeight: 600 },
-  table: { fontSize: 13 },
-  cell: { padding: '6px 8px' },
+  table: { fontSize: 12.5 },
+  cell: { padding: '6px 5px' },
+  pill: { marginLeft: 0, padding: '1px 4px', fontSize: 11.5 },
   scroll: { maxHeight: 320, overflow: 'auto' },
   list: { margin: '6px 0 0', paddingLeft: 18, fontSize: 12.5, maxHeight: 180, overflow: 'auto' },
 }
@@ -32,7 +34,7 @@ const signedAcres = (x: number) => `${x > 0 ? '+' : x < 0 ? '−' : ''}${fmtFull
 
 function ErrPct({ err }: { err: number | null }) {
   if (err == null) return <span>—</span>
-  return <span className={`errtag ${Math.abs(err) <= 0.1 ? 'is-good' : 'is-off'}`} style={{ marginLeft: 0 }}>{fmtPct(err)}</span>
+  return <span className={`errtag ${Math.abs(err) <= 0.1 ? 'is-good' : 'is-off'}`} style={S.pill}>{fmtPct(err)}</span>
 }
 
 /** Why a row in the judge's file has no error. */
@@ -108,7 +110,7 @@ export function ScoreUpload({ data, crop }: { data: Forecast; crop?: Crop }) {
         Drop the QuickStats CSV export (corn for grain/silage, acres harvested, 2025). Nothing is uploaded; it is read in your browser.
       </p>
       <div style={{ ...S.drop, ...(over ? S.dropOver : null) }}>
-        <button type="button" className="ghost-btn" onClick={() => input.current?.click()}>Choose CSV</button>
+        <button type="button" className="ghost-btn" style={{ flex: 'none', whiteSpace: 'nowrap' }} onClick={() => input.current?.click()}>Choose CSV</button>
         <span className="rail__note rail__note--keep" style={S.note}>{file ? file.name : 'or drop it here'}</span>
         <input
           ref={input}
@@ -145,7 +147,7 @@ function Results({ score, crop }: { score: UploadScore; crop?: Crop }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <p style={S.line}>
         <strong>{counts.scored} rows matched</strong>{' '}
-        <span className="rail__note rail__note--keep" style={{ ...S.note, display: 'inline' }}>
+        <span style={S.muted}>
           of {score.rowsRead} read; {unscored.length} not scored; {score.ignored.length} ignored{notInFile ? `; ${notInFile} of our rows not in your file` : ''}.
         </span>
       </p>
@@ -162,16 +164,15 @@ function Results({ score, crop }: { score: UploadScore; crop?: Crop }) {
         <strong>{score.tally.Silage.within10} of {score.tally.Silage.states}</strong>
       </p>
       <p style={S.line}>
-        Mean absolute % error, states: grain <strong>{pctAbs(score.tally.Grain.meanAbsPctError)}</strong>, silage{' '}
-        <strong>{pctAbs(score.tally.Silage.meanAbsPctError)}</strong>
-        <span className="rail__note rail__note--keep" style={{ ...S.note, display: 'inline' }}> (unweighted)</span>
+        Mean absolute % error by state <span style={S.muted}>(unweighted)</span>:
+        grain <strong>{pctAbs(score.tally.Grain.meanAbsPctError)}</strong>, silage <strong>{pctAbs(score.tally.Silage.meanAbsPctError)}</strong>
       </p>
 
       <StateScores rows={score.states} initial={crop ? CROP_OF[crop] : 'Silage'} />
 
       {unscored.length > 0 && (
         <details>
-          <summary className="rail__note rail__note--keep" style={{ ...S.note, cursor: 'pointer' }}>{unscored.length} rows in your file not scored</summary>
+          <summary className="rail__note rail__note--keep" style={{ ...S.note, cursor: 'pointer' }}>{unscored.length} {unscored.length === 1 ? 'row' : 'rows'} in your file not scored</summary>
           <ul style={S.list}>
             {unscored.map((c) => (
               <li key={`${c.geography}-${c.cropUse}`}>{titleCase(c.geography)} {c.cropUse.toLowerCase()}: {notScored(c)}</li>
