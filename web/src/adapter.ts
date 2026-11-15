@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse, Forecast2025, Forecast2025Summary, ForecastCrop, NassAcres, UnlabeledCallView, UnlabeledYearView } from './types'
+import type { ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, ModelSelection, Pred, RollupResponse, SeriesResponse, Forecast2025, Forecast2025Summary, ForecastCrop, NassAcres, UnlabeledCallView, UnlabeledYearView } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -30,6 +30,11 @@ export interface SavedSummary {
   read_errors: number
   logistic: SavedMetrics
   always_grain: SavedMetrics
+  /** present when the saved model is v2 */
+  model_version?: 'v1' | 'v2' | null
+  model?: string | null
+  selection?: ModelSelection | null
+  v1_logistic_same_split?: SavedMetrics | null
 }
 
 export type SavedFields = FeatureCollection<Geometry, {
@@ -184,8 +189,11 @@ export function adaptSummary(data: SavedSummary, convergence: ConvergencePoint[]
     per_class: { Grain: perClass('Grain'), Silage: perClass('Silage') },
     convergence, abstained: data.excluded_field_years,
     n_evaluated: data.evaluated_field_years, n_fields: data.evaluated_fields,
-    model_name: 'Logistic regression on NDVI', balanced_accuracy: m.balanced_accuracy,
+    model_name: data.model ?? 'Logistic regression on NDVI', balanced_accuracy: m.balanced_accuracy,
     baseline: { ...data.always_grain, name: 'Always grain' },
+    model_version: data.model_version ?? 'v1',
+    ...(data.selection ? { selection: data.selection } : {}),
+    ...(data.v1_logistic_same_split ? { v1_same_split: data.v1_logistic_same_split } : {}),
   }
 }
 

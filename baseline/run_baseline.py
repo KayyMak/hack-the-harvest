@@ -280,23 +280,73 @@ def build_model():
         StandardScaler(), LogisticRegression(C=1.0, max_iter=2000, random_state=42))
 
 
+def v2_report(fold_C):
+    """metrics.json keys added for model v2 (v1 files carry none of them)."""
+    import model_version
+    summary = json.loads((HERE / 'model_v2' / 'outputs' / 'summary.json').read_text(encoding='utf-8'))
+    boot = summary['posthoc_field_bootstrap_vs_A']['H']
+    return dict(model_version='v2', model=model_version.NAMES['v2'], model_description=model_version.DESCRIPTIONS['v2'],
+        penalty='l1', C='chosen in each training fold by field-grouped inner CV (C_by_fold)', C_by_fold=fold_C,
+        selection=dict(
+            note=('Model v2 is the winner of eight candidates pre-registered in baseline/model_v2/results.md, '
+                  'chosen on 20 fresh field-grouped splits (seeds 0-19). This seed-42 split was already seen, so '
+                  'its numbers are optimistic; the selection-corrected (nested) balanced accuracy is the honest '
+                  'estimate. The gain rests on 3-4 silage field-years.'),
+            nested_selection_mean_balanced_accuracy=summary['optimism']['nested_selection_mean_ba'],
+            v1_mean_balanced_accuracy_same_seeds=summary['optimism']['current_A_mean_ba'],
+            gain_vs_v1_field_bootstrap_95ci=boot['ci95'],
+            gain_vs_v1_bootstrap_share_le_zero=boot['share_le_zero'],
+            details='baseline/model_v2/results.md'))
+
+
+def v2_interpretation(report):
+    lr, v1, sel = report['logistic'], report['v1_logistic_same_split'], report['selection']
+    lo, hi = sel['gain_vs_v1_field_bootstrap_95ci']
+    cm, cm1 = lr['confusion_matrix'], v1['confusion_matrix']
+    return [
+        f'Model v2 identifies {cm[1][1]} of 12 Silage examples while misclassifying {cm[0][1]} of 32 Grain '
+        f'examples (balanced accuracy {lr["balanced_accuracy"]:.3f}, Brier {lr["brier_score"]:.3f}). On the same '
+        f'split v1 identified {cm1[1][1]} of 12 and misclassified {cm1[0][1]} of 32 (balanced accuracy '
+        f'{v1["balanced_accuracy"]:.3f}, Brier {v1["brier_score"]:.3f}).', '',
+        'How much to trust the gain:', '',
+        '- This seed-42 split was already seen when model v2 was chosen, so the numbers above are optimistic. '
+        'Model v2 won a pre-registered comparison of eight candidates on 20 fresh field-grouped splits.',
+        f'- Repeating the whole selection inside each training fold (nested) gives a mean balanced accuracy of '
+        f'about {sel["nested_selection_mean_balanced_accuracy"]:.2f}, against '
+        f'{sel["v1_mean_balanced_accuracy_same_seeds"]:.2f} for v1 on the same splits: the honest estimate.',
+        f'- A field-level bootstrap 95% interval for the balanced-accuracy gain over v1 is [{lo:.3f}, {hi:.3f}]: '
+        'it touches zero. The gain rests on 3-4 silage field-years.',
+        '- The sample is small (44 field-years, 34 fields) and all fields are near BARC; nearby fields share '
+        'imagery and management. Field grouping does not demonstrate transfer to other regions or future years.',
+        '- drop_size is the largest NDVI fall between consecutive clear looks, so it grows with the gap between '
+        'looks; it may shift where cloud gaps differ from those at BARC.', '']
+
+
 def write_results(report, table, observations):
     lr, grain = report['logistic'], report['always_grain']
+    v2 = report.get('model_version') == 'v2'  # v1 reports carry no model_version and keep their text
+    name = 'Model v2' if v2 else 'Logistic regression'
     metric_names = [('Silage precision', 'silage_precision'), ('Silage recall', 'silage_recall'),
         ('Silage F1', 'silage_f1'), ('False positive rate', 'false_positive_rate'),
         ('Balanced accuracy', 'balanced_accuracy'), ('Brier score (lower is better)', 'brier_score')]
-    lines = ['# Measured BARC baseline results', '',
+    lines = ['# Measured BARC results: model v2' if v2 else '# Measured BARC baseline results', '',
         'All predictions below are held out by field: five stratified group folds, '
         '34 field groups, seed 42. All years of a field share one fold. '
-        'Imputation, scaling, and model fitting occur inside each training fold.', '',
-        '| Metric | Logistic regression | Always Grain |', '| --- | ---: | ---: |']
+        'Imputation, scaling, and model fitting occur inside each training fold.', '']
+    if v2:
+        lines += [f'Model v2: {report["model"]}. The nine NDVI features plus four harvest-timing features '
+            '(decline_doy, drop_doy, drop_size, regrowth); L1 logistic regression with C chosen by '
+            f'field-grouped inner CV inside each training fold (C by fold: {report["C_by_fold"]}); threshold 0.5. '
+            'It is candidate H of the pre-registered experiment in ../model_v2/results.md. '
+            'The v1 model (nine NDVI features, C = 1) is kept as a backup: v1_backup/.', '']
+    lines += [f'| Metric | {name} | Always Grain |', '| --- | ---: | ---: |']
     for label, key in metric_names:
         lines.append(f'| {label} | {lr[key]:.4f} | {grain[key]:.4f} |')
     lines += ['', 'Silage is the positive class. For the always-Grain predictor, '
         'precision has a zero denominator and is reported as 0 by convention.', '',
         '## Confusion matrices', '',
         'Rows are reference labels; columns are predictions.', '',
-        '| Logistic regression | Predicted Grain | Predicted Silage |',
+        f'| {name} | Predicted Grain | Predicted Silage |',
         '| --- | ---: | ---: |',
         f'| True Grain | {lr["confusion_matrix"][0][0]} | {lr["confusion_matrix"][0][1]} |',
         f'| True Silage | {lr["confusion_matrix"][1][0]} | {lr["confusion_matrix"][1][1]} |', '',
@@ -324,7 +374,7 @@ def write_results(report, table, observations):
         f'- {int(table.valid_dates.sum())} usable field-dates after duplicate-date aggregation; '
         f'{int(table.valid_dates.min())}–{int(table.valid_dates.max())} per field-year.',
         f'- {sum(report["missing_feature_counts"].values())} missing final feature cells '
-        f'out of {len(table) * len(FEATURES)}. Missingness is preserved until fold-level imputation.',
+        f'out of {len(table) * len(report["features"])}. Missingness is preserved until fold-level imputation.',
         '- No feature was entirely missing in a training fold.' if
         not any(r['all_missing_training_features'] for r in report['folds']) else
         '- Entirely missing training-fold features are listed in metrics.json.', '',
@@ -336,58 +386,74 @@ def write_results(report, table, observations):
         'The original machine lacked the analysis packages. A local Python 3.12.10 '
         'environment resolved this. Network access required sandbox approval; '
         'all requested satellite reads then completed successfully.', '',
-        '## Interpretation', '',
+        '## Interpretation', ''] + (v2_interpretation(report) if v2 else [
         f'The model identifies {lr["confusion_matrix"][1][1]} of 12 Silage examples '
         f'while misclassifying {lr["confusion_matrix"][0][1]} of 32 Grain examples. '
         'The improvement over always-Grain is useful for an initial baseline, '
         'but five missed Silage examples remain. The sample is small and all fields '
         'are near BARC. Nearby fields can share imagery and management. '
         'Field grouping does not demonstrate transfer to other regions or future years. '
-        'No tuning or threshold selection was performed using held-out predictions.', '',
+        'No tuning or threshold selection was performed using held-out predictions.', '']) + [
         'See ../README.md for methods, package requirements, CRS checks, references, '
         'and commands. Numerical predictions, split IDs, and metrics are saved alongside this file.', '']
     (OUT / 'results.md').write_text('\n'.join(lines), encoding='utf-8')
 
 
 def evaluate(jobs):
+    import model_version
+    version = model_version.current()  # 'v1' reproduces the pre-v2 outputs exactly
+    feats = model_version.features(version)
     rows, observations = [], []
     for row in jobs.itertuples():
         result = load_cache(row)
         if result is None:
             raise RuntimeError(f'Missing extraction cache for {row.OBJECTID}/{row.year}')
-        rows.append(summarize(row, result))
+        summary = summarize(row, result)
+        if version == 'v2':  # timing features from the same accepted per-scene records
+            summary.update(model_version.timing_from_observations(result['observations']))
+        rows.append(summary)
         observations.extend(result['observations'])
     table = pd.DataFrame(rows)
     table.to_csv(OUT / 'features.csv', index=False)
     pd.DataFrame(observations).drop(columns='calibration', errors='ignore').to_csv(
         OUT / 'observations.csv', index=False)
-    table[['OBJECTID', 'year', 'label']].join(table[FEATURES].isna().add_suffix('_missing')).to_csv(
+    table[['OBJECTID', 'year', 'label']].join(table[feats].isna().add_suffix('_missing')).to_csv(
         OUT / 'missing_features.csv', index=False)
     usable = table[table.valid_dates > 0].copy().reset_index(drop=True)
     table[table.valid_dates == 0].to_csv(OUT / 'excluded_no_observations.csv', index=False)
     if len(usable) < 5 or usable.label.nunique() != 2:
         raise RuntimeError('Insufficient observed examples/classes for grouped validation')
-    X = usable[FEATURES]
+    X = usable[feats]
     y = (usable.label == 'Silage').astype(int).to_numpy()
     groups = usable.OBJECTID.to_numpy()
     pred = np.full(len(y), -1)
     proba = np.full(len(y), np.nan)
     folds = np.full(len(y), -1)
-    fold_records = []
+    fold_records, fold_C = [], []
+    v1_pred, v1_proba = np.full(len(y), -1), np.full(len(y), np.nan)
     cv = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
     for fold, (train, test) in enumerate(cv.split(X, y, groups), 1):
         assert not set(groups[train]) & set(groups[test]), 'Field leakage'
         if len(set(y[train])) != 2:
             raise RuntimeError(f'Fold {fold} training data has only one class')
-        model = build_model()
-        model.fit(X.iloc[train], y[train])
+        if version == 'v1':
+            model = build_model()
+            model.fit(X.iloc[train], y[train])
+            pipeline = model
+        else:
+            model = model_version.build_model(version).fit(X.iloc[train], y[train], groups[train])
+            pipeline = model_version.fitted_pipeline(model)
+            fold_C.append(float(model.C_))
+            v1 = build_model().fit(X.iloc[train][FEATURES], y[train])  # v1 on the same split, for comparison
+            v1_pred[test] = v1.predict(X.iloc[test][FEATURES])
+            v1_proba[test] = v1.predict_proba(X.iloc[test][FEATURES])[:, 1]
         pred[test] = model.predict(X.iloc[test])
         proba[test] = model.predict_proba(X.iloc[test])[:, 1]
         folds[test] = fold
         fold_records.append(dict(fold=fold, training_fields=sorted(set(map(int, groups[train]))),
             test_fields=sorted(set(map(int, groups[test]))),
             all_missing_training_features=X.iloc[train].columns[X.iloc[train].isna().all()].tolist(),
-            imputation_medians=model[0].statistics_.tolist(),
+            imputation_medians=pipeline[0].statistics_.tolist(),
             logistic=metrics(y[test], pred[test], proba[test]),
             always_grain=metrics(y[test], np.zeros(len(test), dtype=int), np.zeros(len(test)))))
     assert np.all(pred >= 0) and np.isfinite(proba).all()
@@ -398,12 +464,12 @@ def evaluate(jobs):
     assert usable.groupby('OBJECTID').fold.nunique().max() == 1
     usable.to_csv(OUT / 'heldout_predictions.csv', index=False)
     report = dict(protocol='5-fold StratifiedGroupKFold, OBJECTID groups, shuffle=True, seed=42',
-        features=FEATURES, threshold=0.5, class_weight=None, C=1.0,
+        features=feats, threshold=0.5, class_weight=None, C=1.0,
         preprocessing='Training-fold median imputation then training-fold standard scaling; wholly missing training columns filled with zero',
         labeled_field_years=len(table), evaluated_field_years=len(usable),
         evaluated_fields=int(usable.OBJECTID.nunique()),
         excluded_field_years=int((table.valid_dates == 0).sum()),
-        missing_feature_counts={k: int(v) for k, v in table[FEATURES].isna().sum().items()},
+        missing_feature_counts={k: int(v) for k, v in table[feats].isna().sum().items()},
         read_errors=int(table.read_errors.sum()),
         cloud_or_nodata_rejections=int(table.rejected_cloud_or_nodata.sum()),
         logistic=metrics(y, pred, proba),
@@ -413,6 +479,8 @@ def evaluate(jobs):
         take = usable.year.eq(year).to_numpy()
         report['by_year'][str(year)] = dict(logistic=metrics(y[take], pred[take], proba[take]),
             always_grain=metrics(y[take], np.zeros(take.sum(), dtype=int), np.zeros(take.sum())))
+    if version == 'v2':
+        report.update(v2_report(fold_C), v1_logistic_same_split=metrics(y, v1_pred, v1_proba))
     write_json(OUT / 'metrics.json', report)
     write_results(report, table, observations)
     print(json.dumps({k: report[k] for k in ['evaluated_field_years', 'read_errors',

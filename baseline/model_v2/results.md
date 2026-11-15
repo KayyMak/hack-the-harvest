@@ -219,3 +219,17 @@ and Brier score identical; it needs a threshold change in `run_baseline.evaluate
 it goes from 1 to 4 false silage calls (15 silage calls for 12 true), and it would call two of
 the five yield-confirmed grain fields Silage. Acreage totals built from probabilities
 (`bernoulli(p, acres)`) do not change under G; only the hard calls do.
+
+## Adoption status (2026-11-15)
+
+H was adopted as the submitted model (model v2) on branch `role/model-v2-adopt`, with v1 kept as
+a working backup (`baseline/model_version.py`; `HTH_MODEL_VERSION=v1` rebuilds every v1 output;
+the v1 files are in `baseline/outputs/v1_backup/`). Regenerated with v2: held-out predictions and
+metrics, the season-end signal breakdown, the unlabeled calls, the 2025 satellite check, the
+decline-rule comparison and the web snapshot. The saved seed-42 split reproduces this
+experiment's `heldout_predictions_candidate.csv` (probabilities within 1e-14). Mid-season as-of
+dates still use the v1 month-cut refit (point 3 above). The caveats above apply wherever the v2
+numbers are shown: the seed-42 numbers are optimistic, the selection-corrected estimate is about
+0.87 vs 0.80, and the bootstrap interval for the gain touches zero. Experiments frozen against
+v1 (`compare_nemotron.py`, `experiment_scene_filter.py`, and A here) now read
+`baseline/outputs/v1_backup/`.

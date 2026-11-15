@@ -8,8 +8,10 @@ A blank label is unknown: the field may not have been corn that year. Stages:
            (gitignored).
   pilot    Sentinel-2 extraction for one blank field-year (--field, --year).
   extract  Same extraction for every blank field-year the corn stage marks likely corn.
-  predict  Fit run_baseline.build_model() on the labeled field-years and call the
-           likely-corn blank field-years. Offline.
+  predict  Fit the current model (baseline/model_version.py: v2 by default, v1 =
+           run_baseline.build_model()) on the labeled field-years and call the
+           likely-corn blank field-years. Offline. v2's timing features come from the
+           same per-scene records in cache_unlabeled/.
 
 Extraction and features reuse run_baseline.py unchanged (same CONFIG, signature,
 masking, calibration and monthly features). Caches go to cache_unlabeled/ and
@@ -30,6 +32,7 @@ from rasterio.windows import from_bounds
 from shapely.geometry import mapping
 from sklearn.model_selection import StratifiedGroupKFold
 
+import model_version as mv
 import run_baseline as rb
 
 HERE = rb.HERE
@@ -258,13 +261,14 @@ def labeled_features():
     return table[table.valid_dates > 0].reset_index(drop=True)
 
 
-def reproduce_heldout(usable):
+def reproduce_heldout(usable, version='v1'):
     """Re-run the saved CV from features.csv; probabilities must match heldout_predictions.csv."""
-    X, y = usable[rb.FEATURES], (usable.label == 'Silage').astype(int).to_numpy()
+    X, y = usable[mv.features(version)], (usable.label == 'Silage').astype(int).to_numpy()
+    groups = usable.OBJECTID.to_numpy()
     proba = np.full(len(y), np.nan)
     cv = StratifiedGroupKFold(n_splits=5, shuffle=True, random_state=42)
-    for train, test in cv.split(X, y, usable.OBJECTID.to_numpy()):
-        model = rb.build_model().fit(X.iloc[train], y[train])
+    for train, test in cv.split(X, y, groups):
+        model = mv.build_model(version).fit(X.iloc[train], y[train], groups[train])
         proba[test] = model.predict_proba(X.iloc[test])[:, 1]
     saved = pd.read_csv(rb.OUT / 'heldout_predictions.csv')
     merged = usable[['OBJECTID', 'year']].assign(p=proba).merge(saved[['OBJECTID', 'year', 'silage_probability']],
@@ -303,33 +307,40 @@ def kraatz_check(pred, corn):
 
 def predict_stage():
     use_unlabeled_cache()
+    version = mv.current()
+    mv.check_saved_matches(version, rb.OUT / 'metrics.json')
+    features = mv.features(version)
     corn = pd.read_csv(OUT / 'corn_check.csv')
     usable = labeled_features()
-    max_diff = reproduce_heldout(usable)
+    max_diff = reproduce_heldout(usable, version)
     if max_diff > 1e-9:
         raise RuntimeError(f'Cannot reproduce saved held-out probabilities (max diff {max_diff})')
-    model = rb.build_model().fit(usable[rb.FEATURES], (usable.label == 'Silage').astype(int))
+    model = mv.build_model(version).fit(usable[features], (usable.label == 'Silage').astype(int),
+                                        usable.OBJECTID.to_numpy())
     jobs = blank_jobs(likely_corn_blanks())
     rows = []
     for row in jobs.itertuples():
         result = rb.load_cache(row)
         if result is None:
             raise RuntimeError(f'Missing extraction cache for {row.OBJECTID}/{row.year}; run extract')
-        rows.append(rb.summarize(row, result))
+        summary = rb.summarize(row, result)
+        if version == 'v2':
+            summary.update(mv.timing_from_observations(result['observations']))
+        rows.append(summary)
     feats = pd.DataFrame(rows).drop(columns='label').rename(columns={'OBJECTID': 'field_id'})
     feats = feats.merge(corn[['field_id', 'year', 'acres', 'corn_check_share', 'cdl_pixels']],
         on=['field_id', 'year'], validate='one_to_one').rename(columns={'corn_check_share': 'corn_share'})
-    feats['missing_features'] = [';'.join(f for f in rb.FEATURES if pd.isna(r[f])) for _, r in feats.iterrows()]
+    feats['missing_features'] = [';'.join(f for f in features if pd.isna(r[f])) for _, r in feats.iterrows()]
     callable_ = feats.valid_dates > 0
     feats['silage_probability'] = np.nan
     feats['predicted_label'] = ''
     if callable_.any():
-        X = feats.loc[callable_, rb.FEATURES]
+        X = feats.loc[callable_, features]
         feats.loc[callable_, 'silage_probability'] = model.predict_proba(X)[:, 1]
         feats.loc[callable_, 'predicted_label'] = np.where(model.predict(X) == 1, 'Silage', 'Grain')
     feats['status'] = np.where(callable_, 'called', 'no_usable_dates')
     cols = ['field_id', 'year', 'acres', 'corn_share', 'cdl_pixels', 'valid_dates', 'scene_observations',
-        'rejected_cloud_or_nodata', 'read_errors', *rb.FEATURES, 'missing_features',
+        'rejected_cloud_or_nodata', 'read_errors', *features, 'missing_features',
         'silage_probability', 'predicted_label', 'status']
     feats = feats[cols].sort_values(['year', 'field_id'])
     feats.to_csv(OUT / 'predictions.csv', index=False)
@@ -361,8 +372,9 @@ def predict_stage():
             for k in ('field_years', 'likely_corn', 'sensitivity')),
         no_usable_dates=feats[feats.status == 'no_usable_dates'][['field_id', 'year']].to_dict('records'),
         by_year=by_year,
-        model=dict(name='run_baseline.build_model() (median imputation, standard scaling, logistic regression C=1.0)',
-            features=rb.FEATURES, threshold=0.5, trained_on='all labeled field-years with usable dates',
+        model=dict(name=mv.DESCRIPTIONS[version],
+            **({} if version == 'v1' else dict(model_version=version, C=float(model.C_))),
+            features=features, threshold=0.5, trained_on='all labeled field-years with usable dates',
             training_field_years=len(usable), training_silage=int((usable.label == 'Silage').sum()),
             training_grain=int((usable.label == 'Grain').sum()),
             heldout_reproduced_max_abs_diff=max_diff,

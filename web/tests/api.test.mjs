@@ -41,6 +41,20 @@ test('public summary supplies the same confusion matrix and scores as saved resu
   assert.ok(result.per_class.Silage.recall.hi > result.per_class.Silage.recall.value)
 })
 
+test('the saved model is named, and a v2 summary carries its honest uncertainty and the v1 comparison', () => {
+  const result = adaptSummary(metrics)
+  assert.equal(result.model_version, metrics.model_version ?? 'v1')
+  if (result.model_version === 'v2') {
+    assert.equal(result.model_name, metrics.model)
+    assert.ok(result.selection.nested_selection_mean_balanced_accuracy < result.balanced_accuracy)
+    assert.deepEqual(result.v1_same_split.confusion_matrix, metrics.v1_logistic_same_split.confusion_matrix)
+  }
+  const v1 = adaptSummary({ ...metrics, model_version: undefined, model: undefined, selection: undefined, v1_logistic_same_split: undefined })
+  assert.equal(v1.model_name, 'Logistic regression on NDVI')
+  assert.equal(v1.model_version, 'v1')
+  assert.equal(v1.selection, undefined)
+})
+
 test('saved predictions do not imply mid-season inference or score other years', () => {
   const rows = [{ field_id: 327, year: 2021, predicted_label: 'Grain', silage_probability: 0.01 }]
   assert.equal(adaptPredictions(rows, 2021, '2021-11-30')[0].OBJECTID, 327)

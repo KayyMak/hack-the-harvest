@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-15T08:00:46+00:00",
+  "generated_utc": "2026-11-15T09:16:16+00:00",
   "scope": "BARC field-years with a blank silage/grain label that CDL marks as likely corn",
   "caveat": "These are model calls on BARC field-years that have no silage/grain label. There is no reference label to check them against. A field-year is called only when the USDA Cropland Data Layer shows it was mostly corn that year; CDL itself has errors. The 95% interval uses the model's own probabilities as independent Bernoulli outcomes; it does not include model error or uncertainty about whether the field was corn.",
   "counts": {
@@ -39,48 +39,50 @@
       "called_silage_acres": 0.0,
       "called_grain_acres": 115.4,
       "no_usable_dates": 0,
-      "expected_silage_acres": 21.52,
+      "expected_silage_acres": 13.6,
       "expected_silage_acres_95ci": [
         0.0,
-        46.18
+        34.97
       ],
-      "cv_percent": 58.5
+      "cv_percent": 80.2
     },
     {
       "year": 2022,
       "field_years_called": 13,
       "total_acres": 161.59,
-      "called_silage": 0,
-      "called_grain": 13,
-      "called_silage_acres": 0.0,
-      "called_grain_acres": 161.59,
+      "called_silage": 1,
+      "called_grain": 12,
+      "called_silage_acres": 17.3,
+      "called_grain_acres": 144.3,
       "no_usable_dates": 0,
-      "expected_silage_acres": 29.73,
+      "expected_silage_acres": 25.51,
       "expected_silage_acres_95ci": [
         0.0,
-        67.54
+        56.0
       ],
-      "cv_percent": 64.9
+      "cv_percent": 61.0
     },
     {
       "year": 2023,
       "field_years_called": 9,
       "total_acres": 106.75,
-      "called_silage": 1,
-      "called_grain": 8,
-      "called_silage_acres": 10.07,
-      "called_grain_acres": 96.68,
+      "called_silage": 0,
+      "called_grain": 9,
+      "called_silage_acres": 0.0,
+      "called_grain_acres": 106.75,
       "no_usable_dates": 0,
-      "expected_silage_acres": 12.53,
+      "expected_silage_acres": 21.8,
       "expected_silage_acres_95ci": [
         0.0,
-        33.73
+        48.57
       ],
-      "cv_percent": 86.4
+      "cv_percent": 62.7
     }
   ],
   "model": {
-    "name": "run_baseline.build_model() (median imputation, standard scaling, logistic regression C=1.0)",
+    "name": "model v2 (pre-registered candidate H, baseline/model_v2): median imputation, standard scaling, L1 logistic regression (liblinear) with C chosen by field-grouped inner CV, threshold 0.5",
+    "model_version": "v2",
+    "C": 1.0,
     "features": [
       "ndvi_07",
       "ndvi_08",
@@ -90,7 +92,11 @@
       "peak_ndvi",
       "peak_doy",
       "late_ndvi",
-      "early_minus_late"
+      "early_minus_late",
+      "decline_doy",
+      "drop_doy",
+      "drop_size",
+      "regrowth"
     ],
     "threshold": 0.5,
     "trained_on": "all labeled field-years with usable dates",
@@ -137,12 +143,12 @@
   "heldout_accuracy_for_context": {
     "note": "Field-held-out 5-fold results of the same model on labeled field-years (baseline/outputs/metrics.json)",
     "n": 44,
-    "balanced_accuracy": 0.7760416666666667,
-    "silage_precision": 0.875,
-    "silage_recall": 0.5833333333333334,
-    "silage_f1": 0.7,
+    "balanced_accuracy": 0.9010416666666667,
+    "silage_precision": 0.9090909090909091,
+    "silage_recall": 0.8333333333333334,
+    "silage_f1": 0.8695652173913043,
     "false_positive_rate": 0.03125,
-    "brier_score": 0.08256721062853613
+    "brier_score": 0.06489516825521678
   },
   "farm_record_spot_check": {
     "note": "Kraatz (2023) farm planting/harvest records for blank field-years, including ones the CDL gate did not call (predicted_label null). Evidence only, not an official label and never used in training.",
@@ -156,7 +162,7 @@
         "cdl_corn_share": 0.8421,
         "corn_category": "likely_corn",
         "predicted_label": "Grain",
-        "silage_probability": 0.208
+        "silage_probability": 0.0708
       },
       {
         "field_id": 243,
@@ -178,7 +184,7 @@
         "cdl_corn_share": 0.6154,
         "corn_category": "likely_corn",
         "predicted_label": "Grain",
-        "silage_probability": 0.0574
+        "silage_probability": 0.1448
       },
       {
         "field_id": 602,
@@ -189,7 +195,7 @@
         "cdl_corn_share": 0.8088,
         "corn_category": "likely_corn",
         "predicted_label": "Grain",
-        "silage_probability": 0.0394
+        "silage_probability": 0.0315
       }
     ]
   },

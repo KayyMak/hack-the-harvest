@@ -2,8 +2,10 @@
 
     python baseline/estimate_2025/estimate.py
 
-Model: the baseline pipeline (run_baseline.build_model) fitted once on every labeled
-BARC field-year with usable dates. Nothing here reads the 2025 NASS values until the
+Model: the current field model (baseline/model_version.py; v2 by default, v1 =
+run_baseline.build_model) fitted once on every labeled BARC field-year with usable dates.
+v2's four timing features for the 2025 sample come from the saved per-scene records
+(observations.csv.gz), computed exactly as for BARC. Nothing here reads the 2025 NASS values until the
 estimate is final; they are only used to report the error afterwards.
 
 Raw estimate
@@ -29,12 +31,42 @@ import numpy as np
 import pandas as pd
 
 from common import BASELINE, CDL_URL, CSB_URL, MIN_VALID_DATES, OUT, ROOT, SEED, STATE, YEAR, write_json
+import model_version as mv
 import run_baseline as rb
 
 DRAWS = 2000
 THRESHOLD = 0.5
 ACCESSED = '2026-11-14'
 ITEMS = {'silage': 'CORN, SILAGE - ACRES HARVESTED', 'grain': 'CORN, GRAIN - ACRES HARVESTED'}
+MODEL_NAMES = {'v1': 'Logistic regression on NDVI (the BARC baseline pipeline)',
+               'v2': 'Logistic regression on NDVI and harvest-timing features (L1), model v2'}
+
+
+def sample_observations():
+    """{field id: [per-scene records]} for the 2025 sample, as saved by extract.py."""
+    obs = pd.read_csv(OUT / 'observations.csv.gz', dtype={'id': str})
+    return {k: g.to_dict('records') for k, g in obs.groupby('id', sort=False)}
+
+
+def look_gaps(observations_by_key):
+    """Days between consecutive accepted dates, pooled, and each field-year's longest gap."""
+    gaps, longest = [], []
+    for records in observations_by_key.values():
+        days = sorted({pd.Timestamp(r['date']) for r in records if r['status'] == 'ok'})
+        g = [(b - a).days for a, b in zip(days, days[1:])]
+        gaps += g
+        if g:
+            longest.append(max(g))
+    q = lambda v, p: float(np.percentile(v, p)) if len(v) else None
+    return dict(field_years=len(observations_by_key), median_gap_days=q(gaps, 50), p90_gap_days=q(gaps, 90),
+                median_longest_gap_days=q(longest, 50))
+
+
+def barc_look_gaps():
+    obs = pd.read_csv(BASELINE / 'outputs' / 'observations.csv')
+    train = barc_training()
+    keep = set(zip(train.OBJECTID, train.year))
+    return look_gaps({k: g.to_dict('records') for k, g in obs.groupby(['OBJECTID', 'year']) if k in keep})
 
 
 def barc_training():
@@ -125,18 +157,28 @@ def main():
     extraction = json.loads((OUT / 'extraction.json').read_text(encoding='utf-8'))
     corn_acres = population['corn_acres_2025']
 
+    version = mv.current()
+    mv.check_saved_matches(version, BASELINE / 'outputs' / 'metrics.json')
+    feats = mv.features(version)
     train = barc_training()
-    model = rb.build_model()
-    model.fit(train[rb.FEATURES], (train.label == 'Silage').astype(int).to_numpy())
+    model = mv.build_model(version)
+    model.fit(train[feats], (train.label == 'Silage').astype(int).to_numpy(), train.OBJECTID.to_numpy())
 
     features = pd.read_csv(OUT / 'features.csv', dtype={'id': str})
+    gaps = None
+    if version == 'v2':
+        observations = sample_observations()
+        timing = [mv.timing_from_observations(observations.get(i, [])) for i in features.id]
+        features = features.assign(**{c: [t[c] for t in timing] for c in mv.TIMING_FEATURES})
+        gaps = dict(sample_2025=look_gaps({i: observations.get(i, []) for i in features[features.status == 'ok'].id}),
+                    barc_training=barc_look_gaps())
     scored = features[features.status == 'ok'].reset_index(drop=True)
     skipped = features[features.status != 'ok']
-    p = model.predict_proba(scored[rb.FEATURES])[:, 1]
+    p = model.predict_proba(scored[feats])[:, 1]
     acres = scored.acres.to_numpy()
     called = p >= THRESHOLD
     scored.assign(silage_probability=p, predicted_label=np.where(called, 'Silage', 'Grain'))[
-        ['id', 'county', 'acres', 'valid_dates', *rb.FEATURES, 'silage_probability', 'predicted_label']
+        ['id', 'county', 'acres', 'valid_dates', *feats, 'silage_probability', 'predicted_label']
     ].to_csv(OUT / 'predictions.csv', index=False)
 
     raw_share = float((p * acres).sum() / acres.sum())
@@ -196,10 +238,12 @@ def main():
             scored_fields=int(len(scored)), scored_acres=round(float(acres.sum()), 1),
             skipped_fields=int(len(skipped)), skipped_reasons=reasons, min_valid_dates=MIN_VALID_DATES,
             batches_used=extraction['batches'], batches_drawn=population['sample']['batches']),
-        model=dict(name='Logistic regression on NDVI (the BARC baseline pipeline)',
+        model=dict(name=MODEL_NAMES[version],
             training_field_years=int(len(train)), training_silage_field_years=int((train.label == 'Silage').sum()),
-            features=rb.FEATURES, threshold=THRESHOLD,
-            sample_fields_called_silage=int(called.sum())),
+            features=feats, threshold=THRESHOLD,
+            sample_fields_called_silage=int(called.sum()),
+            **({} if version == 'v1' else dict(model_version=version, C=float(model.C_),
+                                               description=mv.DESCRIPTIONS[version]))),
         raw=raw, calibrated=calibrated,
         nass_2025=dict(silage_acres=nass['silage'], grain_acres=nass['grain'],
             source='USDA NASS Quick Stats, 2025 survey, acres harvested (data/reference/quickstats_2025_judges.csv)'),
@@ -208,9 +252,13 @@ def main():
             f"Maryland {YEAR} corn fields are Crop Sequence Boundaries polygons with at least half of their "
             f"{YEAR} Cropland Data Layer pixels in corn: {population['corn_fields_2025']:,} fields, {corn_acres:,.0f} acres. "
             f"A seeded random sample of {len(features):,} fields, allocated by county, was read from Sentinel-2 L2A "
-            f"(July-November {YEAR}) with the baseline's cloud mask, reflectance offset and nine NDVI features. "
-            f"The baseline logistic regression, fitted on all {len(train)} labeled BARC field-years, gives each field a "
-            "silage probability. Raw: probability-weighted silage acres in the sample, scaled to all Maryland corn acres. "
+            + (f"(July-November {YEAR}) with the baseline's cloud mask, reflectance offset and nine NDVI features. "
+               f"The baseline logistic regression, fitted on all {len(train)} labeled BARC field-years, gives each field a "
+               if version == 'v1' else
+               f"(July-November {YEAR}) with the baseline's cloud mask and reflectance offset, giving nine NDVI features "
+               "and four harvest-timing features per field. Model v2 (L1 logistic regression), fitted on all "
+               f"{len(train)} labeled BARC field-years, gives each field a ")
+            + "silage probability. Raw: probability-weighted silage acres in the sample, scaled to all Maryland corn acres. "
             "Calibrated: the acre share called silage, corrected with the miss and false-alarm rates measured on "
             "held-out BARC fields. Grain is corn acres minus silage. The 2025 NASS values were not used to fit, "
             "choose or adjust anything."),
@@ -221,7 +269,18 @@ def main():
             'Field polygons date from 2023; corn in 2025 is taken from the Cropland Data Layer, which has its own classification error.',
             'Corn acres here are mapped field acres, not NASS acres harvested; abandoned or failed corn is not removed.',
             f'Fields with fewer than {MIN_VALID_DATES} clear Sentinel-2 dates are skipped and listed, not filled in.',
-        ],
+        ] + ([] if gaps is None else [
+            'The timing feature drop_size is the largest NDVI fall between consecutive clear looks, so it grows with '
+            'the gap between looks. BARC fields share scenes and cloud gaps; the statewide sample does not. Days '
+            f"between clear looks: 2025 sample median {gaps['sample_2025']['median_gap_days']:.0f}, 90th percentile "
+            f"{gaps['sample_2025']['p90_gap_days']:.0f}, median longest gap per field "
+            f"{gaps['sample_2025']['median_longest_gap_days']:.0f}; BARC training median "
+            f"{gaps['barc_training']['median_gap_days']:.0f}, 90th percentile {gaps['barc_training']['p90_gap_days']:.0f}, "
+            f"median longest gap {gaps['barc_training']['median_longest_gap_days']:.0f}.",
+            'Model v2 was chosen on BARC held-out data (selection-corrected balanced accuracy about 0.87 vs 0.80 for v1; '
+            'the bootstrap interval for the gain touches zero); its timing features are untested outside BARC.',
+        ]),
+        **({} if gaps is None else dict(look_gaps_days=gaps)),
         sources=[
             dict(name='USDA NASS Crop Sequence Boundaries (fiboa copy on Source Cooperative)', url=CSB_URL, accessed=ACCESSED),
             dict(name=f'USDA NASS Cropland Data Layer {YEAR}, Maryland (CropScape)', url=CDL_URL, accessed=ACCESSED),

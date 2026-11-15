@@ -1,10 +1,16 @@
 """As-of predictions: what the model could say on a given date, using only satellite months
 complete by then. Shared by the one command (harvest.run) and the agent tools (harvest.tools).
 
-Monthly NDVI medians are complete at month end. Before Nov 30 the baseline's logistic
-pipeline is refit on the saved field folds with just those features (needs scikit-learn);
-from Nov 30 the saved full-season predictions are used; before Jul 31 every field is Pending.
-Artifacts are read on each call so regenerated outputs take effect immediately.
+Monthly NDVI medians are complete at month end. Before Nov 30 the v1 logistic pipeline
+(run_baseline.build_model: C = 1, threshold 0.5) is refit on the saved field folds with just
+those features (needs scikit-learn); from Nov 30 the saved full-season predictions are used;
+before Jul 31 every field is Pending. Artifacts are read on each call so regenerated outputs
+take effect immediately.
+
+When the saved full-season model is model v2 (metrics.json "model_version": "v2"), mid-season
+dates still use that v1 month-cut refit and say so in their mode: v2 was selected and validated
+only on full-season series (its timing features and November NDVI need the whole season; see
+baseline/model_v2/results.md), so a truncated v2 would be a new, unvalidated model.
 """
 import csv
 import json
@@ -23,20 +29,24 @@ MONTH_END = {'ndvi_07': (7, 31), 'ndvi_08': (8, 31), 'ndvi_09': (9, 30), 'ndvi_1
              'ndvi_11': (11, 30)}
 FULL = 'saved full-season model'
 EARLY = 'too early: all Pending'
-REFIT = 'refit on months complete by as-of'
+REFIT = 'refit on months complete by as-of'  # saved model is v1: the refit is the same model
+REFIT_V1 = 'v1 month-cut refit'  # saved model is v2: mid-season dates use the v1 refit, labelled as such
 
 
 def features_as_of(year: int, as_of: date) -> tuple[list[str], str]:
     try:
-        full = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))['features']
+        saved = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))
+        full, version = saved['features'], saved.get('model_version', 'v1')
         if not isinstance(full, list) or not full or not all(isinstance(f, str) for f in full):
             raise ValueError('Invalid feature list')
-    except (OSError, ValueError, KeyError, TypeError) as exc:
+        if version not in ('v1', 'v2'):
+            raise ValueError('Unknown model version')
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
         raise artifacts.ArtifactUnavailable('Saved model features are missing or invalid.') from exc
     if as_of >= date(year, 11, 30):
         return full, FULL
     usable = [f for f, (m, d) in MONTH_END.items() if as_of >= date(year, m, d)]
-    return usable, REFIT if usable else EARLY
+    return usable, (REFIT if version == 'v1' else REFIT_V1) if usable else EARLY
 
 
 def _refit(features: tuple[str, ...]) -> tuple[Prediction, ...]:
@@ -85,7 +95,7 @@ def predictions_as_of(year: int, as_of: str) -> dict:
     features, mode = features_as_of(year, day)
     if mode == FULL:
         preds = artifacts.read_predictions()
-    elif mode == REFIT:
+    elif mode in (REFIT, REFIT_V1):
         preds = list(_refit(tuple(features)))
     else:
         preds = []

@@ -18,6 +18,7 @@ for extra in (str(ROOT), str(ROOT / 'backend')):
         sys.path.insert(0, extra)
 
 from app import artifacts, tools  # noqa: E402
+from harvest import asof  # noqa: E402
 from harvest.asof import predictions_as_of  # noqa: E402
 
 YEARS = (2021, 2022, 2023)
@@ -52,9 +53,16 @@ def build() -> dict:
             'balanced_accuracy': scores.get('balanced_accuracy'),
             'silage_recall': scores.get('silage_recall'),
             'confusion_matrix': scores.get('confusion_matrix')})
+    v2 = any(d['mode'] == asof.REFIT_V1 for d in dates)
+    method = ('Logistic pipeline refit on the saved field folds using only monthly NDVI medians '
+              'complete by each date; the saved full-season model from Nov 30')
+    if v2:
+        method = ('Before Nov 30: the v1 logistic pipeline (C = 1) refit on the saved field folds using only monthly '
+                  'NDVI medians complete by each date (model v2 needs the full season and was not validated on '
+                  'truncated series). From Nov 30: the saved full-season model v2 (NDVI and harvest-timing '
+                  'features, L1).')
     return {'scope': 'Labeled BARC field-years, held out by field; pooled over 2021-2023 in `pooled`',
-            'method': 'Logistic pipeline refit on the saved field folds using only monthly NDVI medians '
-                      'complete by each date; the saved full-season model from Nov 30',
+            'method': method,
             'years': list(YEARS), 'month_days': list(MONTH_DAYS), 'dates': dates, 'pooled': summary}
 
 

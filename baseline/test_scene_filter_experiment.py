@@ -19,7 +19,7 @@ class SceneFilterChecks(unittest.TestCase):
         protocol = json.loads((out / 'protocol.json').read_text())
         import hashlib
         for name, expected in protocol['inputs'].items():
-            self.assertEqual(hashlib.sha256((experiment.HERE / 'outputs' / name).read_bytes()).hexdigest(), expected)
+            self.assertEqual(hashlib.sha256((experiment.REFERENCE / name).read_bytes()).hexdigest(), expected)
         for key, expected in protocol['original_cache_hashes'].items():
             source = json.loads((experiment.HERE / 'cache' / f'{key}.json').read_text())
             self.assertEqual(experiment.fingerprint(source), expected)
@@ -58,9 +58,9 @@ class SceneFilterChecks(unittest.TestCase):
                 experiment.scene_records(item, pd.DataFrame({'OBJECTID': [323]}), 'stale')
 
     def test_saved_fold_refit_reproduces_baseline(self):
-        table = pd.read_csv(experiment.HERE / 'outputs/features.csv')
-        saved = pd.read_csv(experiment.HERE / 'outputs/heldout_predictions.csv')
-        metadata = json.loads((experiment.HERE / 'outputs/metrics.json').read_text())
+        table = pd.read_csv(experiment.REFERENCE / 'features.csv')
+        saved = pd.read_csv(experiment.REFERENCE / 'heldout_predictions.csv')
+        metadata = json.loads((experiment.REFERENCE / 'metrics.json').read_text())
         rebuilt = experiment.fit_on_saved_folds(table, metadata)
         np.testing.assert_allclose(rebuilt.silage_probability, saved.silage_probability, atol=1e-10, rtol=0)
         self.assertEqual(rebuilt.predicted_label.tolist(), saved.predicted_label.tolist())

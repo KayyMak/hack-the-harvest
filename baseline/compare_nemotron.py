@@ -18,8 +18,9 @@ import urllib.error
 import urllib.request
 
 HERE = Path(__file__).resolve().parent
-INPUTS = HERE / 'outputs'
-OUT = INPUTS / 'nemotron'
+# Frozen against the v1 (nine-feature) baseline it was run on; model v2 kept a byte-identical copy there.
+INPUTS = HERE / 'outputs' / 'v1_backup'
+OUT = HERE / 'outputs' / 'nemotron'
 MODEL = 'nvidia/nemotron-3.5-super-vl-120b-a12b'
 URL = 'https://integrate.api.nvidia.com/v1/chat/completions'
 PROMPT = '''Predict whether a corn field was harvested for Grain or Silage using

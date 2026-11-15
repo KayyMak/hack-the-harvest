@@ -26,8 +26,20 @@ from sklearn.preprocessing import StandardScaler
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE.parent))
-import run_baseline as rb  # noqa: E402  (only FEATURES, metrics, build_model, verify_originals)
-from features import BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, build_table  # noqa: E402
+# run_baseline: only FEATURES, metrics, build_model, verify_originals
+from features import BASE_FEATURES, TIMING_FEATURES, BASELINE_OUT, V1_REFERENCE, build_table  # noqa: E402
+
+class _LazyRunBaseline:
+    """run_baseline imports the extraction stack (geopandas, rasterio, ...); load it only when used,
+    so fitting the model needs just numpy, pandas and scikit-learn."""
+
+    def __getattr__(self, name):
+        import run_baseline
+        return getattr(run_baseline, name)
+
+
+rb = _LazyRunBaseline()
+
 
 OUT = HERE / 'outputs'
 REFERENCE_SEED = 42
@@ -214,13 +226,13 @@ def run_all(table, seeds, jobs=-1):
 
 def check_reference(table, ref):
     """Candidate A at seed 42 must reproduce the saved baseline folds and predictions."""
-    saved = pd.read_csv(BASELINE_OUT / 'heldout_predictions.csv')
+    saved = pd.read_csv(V1_REFERENCE / 'heldout_predictions.csv')
     assert (saved.OBJECTID.to_numpy() == table.OBJECTID.to_numpy()).all()
     assert (saved.year.to_numpy() == table.year.to_numpy()).all()
     a = ref['A']
     assert (a['folds'] == saved.fold.to_numpy()).all(), 'Seed-42 folds differ from the saved baseline'
     assert np.allclose(a['proba'], saved.silage_probability.to_numpy(), atol=1e-9), 'A != saved baseline'
-    saved_metrics = json.loads((BASELINE_OUT / 'metrics.json').read_text())['logistic']
+    saved_metrics = json.loads((V1_REFERENCE / 'metrics.json').read_text())['logistic']
     assert abs(a['score']['balanced_accuracy'] - saved_metrics['balanced_accuracy']) < 1e-12
     assert abs(a['score']['brier_score'] - saved_metrics['brier_score']) < 1e-12
     ref_model = rb.build_model()

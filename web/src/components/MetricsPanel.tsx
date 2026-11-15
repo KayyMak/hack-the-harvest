@@ -38,6 +38,7 @@ export function MetricsPanel({ data, error, asOf }: Props) {
     <div className="metrics">
       {data.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {data.convergence_error}</p>}
       <p className="muted small">The scores and confusion matrix below use full-season predictions as of November 30, pooled over 2021–2023. Only the season chart follows the selected date.</p>
+      {data.model_version === 'v2' && data.selection && <ModelV2Note data={data} />}
       <p className="finding">
         On field-years {data.split_label ?? 'held out by year'} the model recovers <b>{sHit}/{sN}</b> silage field-years (recall <b>{num(S.recall.value)}</b>) and keeps grain recall at{' '}
         <b>{num(G.recall.value)}</b>{gi >= 0 ? '' : ''}.
@@ -83,6 +84,30 @@ export function MetricsPanel({ data, error, asOf }: Props) {
         <Convergence data={data} asOf={asOf} />
       </section>}
     </div>
+  )
+}
+
+/** Honest note on the v2 switch: what changed, how it was chosen, and how uncertain the gain is. */
+function ModelV2Note({ data }: { data: EvaluateResponse }) {
+  const sel = data.selection!
+  const v1 = data.v1_same_split
+  const silage = (cm: number[][] | undefined) => {
+    const i = data.labels.indexOf('Silage')
+    return cm && i >= 0 ? `${cm[i][i]}/${cm[i].reduce((a, b) => a + b, 0)}` : '—'
+  }
+  const [lo, hi] = sel.gain_vs_v1_field_bootstrap_95ci
+  return (
+    <section className="reliability" aria-label="About model v2">
+      <h3>Model v2</h3>
+      <p>
+        {data.model_name}: the nine NDVI features plus four harvest-timing features (when greenness falls, how sharply, and whether it regrows), chosen from eight candidates in a comparison written down before any was scored.
+        {v1 && <> On this split it recovers <b>{silage(data.confusion)}</b> silage field-years (balanced accuracy <b>{num(data.balanced_accuracy ?? null)}</b>); the v1 model recovered <b>{silage(v1.confusion_matrix)}</b> (<b>{num(v1.balanced_accuracy)}</b>).</>}
+      </p>
+      <p>
+        This split was already seen when v2 was picked, so those numbers are optimistic. Repeating the selection inside each training fold gives about <b>{num(sel.nested_selection_mean_balanced_accuracy)}</b> balanced accuracy against <b>{num(sel.v1_mean_balanced_accuracy_same_seeds)}</b> for v1, and a 95% bootstrap range for the gain of <b>{num(lo, 3)}</b> to <b>{num(hi, 3)}</b>, which touches zero. The gain rests on three or four silage field-years.
+      </p>
+      <p className="muted small">Details: {sel.details}. Mid-season dates still use the v1 model, refit on the months available by each date.</p>
+    </section>
   )
 }
 

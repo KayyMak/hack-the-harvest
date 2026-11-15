@@ -30,6 +30,9 @@ import pandas as pd
 
 HERE = Path(__file__).resolve().parent
 BASELINE_OUT = HERE.parent / 'outputs'
+# The v1 baseline (candidate A) this experiment compared against. Since model v2 was adopted,
+# baseline/outputs/ holds v2 results; the v1 held-out predictions and metrics are kept here unchanged.
+V1_REFERENCE = BASELINE_OUT / 'v1_backup'
 DECLINE_DROP = 0.25
 NO_DECLINE_DOY = 335.0
 MONTHS = [7, 8, 9, 10, 11]
