@@ -91,7 +91,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
       </div>
 
       <aside className="glass rail" aria-label="Season and accuracy">
-        {evaluation && evaluation.convergence.length < 2 && evaluation.by_year && base ? (
+        {evaluation && evaluation.convergence.length < 2 && base ? (
           <section>
             <h2 className="rail__title">Model vs always guessing grain</h2>
             <p className="rail__note">Balanced accuracy by year. 0.50 is a coin flip between the classes.</p>

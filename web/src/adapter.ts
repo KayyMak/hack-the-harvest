@@ -1,0 +1,103 @@
+/** Adapt the published FastAPI contract to the dashboard's display types. */
+import type { FeatureCollection, Geometry } from 'geojson'
+import type { EvaluateResponse, FieldsResponse, Label, Pred, SeriesResponse } from './types'
+
+export interface SavedPrediction {
+  field_id: number
+  year: number
+  reference_label: Label
+  predicted_label: Label
+  silage_probability: number
+  fold: number
+  valid_dates: number
+}
+
+interface SavedMetrics {
+  n: number
+  silage_precision: number
+  silage_recall: number
+  balanced_accuracy: number
+  brier_score: number
+  confusion_matrix: number[][]
+  matrix_order: Label[]
+}
+
+export interface SavedSummary {
+  protocol: string
+  evaluated_field_years: number
+  evaluated_fields: number
+  excluded_field_years: number
+  read_errors: number
+  logistic: SavedMetrics
+  always_grain: SavedMetrics
+}
+
+export type SavedFields = FeatureCollection<Geometry, {
+  field_id: number
+  field: string | null
+  acres: number | null
+  reference_2021: Label | null
+  reference_2022: Label | null
+  reference_2023: Label | null
+}>
+
+export function adaptFields(data: SavedFields, year: number): FieldsResponse {
+  const reference = `reference_${year}` as 'reference_2021' | 'reference_2022' | 'reference_2023'
+  return {
+    type: 'FeatureCollection',
+    features: data.features.map((f) => ({
+      type: 'Feature', geometry: f.geometry,
+      properties: { OBJECTID: f.properties.field_id, label: f.properties[reference] ?? null,
+        FIELD: f.properties.field ?? undefined, ACRES: f.properties.acres ?? undefined },
+    })),
+  }
+}
+
+export function adaptPredictions(data: SavedPrediction[], year: number, asOf: string): Pred[] {
+  if (asOf !== `${year}-11-30`) throw new Error('Only saved end-of-season predictions are available.')
+  return data.filter((p) => p.year === year).map((p) => ({
+    OBJECTID: p.field_id, year: p.year, as_of: asOf, p_silage: p.silage_probability,
+    class: p.predicted_label, abstain: false, top_features: '[]',
+  }))
+}
+
+function wilson(k: number, n: number) {
+  if (!n) return { value: 0, lo: 0, hi: 0 }
+  const z = 1.959964
+  const p = k / n
+  const d = 1 + z * z / n
+  const c = (p + z * z / (2 * n)) / d
+  const h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / d
+  return { value: p, lo: Math.max(0, c - h), hi: Math.min(1, c + h) }
+}
+
+export function adaptSummary(data: SavedSummary): EvaluateResponse {
+  const m = data.logistic
+  const cm = m.confusion_matrix
+  const perClass = (label: Label) => {
+    const i = m.matrix_order.indexOf(label)
+    const support = cm[i].reduce((a, b) => a + b, 0)
+    const called = cm.reduce((a, row) => a + row[i], 0)
+    return { precision: wilson(cm[i][i], called), recall: wilson(cm[i][i], support), support }
+  }
+  return {
+    split: 'field', split_label: 'held out by field', protocol: data.protocol,
+    labels: m.matrix_order, confusion: cm,
+    per_class: { Grain: perClass('Grain'), Silage: perClass('Silage') },
+    convergence: [], abstained: data.excluded_field_years,
+    n_evaluated: data.evaluated_field_years, n_fields: data.evaluated_fields,
+    model_name: 'Logistic regression on NDVI', balanced_accuracy: m.balanced_accuracy,
+    baseline: { ...data.always_grain, name: 'Always grain' },
+  }
+}
+
+export function adaptSeries(data: { date: string; ndvi: number | null; status: string }[], id: number, year: number): SeriesResponse {
+  return { OBJECTID: id, year, decline_date: null,
+    points: data.filter((p) => p.status === 'ok' && p.ndvi != null)
+      .map((p) => ({ date: p.date, ndvi: p.ndvi, ndti: null })) }
+}
+
+/** Leaflet data is immutable; remount when the year's reference labels change. */
+export function fieldLayerKey(data: FieldsResponse): string {
+  return data.features.map((f) => `${f.properties.OBJECTID}:${f.properties.label ?? ''}`).join('|')
+}

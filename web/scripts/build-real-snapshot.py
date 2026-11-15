@@ -13,7 +13,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
-The agent trace stays the existing demo files.
+Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
 """
@@ -35,7 +35,7 @@ GPKG = ROOT / 'BARC_Corn.2021-2023.gpkg'
 BASE = Path(os.environ.get('CUTLINE_BASE', ROOT / 'baseline' / 'outputs'))
 YEARS = [2021, 2022, 2023]
 SEASON_END = '11-30'
-KEEP = {'agent_run.json', 'README.md'}  # demo agent files and docs survive a rebuild
+KEEP = {'README.md'}
 
 # NAD83 / Maryland (ftUS) -> WGS84 lon/lat
 TO_WGS84 = Transformer.from_crs('EPSG:2248', 'EPSG:4326', always_xy=True)
@@ -106,7 +106,7 @@ def write(name: str, data) -> None:
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for p in OUT.iterdir():
-        if p.name in KEEP or p.name.startswith('agent_trace_'):
+        if p.name in KEEP:
             continue
         if p.is_dir():
             for q in p.iterdir():

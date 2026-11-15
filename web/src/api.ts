@@ -17,12 +17,15 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
+import { adaptFields, adaptPredictions, adaptSeries, adaptSummary } from './adapter.ts'
+import type { SavedFields, SavedPrediction, SavedSummary } from './adapter'
 
-export * from './types'
+export * from './types.ts'
 
-export const API_URL = (import.meta.env.VITE_API_URL ?? 'http://localhost:8000').replace(/\/$/, '')
-export const STATIC = import.meta.env.VITE_STATIC === '1'
-const SNAPSHOT_BASE = `${import.meta.env.BASE_URL}snapshot/`
+const env = import.meta.env ?? {}
+export const API_URL = (env.VITE_API_URL ?? '').replace(/\/$/, '')
+export const STATIC = env.VITE_STATIC === '1'
+const SNAPSHOT_BASE = `${env.BASE_URL ?? '/'}snapshot/`
 
 /** Snapshot file names (without .json) for every route. Backend's exporter must match these. */
 export const snap = {
@@ -59,53 +62,50 @@ const post = <T>(path: string, body: unknown) =>
     body: JSON.stringify(body),
   })
 
-/* In static mode the agent trace is revealed line by line, so the offline demo still "runs". */
-const staticRunStarted = new Map<string, number>()
-const STATIC_MS_PER_LINE = 900
-
 export const api = {
   /** Static mode only: describes the snapshot (stub or real, which years / dates exist). */
   meta: (): Promise<SnapshotMeta | null> =>
-    STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()).catch(() => null) : Promise.resolve(null),
+    STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()) : Promise.resolve({
+      stub: false, note: 'Saved BARC baseline results; held out by field.',
+      years: [2021, 2022, 2023], as_of_dates: [2021, 2022, 2023].map((y) => `${y}-11-30`),
+      season_end_only: true, has_chips: false, has_rollup: false, has_contributions: false,
+    }),
 
   fields: (year: number) =>
     STATIC
       ? fromSnapshot<FieldsResponse>(snap.fields(year))
-      : getJson<FieldsResponse>(`${API_URL}/fields?year=${year}`),
+      : getJson<SavedFields>(`${API_URL}/api/fields.geojson`).then((data) => adaptFields(data, year)),
 
   predict: (year: number, asOf: string) =>
     STATIC
       ? fromSnapshot<Pred[]>(snap.predict(year, asOf))
-      : post<Pred[]>('/predict', { year, as_of: asOf }),
+      : getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`).then((data) => adaptPredictions(data, year, asOf)),
 
   evaluate: (split = 'strict') =>
     STATIC
       ? fromSnapshot<EvaluateResponse>(snap.evaluate(split))
-      : getJson<EvaluateResponse>(`${API_URL}/evaluate?split=${encodeURIComponent(split)}`),
+      : getJson<SavedSummary>(`${API_URL}/api/baseline/summary`).then(adaptSummary),
 
   rollup: (year: number) =>
     STATIC
       ? fromSnapshot<RollupResponse>(snap.rollup(year))
-      : getJson<RollupResponse>(`${API_URL}/rollup?year=${year}`),
+      : Promise.reject<RollupResponse>(new ApiError('Statewide estimates are unavailable. The saved rollup covers labeled BARC fields only; it cannot be compared with statewide Census acres.', 503)),
 
   series: (id: number, year: number) =>
     STATIC
       ? fromSnapshot<SeriesResponse>(snap.series(id, year))
-      : getJson<SeriesResponse>(`${API_URL}/fields/${id}/series?year=${year}`),
+      : getJson<{ date: string; ndvi: number | null; status: string }[]>(`${API_URL}/api/fields/${id}/observations?year=${year}`)
+        .then((data) => adaptSeries(data, id, year)),
 
   agentRun: async (query: string): Promise<AgentRunResponse> => {
-    if (!STATIC) return post<AgentRunResponse>('/agent/run', { query })
-    const res = await fromSnapshot<AgentRunResponse>(snap.agentRun())
-    staticRunStarted.set(res.run_id, Date.now())
-    return res
+    if (STATIC) throw new ApiError('Agent execution is unavailable in a static snapshot.', 501)
+    return post<AgentRunResponse>('/api/agent/run', { query })
   },
 
   agentTrace: async (runId: string): Promise<AgentTraceResponse> => {
-    if (!STATIC) return getJson<AgentTraceResponse>(`${API_URL}/agent/trace/${encodeURIComponent(runId)}`)
-    const full = await fromSnapshot<AgentTraceResponse>(snap.agentTrace(runId))
-    const started = staticRunStarted.get(runId) ?? 0
-    const shown = Math.min(full.lines.length, 1 + Math.floor((Date.now() - started) / STATIC_MS_PER_LINE))
-    return { ...full, lines: full.lines.slice(0, shown), status: shown < full.lines.length ? 'running' : full.status }
+    if (STATIC) throw new ApiError('No agent ran for this static snapshot.', 501)
+    const lines = await getJson<AgentTraceResponse['lines']>(`${API_URL}/api/agent/trace/${encodeURIComponent(runId)}`)
+    return { run_id: runId, lines, status: lines.some((line) => line.type === 'report') ? 'done' : 'running' }
   },
 
   /** Before/after image chip URL for a field-year. */

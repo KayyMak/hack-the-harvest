@@ -11,7 +11,7 @@ export function useAsync<T>(fn: () => Promise<T>, deps: readonly unknown[]): Asy
   const [state, setState] = useState<AsyncState<T>>({ data: null, error: null, loading: true })
   useEffect(() => {
     let live = true
-    setState((s) => ({ ...s, loading: true, error: null }))
+    setState({ data: null, loading: true, error: null })
     fn().then(
       (data) => live && setState({ data, error: null, loading: false }),
       (error: unknown) =>

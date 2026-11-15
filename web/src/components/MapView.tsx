@@ -5,6 +5,7 @@ import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import type { FieldFeature, FieldsResponse, Pred } from '../api'
 import { classColor, num } from '../format'
+import { fieldLayerKey } from '../adapter'
 
 const CENTER: [number, number] = [39.03, -76.9]
 const ESRI_IMAGERY = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
@@ -85,7 +86,7 @@ export function MapView({ fields, preds, selectedId, onSelect, error, layoutKey 
         </Pane>
         {fields && (
           <GeoJSON
-            key={fields.features.length}
+            key={fieldLayerKey(fields)}
             ref={geoRef}
             data={fields}
             style={(f) => styleFor(f as FieldFeature, predsRef.current)}

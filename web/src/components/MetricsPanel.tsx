@@ -43,8 +43,8 @@ export function MetricsPanel({ data, error, asOf }: Props) {
       <section className="reliability" aria-label="Reliability of these scores">
         <h3>Reliability of these scores</h3>
         <p>
-          Chances are 19 out of 20 (95% confidence) that silage recall on new fields like these lies between <b>{num(S.recall.lo)}</b> and <b>{num(S.recall.hi)}</b>, and silage precision between{' '}
-          <b>{num(S.precision.lo)}</b> and <b>{num(S.precision.hi)}</b>.
+          Wilson 95% intervals for these held-out results are <b>{num(S.recall.lo)}</b> to <b>{num(S.recall.hi)}</b> for silage recall and{' '}
+          <b>{num(S.precision.lo)}</b> to <b>{num(S.precision.hi)}</b> for silage precision. These intervals do not establish accuracy on new regions or account for repeated years of the same field.
         </p>
         <p className="muted small">
           Based on {data.n_evaluated ?? total} labeled field-years scored out of fold. With few silage examples the ranges are wide; read overlapping ranges as "not yet distinguishable".

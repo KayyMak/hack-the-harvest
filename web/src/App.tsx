@@ -72,7 +72,7 @@ export default function App() {
     const fromMeta = meta.data?.as_of_dates.filter((d) => d.startsWith(String(year)))
     return fromMeta?.length ? fromMeta : asOfDatesFor(year)
   }, [meta.data, year])
-  const asOf = asOfDates[Math.min(asOfIdx, asOfDates.length - 1)]
+  const asOf = meta.loading ? `${year}-11-30` : asOfDates[Math.min(asOfIdx, asOfDates.length - 1)]
 
   const seasonEnd = meta.data?.season_end_only === true || asOfDates.length === 1
   const fields = useAsync(() => api.fields(year), [year])
@@ -153,6 +153,8 @@ export default function App() {
   return (
     <ThemeContext.Provider value={shownTheme}>
       <div ref={shellRef} className={`shell shell--${view}`}>
+        {meta.error && <p className="map-card map-error" role="alert">Snapshot metadata unavailable: {meta.error.message}</p>}
+        {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
         <MapView fields={fields.data} preds={predMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />
 
         <header className="glass topbar">
@@ -207,7 +209,7 @@ export default function App() {
               </select>
             </label>
           )}
-          <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data}>
+          <button className="ghost-btn" onClick={downloadCsv} disabled={!fields.data || preds.loading || !!preds.error}>
             <svg aria-hidden="true" width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
               <path d="M7 1.5v8M3.5 6.5L7 10l3.5-3.5M2 12.5h10" />
             </svg>
@@ -255,7 +257,7 @@ export default function App() {
                 <h2 className="sheet__h2">Maryland roll-up</h2>
                 {rollup.error ? (
                   <Pending title="Maryland silage acres vs the Census">
-                    Statewide corn-for-silage acres from the model, with a 95% range, compared with the {year} Census of Agriculture and exportable as a QuickStats-shaped CSV.
+                    {rollup.error.message}
                   </Pending>
                 ) : (
                   <RollupPanel data={rollup.data} error={rollup.error} />

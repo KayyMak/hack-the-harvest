@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { api } from '../api'
+import { api, STATIC } from '../api'
 import type { AgentTraceResponse, TraceLine } from '../api'
 
 const DEFAULT_QUERY =
@@ -56,6 +56,8 @@ export function AgentPanel() {
 
   const status = starting ? 'starting' : (trace?.status ?? (runId ? 'running' : 'idle'))
   const flags = trace?.lines.filter((l) => l.type === 'flag').length ?? 0
+
+  if (STATIC) return <p role="status">Agent execution is unavailable in this saved snapshot. No live agent or verifier has run.</p>
 
   return (
     <div className="agent">
