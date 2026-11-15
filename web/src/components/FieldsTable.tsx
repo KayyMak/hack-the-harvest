@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
-import { cdlText, classColor, num } from '../format'
+import { cdlText, classColor, noCallReason, num } from '../format'
 
 type SortKey = 'id' | 'acres' | 'label' | 'call' | 'p' | 'result' | 'cover'
 
@@ -18,7 +18,7 @@ interface Row {
   landcover?: FieldLandcover
 }
 
-export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView> = new Map(), cover: Map<number, FieldLandcover> = new Map()): Row[] {
+export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView> = new Map(), cover: Map<number, FieldLandcover> = new Map(), seasonEnd = true): Row[] {
   return (fields?.features ?? []).map((f) => {
     const p = preds.get(f.properties.OBJECTID)
     const label = f.properties.label ?? 'Unlabeled'
@@ -26,7 +26,8 @@ export function buildRows(fields: FieldsResponse | null, preds: Map<number, Pred
     const land = { cover: lc ? cdlText(lc) : '', landcover: lc }
     const u = !f.properties.label && !p ? unlabeled.get(f.properties.OBJECTID) : undefined
     if (u) return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call: u.label, p: u.p_silage, result: '', unlabeledCall: true, ...land }
-    const call = p?.class === 'Pending' ? 'Not yet decided' : p?.class === 'Insufficient' ? 'Abstained' : (p?.class ?? 'No call')
+    const none = !f.properties.label ? noCallReason(lc, seasonEnd)?.short : undefined
+    const call = p?.class === 'Pending' ? 'Not yet decided' : p?.class === 'Insufficient' ? 'Abstained' : (p?.class ?? none ?? 'No call')
     const decided = p?.class === 'Grain' || p?.class === 'Silage'
     const result = !f.properties.label || !decided ? '' : p?.class === f.properties.label ? 'Agrees' : 'Disagrees'
     return { id: f.properties.OBJECTID, acres: f.properties.ACRES ?? null, label, call, p: p?.p_silage ?? null, result, unlabeledCall: false, ...land }
@@ -53,11 +54,11 @@ const COLS: { key: SortKey; label: string; num?: boolean }[] = [
   { key: 'cover', label: 'Land cover (CDL)' },
 ]
 
-export function FieldsTable({ fields, preds, unlabeled, cover, coverError, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; cover: Map<number, FieldLandcover>; coverError?: Error | null; onSelect: (id: number) => void; selectedId: number | null }) {
+export function FieldsTable({ fields, preds, unlabeled, cover, coverError, seasonEnd, onSelect, selectedId }: { fields: FieldsResponse | null; preds: Map<number, Pred>; unlabeled: Map<number, UnlabeledCallView>; cover: Map<number, FieldLandcover>; coverError?: Error | null; seasonEnd: boolean; onSelect: (id: number) => void; selectedId: number | null }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: 1 | -1 }>({ key: 'result', dir: -1 })
   const [filter, setFilter] = useState('')
   const [showUnlabeled, setShowUnlabeled] = useState(false)
-  const all = useMemo(() => buildRows(fields, preds, unlabeled, cover), [fields, preds, unlabeled, cover])
+  const all = useMemo(() => buildRows(fields, preds, unlabeled, cover, seasonEnd), [fields, preds, unlabeled, cover, seasonEnd])
   const labeledCount = all.filter((r) => r.label !== 'Unlabeled').length
   const rows = useMemo(() => {
     const shown = all.filter((r) => (showUnlabeled || r.label !== 'Unlabeled') && (!filter || `${r.id} ${r.label} ${r.call} ${r.result} ${r.cover}`.toLowerCase().includes(filter.toLowerCase())))
@@ -115,8 +116,8 @@ export function FieldsTable({ fields, preds, unlabeled, cover, coverError, onSel
                     <><span className="swatch swatch--fill" style={{ background: classColor(r.call === 'Grain' || r.call === 'Silage' ? (r.call as 'Grain') : null) }} /> {r.call}</>
                   )}
                 </td>
-                <td className="is-num">{num(r.p)}</td>
-                <td className={r.result === 'Disagrees' ? 'is-bad' : r.result === 'Agrees' ? 'is-ok' : undefined}>{r.result || '—'}</td>
+                <td className="is-num">{r.p == null ? <span className="muted">n/a</span> : num(r.p)}</td>
+                <td className={r.result === 'Disagrees' ? 'is-bad' : r.result === 'Agrees' ? 'is-ok' : undefined}>{r.result || (r.label === 'Unlabeled' ? <span className="muted">Not scored</span> : '—')}</td>
                 <td className="ftable__cover" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">{r.cover || '—'}</td>
               </tr>
             ))}

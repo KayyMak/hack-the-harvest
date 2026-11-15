@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { geoJSON as leafletGeoJSON } from 'leaflet'
 import { GeoJSON, MapContainer, Pane, TileLayer, ZoomControl, useMap } from 'react-leaflet'
 import type { FieldFeature, FieldLandcover, FieldsResponse, Pred, UnlabeledCallView } from '../api'
-import { cdlText, classColor, num } from '../format'
+import { cdlText, classColor, noCallReason, num } from '../format'
 import { fieldLayerKey } from '../adapter'
 
 const CENTER: [number, number] = [39.03, -76.9]
@@ -18,6 +18,8 @@ interface Props {
   unlabeled: Map<number, UnlabeledCallView>
   /** USDA Cropland Data Layer cover per field (land cover, not a label); shown in the tooltip */
   cover: Map<number, FieldLandcover>
+  /** the selected date is Nov 30 (season-end calls on unlabeled corn fields exist only then) */
+  seasonEnd: boolean
   selectedId: number | null
   onSelect: (id: number) => void
   error: Error | null
@@ -44,23 +46,24 @@ function styleFor(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<numb
   }
 }
 
-function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView>, cover: Map<number, FieldLandcover>) {
+function tooltipHtml(f: FieldFeature, preds: Map<number, Pred>, unlabeled: Map<number, UnlabeledCallView>, cover: Map<number, FieldLandcover>, seasonEnd: boolean) {
   const p = preds.get(f.properties.OBJECTID)
   const label = f.properties.label ?? 'none'
   const lc = cover.get(f.properties.OBJECTID)
   const land = lc ? `<br/><span class="field-tip__cdl">Land cover: ${cdlText(lc)}, USDA Cropland Data Layer</span>` : ''
   const u = !f.properties.label && !p ? unlabeled.get(f.properties.OBJECTID) : undefined
   if (u) return `<strong>Field ${f.properties.OBJECTID}</strong><br/>BARC label: none${land}<br/>Model call, no label: ${u.label} · P(silage) ${num(u.p_silage)}<br/><em>Season end; nothing to check it against</em>`
-  const call = p ? (p.p_silage == null ? p.class : `${p.class} · P(silage) ${num(p.p_silage)}`) : 'no call'
+  const call = p ? (p.p_silage == null ? p.class : `${p.class} · P(silage) ${num(p.p_silage)}`) : (!f.properties.label ? noCallReason(lc, seasonEnd)?.short : undefined) ?? 'No call'
   return `<strong>Field ${f.properties.OBJECTID}</strong><br/>BARC label: ${label}<br/>Model: ${call}${land}`
 }
 
-export function MapView({ fields, preds, unlabeled, cover, selectedId, onSelect, error, layoutKey }: Props) {
+export function MapView({ fields, preds, unlabeled, cover, seasonEnd, selectedId, onSelect, error, layoutKey }: Props) {
   const geoRef = useRef<LeafletGeoJSON | null>(null)
   const predsRef = useRef(preds)
   const unlabeledRef = useRef(unlabeled)
   const coverRef = useRef(cover)
-  useEffect(() => { coverRef.current = cover }, [cover])
+  const seasonEndRef = useRef(seasonEnd)
+  useEffect(() => { coverRef.current = cover; seasonEndRef.current = seasonEnd }, [cover, seasonEnd])
   const onSelectRef = useRef(onSelect)
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export function MapView({ fields, preds, unlabeled, cover, selectedId, onSelect,
   const onEachFeature = (feature: Feature, layer: Layer) => {
     const f = feature as FieldFeature
     layer.on('click', () => onSelectRef.current(f.properties.OBJECTID))
-    layer.bindTooltip(() => tooltipHtml(f, predsRef.current, unlabeledRef.current, coverRef.current), { sticky: true, className: 'field-tip', direction: 'top', offset: [0, -8] })
+    layer.bindTooltip(() => tooltipHtml(f, predsRef.current, unlabeledRef.current, coverRef.current, seasonEndRef.current), { sticky: true, className: 'field-tip', direction: 'top', offset: [0, -8] })
   }
 
   return (

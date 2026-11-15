@@ -162,7 +162,7 @@ export default function App() {
   }, [panelsOpen])
 
   const downloadCsv = () => {
-    const csv = rowsToCsv(buildRows(fields.data, predMap, unlabeledMap, coverMap), year, asOf)
+    const csv = rowsToCsv(buildRows(fields.data, predMap, unlabeledMap, coverMap, atSeasonEnd), year, asOf)
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }))
     const a = document.createElement('a')
     a.href = url
@@ -198,7 +198,7 @@ export default function App() {
         {meta.data?.stub && <p className="map-card map-error" role="alert">Demonstration data: these values are fabricated and are not model results.</p>}
         {view === 'states' ? (
           <USMap shapes={usShapes.data} rows={byStateRows} crop={crop} selected={usState} onSelect={setUsState} dark={mode === 'dark'} layoutKey={`${usState ?? ''}-${stateTable}-${!!byState.data}`} />
-        ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
+        ) : <MapView fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} seasonEnd={atSeasonEnd} selectedId={selectedId} onSelect={select} error={fields.error ?? preds.error} layoutKey={`${view}-${selected ? 'open' : 'closed'}`} />}
         {view === 'states' && byState.data && (
           <>
             <div className="glass statecrop seg" role="group" aria-label="Crop">
@@ -303,7 +303,7 @@ export default function App() {
                   <summary>What the columns mean</summary>
                   <p className="muted small">BARC label is the reference label. Model call is our held-out call; "no label" marks season-end calls on fields BARC did not label but the Cropland Data Layer shows as corn, with nothing to check them against. Land cover (CDL) is the USDA Cropland Data Layer's satellite crop map for that year: context only, never a BARC label or a model call.</p>
                 </details>
-                <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} coverError={landcover.error} onSelect={select} selectedId={selectedId} />
+                <FieldsTable fields={fields.data} preds={predMap} unlabeled={unlabeledMap} cover={coverMap} coverError={landcover.error} seasonEnd={atSeasonEnd} onSelect={select} selectedId={selectedId} />
               </>
             )}
             {view === 'quality' && (

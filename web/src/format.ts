@@ -42,10 +42,35 @@ export function cdlText(c: FieldLandcover): string {
   return `${c.crop}, not corn (CDL ${c.year})`
 }
 
+/**
+ * Why a field-year has no model call, in words, from its USDA Cropland Data Layer cover (null when the cover is
+ * unknown). `short` fits a table cell; `text` is the panel sentence. Land cover only: never a label or a call.
+ */
+export function noCallReason(c: FieldLandcover | undefined, seasonEnd: boolean): { short: string; text: string; na: string } | null {
+  if (!c) return null
+  const corn = pct(c.corn_share)
+  if (c.category === 'not_corn')
+    return { short: `No call: ${c.crop}, not corn`, text: `${c.crop} (${corn} corn): not corn this year, so no silage/grain call.`, na: 'Not applicable: no model call for a non-corn field-year.' }
+  if (c.category === 'mixed')
+    return { short: `No call: mixed (${corn} corn)`, text: `Partly corn (${corn}): too mixed to call reliably.`, na: 'Not applicable: no model call for a field-year this mixed.' }
+  return seasonEnd
+    ? { short: 'No call: too few clear looks', text: `Corn (${corn} of the field), but too few clear satellite looks to make a call.`, na: 'Not applicable: no model call for this field-year.' }
+    : { short: 'No call before Nov 30', text: `Corn (${corn} of the field). Calls on unlabeled corn fields are made at season end (Nov 30).`, na: 'Not applicable until the season-end call (Nov 30).' }
+}
+
 export const classColor = (c: PredClass | Label | null | undefined) =>
   c === 'Silage' ? DATA.silage : c === 'Grain' ? DATA.grain : DATA.undecided
 
 const FEATURE_NAMES: Record<string, string> = {
+  ndvi_07: 'Jul greenness (NDVI)',
+  ndvi_08: 'Aug greenness (NDVI)',
+  ndvi_09: 'Sep greenness (NDVI)',
+  ndvi_10: 'Oct greenness (NDVI)',
+  ndvi_11: 'Nov greenness (NDVI)',
+  peak_ndvi: 'Peak greenness',
+  peak_doy: 'Peak greenness date',
+  late_ndvi: 'Late-season greenness',
+  early_minus_late: 'Early minus late greenness',
   ndvi_pre_drop: 'Greenness before drop',
   drop_days: 'Days to drop',
   ndti_post: 'Residue after (NDTI)',

@@ -15,7 +15,8 @@ test('model v2 timing features have readable names', () => {
   assert.equal(featureName('drop_doy'), 'Largest drop date')
   assert.equal(featureName('drop_size'), 'Largest drop size')
   assert.equal(featureName('regrowth'), 'Regrowth after low')
-  assert.equal(featureName('peak_ndvi'), 'peak ndvi')  // unnamed features fall back to spaces
+  assert.equal(featureName('ndvi_09'), 'Sep greenness (NDVI)')
+  assert.equal(featureName('cloud_share'), 'cloud share')  // unnamed features fall back to spaces
 })
 
 test('big numbers are shown to three significant figures with k, M or B', async () => {

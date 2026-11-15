@@ -13,7 +13,7 @@ import {
 } from 'recharts'
 import { api, parseTopFeatures } from '../api'
 import type { FieldFeature, FieldLandcover, Pred, UnlabeledCallView } from '../api'
-import { cdlText, classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
+import { cdlText, classColor, featureName, noCallReason, monthOf, num, shortDate, toTime } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
 import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
@@ -78,6 +78,10 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
   const series = useAsync(() => api.series(id, year), [id, year])
   const decided = pred?.class === 'Grain' || pred?.class === 'Silage'
   const verdict = !label || !decided ? null : pred?.class === label
+  // No label, no held-out prediction and no season-end call: say why from the Cropland Data Layer.
+  const noCall = !label && !pred && !unlabeledCall
+  const reason = noCall ? noCallReason(cover, seasonEnd) : null
+  const missingLooks = `No clear satellite looks saved for this field in ${year}.`
 
   return (
     <div className="field">
@@ -91,19 +95,28 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
         </div>
         <div className="field__badges">
           <Badge kicker="BARC label" text={label ?? 'Unlabeled'} color={label ? classColor(label) : undefined} outline />
-          <Badge kicker={`Predicted · ${shortDate(asOf)}`} text={pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? '—')} color={decided ? classColor(pred?.class) : undefined} />
+          <Badge kicker={`Model · ${shortDate(asOf)}`} text={pred?.class === 'Pending' ? 'Pending (NA)' : pred?.class === 'Insufficient' ? 'Abstained (X)' : (pred?.class ?? (unlabeledCall && !label ? `${unlabeledCall.label} (no label)` : 'No call'))} color={decided ? classColor(pred?.class) : unlabeledCall && !label && !pred ? classColor(unlabeledCall.label) : undefined} />
           {verdict != null && <span className={`verdict ${verdict ? 'verdict--ok' : 'verdict--bad'}`}>{verdict ? '✓ Match' : '✗ Mismatch'}</span>}
         </div>
       </header>
 
-      {cover && (
-        <p className="block__note cdl-note">
-          <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">USDA Cropland Data Layer</span> {cdlText(cover)}
-          {!label && !pred && !unlabeledCall && <>; no BARC label and no model call</>}
-        </p>
+      {reason ? (
+        <section className="pbar pbar--empty nocall" aria-label="No model call">
+          <div className="pbar__value">No call</div>
+          <p>
+            <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label or a model call">USDA Cropland Data Layer {year}</span> {reason.text}
+          </p>
+          <p className="muted small">BARC has no label for this field-year. The Cropland Data Layer is satellite land cover, not a BARC label or a model call.</p>
+        </section>
+      ) : (
+        cover && (
+          <p className="block__note cdl-note">
+            <span className="tag tag--cdl" title="USDA Cropland Data Layer: satellite land cover, not a BARC label">USDA Cropland Data Layer</span> {cdlText(cover)}
+          </p>
+        )
       )}
       {/* An unlabeled call replaces the "no model call" bar: it is a call, just not a scored one. */}
-      {!(unlabeledCall && !label && !pred) && <ProbabilityBar pred={pred} />}
+      {!(unlabeledCall && !label && !pred) && !reason && <ProbabilityBar pred={pred} />}
       {unlabeledCall && !label && !pred && (
         <p className="block__note">
           <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, season end {year}.
@@ -121,8 +134,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
           )}
         </div>
         {series.loading && <div className="skeleton skeleton--chart" />}
-        {series.error && <p className="inline-error">Series unavailable: {series.error.message}</p>}
-        {series.data && <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} />}
+        {series.error && <p className="muted small">{missingLooks}</p>}
+        {series.data && (series.data.points.some((p) => p.ndvi != null) ? <SeriesChart points={series.data.points} decline={series.data.decline_date} asOf={asOf} /> : <p className="muted small">{missingLooks}</p>)}
       </section>
 
       {!showChips && (
@@ -132,7 +145,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
       )}
       {showChips && !seasonEnd && (
         <section className="block">
-          <Pending title="Before and after images">These cutouts are chosen from the whole season, so they can show imagery taken after {shortDate(asOf)}. They are shown on Nov 30.</Pending>
+          <div className="block__head"><h3>Before and after</h3></div>
+          <p className="muted small">Shown on Nov 30: the images are picked from the whole season, so on {shortDate(asOf)} they could show later imagery.</p>
         </section>
       )}
       {showChips && seasonEnd && (
@@ -142,8 +156,8 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
           {stub && <span className="tag tag--warn">Stub imagery</span>}
         </div>
         <div className="chips">
-          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the season’s largest greenness drop" />
-          <Chip src={api.chipUrl(id, year, 'post')} caption="After that drop" />
+          <Chip src={api.chipUrl(id, year, 'pre')} caption="Before the season’s largest greenness drop" missing={missingLooks} />
+          <Chip src={api.chipUrl(id, year, 'post')} caption="After that drop" missing={missingLooks} />
         </div>
       </section>
       )}
@@ -151,11 +165,14 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall, 
       <section className="block">
         <div className="block__head">
           <h3>Why the model decided</h3>
-          {parseTopFeatures(pred?.top_features).length > 0 && <span className="block__note">
-            <span className="txt-grain">◀ toward Grain</span> · <span className="txt-silage">toward Silage ▶</span>
-          </span>}
         </div>
-        <Contributions raw={pred?.top_features} />
+        {pred ? (
+          <Contributions raw={pred.top_features} />
+        ) : (
+          <p className="muted small">
+            {reason ? reason.na : unlabeledCall && !label ? 'Signal breakdowns are saved for labeled field-years only.' : 'Not applicable: no model call for this field-year.'}
+          </p>
+        )}
       </section>
     </div>
   )
@@ -268,11 +285,11 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
   )
 }
 
-function Chip({ src, caption }: { src: string; caption: string }) {
+function Chip({ src, caption, missing }: { src: string; caption: string; missing: string }) {
   const [failed, setFailed] = useState(false)
   return (
     <figure className="chip">
-      {failed ? <div className="chip__missing">No image chip</div> : <img src={src} alt={caption} onError={() => setFailed(true)} />}
+      {failed ? <div className="chip__missing">{missing}</div> : <img src={src} alt={caption} onError={() => setFailed(true)} />}
       <figcaption>{caption}</figcaption>
     </figure>
   )
@@ -286,8 +303,7 @@ function Contributions({ raw }: { raw: string | undefined }) {
         .sort((a, b) => Math.abs(b.contrib) - Math.abs(a.contrib)),
     [raw],
   )
-  if (!rows.length)
-    return <Pending title="Signal breakdown for this field">Which signals pushed this field toward grain or silage, from the model's per-field breakdown.</Pending>
+  if (!rows.length) return <p className="muted small">No signal breakdown is saved for this call.</p>
   const m = Math.max(0.5, ...rows.map((r) => Math.abs(r.contrib)))
   return (
     <div className="contrib" role="table" aria-label="Feature contributions; negative pushes toward grain, positive toward silage">
@@ -311,6 +327,15 @@ function Contributions({ raw }: { raw: string | undefined }) {
           </div>
         )
       })}
+      <div className="contrib__row contrib__dir" aria-hidden="true">
+        <span />
+        <span className="contrib__ends">
+          <span className="txt-grain">◀ Grain</span>
+          <span className="contrib__zero">0</span>
+          <span className="txt-silage">Silage ▶</span>
+        </span>
+        <span />
+      </div>
     </div>
   )
 }
