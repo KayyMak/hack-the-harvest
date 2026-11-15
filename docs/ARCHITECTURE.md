@@ -50,6 +50,9 @@ are separate fields.
 | `GET /api/baseline/asof?year=` | Saved mid-season calls for Aug 12, Sep 12, Oct 12, Nov 12 and Nov 30 of each year, with scores pooled over 2021-2023; written by `python -m harvest.export_asof`; 503 if missing |
 | `GET /api/baseline/rollup` | Per-year acres: reference silage, predicted silage, expected silage with 95% interval and CV%, and the misclassification-adjusted share (q - FPR)/(TPR - FPR) using acre-weighted rates from the other years (labeled field-years only) |
 | `GET /api/baseline/rollup.csv` | The roll-up in the lab QuickStats file's exact columns (`value`, `cv_percent`, ...), as a CSV download |
+| `GET /api/unlabeled` | Saved season-end model calls on blank-label field-years that the Cropland Data Layer marks as corn: per-call label and P(silage), per-year counts and acres with the same Bernoulli 95% interval, corn rule, caveat and sources; written by `baseline/unlabeled_calls.py`; 503 if missing. No reference label exists for these calls |
+| `GET /chips/{id}_{year}_{pre,post}.png` | Saved Sentinel-2 true-color cutouts just before and after each labeled field-year's largest NDVI drop (`baseline/export_chips.py`, provenance in `baseline/outputs/chips/index.json`); 404 if none |
+| `GET /api/baseline/contributions` | Per-field signal breakdown of the saved season-end calls (log-odds; positive = toward Silage; intercept + contributions = the model's log-odds), from `baseline/export_contributions.py`; 503 if missing |
 | `GET /api/fields.geojson` | All 83 field polygons (EPSG:4326, GeoJSON) with `field_id`, farm, field, acres and `reference_<year>` labels (null = unlabeled); from `baseline/outputs/fields.geojson`; 503 if missing |
 | `GET /api/fields` | Field ID, farm, field name, acres from the source GeoPackage (read-only, no geometry) |
 | `GET /api/fields/{id}/observations?year=` | Saved per-scene NDVI, clear fraction, cloud percent, status; 404 if none |

@@ -263,6 +263,39 @@ class ApiChecks(unittest.TestCase):
                          '#/components/schemas/AsOfResults')
         self.assertEqual(self.client.get('/api/baseline/asof?year=2019').status_code, 404)
 
+    def test_signal_breakdown_matches_saved_calls(self):
+        import math
+        rows = self.client.get('/api/baseline/contributions').json()
+        preds = {(p['field_id'], p['year']): p['silage_probability']
+                 for p in self.client.get('/api/baseline/predictions').json()}
+        logodds, intercept = {}, {}
+        for r in rows:
+            key = (r['field_id'], r['year'], r['as_of'])
+            logodds[key] = logodds.get(key, 0.0) + r['contribution']
+            intercept[key] = r['intercept']
+        self.assertEqual({k[:2] for k in logodds if k[2] is None}, set(preds))
+        for key, p in preds.items():
+            k = (*key, None)
+            self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[k] + logodds[k]))), p, places=4)
+        for d in self.client.get('/api/baseline/asof').json()['dates']:
+            for p in d['predictions']:
+                k = (p['field_id'], d['year'], d['as_of'])
+                if k in logodds:
+                    self.assertAlmostEqual(1 / (1 + math.exp(-(intercept[k] + logodds[k]))), p['silage_probability'], places=4)
+        self.assertTrue(any(k[2] for k in logodds), 'mid-season breakdowns missing')
+        with tempfile.TemporaryDirectory() as directory:
+            with patch('app.artifacts.OUTPUT_DIR', Path(directory)):
+                self.assertEqual(self.client.get('/api/baseline/contributions').status_code, 503)
+
+    def test_chips_served_and_validated(self):
+        ok = self.client.get('/chips/231_2022_pre.png')
+        self.assertEqual(ok.status_code, 200)
+        self.assertEqual(ok.headers['content-type'], 'image/png')
+        self.assertTrue(ok.content.startswith(b'\x89PNG'))
+        self.assertEqual(self.client.get('/chips/231_2099_pre.png').status_code, 404)
+        for bad in ('..%2Fmetrics.json', '231_2022_side.png', 'x.png'):
+            self.assertIn(self.client.get(f'/chips/{bad}').status_code, (400, 404))
+
 
 if __name__ == '__main__':
     unittest.main()

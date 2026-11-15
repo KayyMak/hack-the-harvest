@@ -368,6 +368,9 @@ textarea {
 .swatch--dashed {
   border: 2px dashed #9e9e9e;
 }
+.swatch--unlabeled {
+  border: 2px dotted;
+}
 
 /* ---------- right panel ---------- */
 .panel {
@@ -1378,6 +1381,10 @@ textarea {
 .k--grain { background: #e2a43a; }
 .k--pending { background: rgba(139, 153, 148, 0.6); }
 .k--abstain { border: 2px dashed #c9d3cf; }
+/* Model call on a field with no BARC label: light two-color fill, dotted outline. Never a reference label. */
+.k--unlabeled { border: 2px dotted #c9d3cf; background: linear-gradient(135deg, rgba(92, 191, 122, 0.35) 50%, rgba(226, 164, 58, 0.35) 50%); }
+.unl { margin: 2px 0 6px; font-size: 13px; line-height: 1.45; }
+.unl__tag { display: inline-block; margin-right: 4px; padding: 1px 7px; border: 1.5px dotted currentColor; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.85; }
 
 /* fields table */
 .ftable__tools { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -1778,6 +1785,7 @@ textarea {
 :root[data-theme='glass'][data-mode='light'] .review__row:hover { background: rgba(20, 45, 38, 0.05); }
 :root[data-theme='glass'][data-mode='light'] .review__mark--abstained,
 :root[data-theme='glass'][data-mode='light'] .k--abstain { border-color: #55655e; }
+:root[data-theme='glass'][data-mode='light'] .k--unlabeled { border-color: #55655e; }
 
 /* fields table */
 :root[data-theme='glass'][data-mode='light'] .ftable__scroll { border-color: rgba(20, 45, 38, 0.12); }

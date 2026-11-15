@@ -12,8 +12,10 @@ COPY backend/requirements.txt backend/constraints.txt ./backend/
 RUN python -m pip install --no-cache-dir -r backend/requirements.txt \
     && useradd --create-home harvest
 COPY backend/app/ ./backend/app/
-COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv baseline/outputs/observations.csv baseline/outputs/fields.geojson baseline/outputs/asof.json ./baseline/outputs/
+COPY baseline/outputs/metrics.json baseline/outputs/heldout_predictions.csv baseline/outputs/observations.csv baseline/outputs/fields.geojson baseline/outputs/asof.json baseline/outputs/feature_contributions.csv ./baseline/outputs/
+COPY baseline/outputs/chips/ ./baseline/outputs/chips/
 COPY baseline/outputs/decline_rule/metrics.json ./baseline/outputs/decline_rule/metrics.json
+COPY baseline/outputs/unlabeled/summary.json baseline/outputs/unlabeled/predictions.csv ./baseline/outputs/unlabeled/
 COPY data/reference/quickstats_2025_judges.csv ./data/reference/quickstats_2025_judges.csv
 ENV QUICKSTATS_CSV=/app/data/reference/quickstats_2025_judges.csv
 COPY market/data/nass_market.csv market/data/nass_sources.json market/data/market_timeline.json ./market/data/

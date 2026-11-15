@@ -12,7 +12,7 @@ import {
   YAxis,
 } from 'recharts'
 import { api, parseTopFeatures } from '../api'
-import type { FieldFeature, Pred } from '../api'
+import type { FieldFeature, Pred, UnlabeledCallView } from '../api'
 import { classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
@@ -34,9 +34,11 @@ interface Props {
   stub: boolean
   /** hide the before/after image block when no chips exist for this data */
   showChips?: boolean
+  /** season-end model call on a field with no BARC label (CDL corn); shown apart from the prediction */
+  unlabeledCall?: UnlabeledCallView
 }
 
-export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect }: Props) {
+export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, shortcuts = [], onSelect, unlabeledCall }: Props) {
   if (!field) {
     return (
       <div className="empty">
@@ -63,10 +65,10 @@ export function FieldPanel({ field, pred, year, asOf, stub, showChips = true, sh
       </div>
     )
   }
-  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} />
+  return <FieldDetail key={`${field.properties.OBJECTID}-${year}`} field={field} pred={pred} year={year} asOf={asOf} stub={stub} showChips={showChips} unlabeledCall={unlabeledCall} />
 }
 
-function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { field: FieldFeature }) {
+function FieldDetail({ field, pred, year, asOf, stub, showChips, unlabeledCall }: Props & { field: FieldFeature }) {
   const id = field.properties.OBJECTID
   const label = field.properties.label
   const series = useAsync(() => api.series(id, year), [id, year])
@@ -90,7 +92,14 @@ function FieldDetail({ field, pred, year, asOf, stub, showChips }: Props & { fie
         </div>
       </header>
 
-      <ProbabilityBar pred={pred} />
+      {/* An unlabeled call replaces the "no model call" bar: it is a call, just not a scored one. */}
+      {!(unlabeledCall && !label && !pred) && <ProbabilityBar pred={pred} />}
+      {unlabeledCall && !label && !pred && (
+        <p className="block__note">
+          <span className="tag">Model call, no label</span> {unlabeledCall.label}, P(silage) {num(unlabeledCall.p_silage)}, season end {year}.
+          {' '}BARC did not label this field-year; the Cropland Data Layer shows it {Math.round(unlabeledCall.corn_share * 100)}% corn. There is no reference to check this call against.
+        </p>
+      )}
 
       <section className="block">
         <div className="block__head">

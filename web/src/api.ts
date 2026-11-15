@@ -20,9 +20,10 @@ import type {
   RollupResponse,
   SeriesResponse,
   SnapshotMeta,
+  UnlabeledYearView,
 } from './types'
-import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary } from './adapter.ts'
-import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
+import { adaptAsOfPredictions, adaptConvergence, adaptFields, adaptPredictions, type SavedContribution, adaptRollup, adaptSeries, adaptSummary, adaptUnlabeled } from './adapter.ts'
+import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary, SavedUnlabeled } from './adapter'
 
 export * from './types.ts'
 
@@ -42,6 +43,7 @@ export const snap = {
   agentRun: () => 'agent_run',
   agentTrace: (runId: string) => `agent_trace_${runId}`,
   convergenceAcres: () => 'convergence_acres',
+  unlabeled: () => 'unlabeled',
 }
 
 export class ApiError extends Error {
@@ -89,6 +91,9 @@ const post = <T>(path: string, body: unknown) =>
 const LIVE_YEARS = [2021, 2022, 2023]
 const LIVE_MONTH_DAYS = ['08-12', '09-12', '10-12', '11-12', '11-30']
 const isSeasonEnd = (year: number, asOf: string) => asOf === `${year}-11-30`
+// The signal breakdown is optional: without it the field panel shows its pending state.
+const contributions = () =>
+  getJson<SavedContribution[]>(`${API_URL}/api/baseline/contributions`).catch((): SavedContribution[] => [])
 const savedAsOf = () => getJson<SavedAsOf>(`${API_URL}/api/baseline/asof`)
 
 export const api = {
@@ -113,7 +118,7 @@ export const api = {
     STATIC ? fromSnapshot<SnapshotMeta>(snap.meta()) : Promise.resolve({
       stub: false, note: 'Saved BARC baseline results; held out by field.',
       years: LIVE_YEARS, as_of_dates: LIVE_YEARS.flatMap((y) => LIVE_MONTH_DAYS.map((md) => `${y}-${md}`)),
-      season_end_only: false, has_chips: false, has_rollup: true, has_contributions: false,
+      season_end_only: false, has_chips: true, has_rollup: true, has_contributions: true,
     }),
 
   fields: (year: number) =>
@@ -125,8 +130,12 @@ export const api = {
     STATIC
       ? fromSnapshot<Pred[]>(snap.predict(year, asOf))
       : isSeasonEnd(year, asOf)
-        ? getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`).then((data) => adaptPredictions(data, year, asOf))
-        : savedAsOf().then((data) => adaptAsOfPredictions(data, year, asOf)),
+        ? Promise.all([
+            getJson<SavedPrediction[]>(`${API_URL}/api/baseline/predictions`),
+            contributions(),
+          ]).then(([data, contributions]) => adaptPredictions(data, year, asOf, contributions))
+        : Promise.all([savedAsOf(), contributions()])
+            .then(([data, rows]) => adaptAsOfPredictions(data, year, asOf, rows)),
 
   /** `year` only dates the season chart; the scores themselves are pooled over all saved years. */
   evaluate: (split = 'strict', year = LIVE_YEARS[1]) =>
@@ -148,6 +157,11 @@ export const api = {
     STATIC
       ? fromSnapshot<ConvergenceAcres>(snap.convergenceAcres())
       : getJson<ConvergenceAcres>(`${API_URL}/api/baseline/convergence`),
+
+  /** Model calls on blank-label field-years CDL marks as corn: same saved shape live and static. */
+  unlabeled: (year: number): Promise<UnlabeledYearView> =>
+    (STATIC ? fromSnapshot<SavedUnlabeled>(snap.unlabeled()) : getJson<SavedUnlabeled>(`${API_URL}/api/unlabeled`))
+      .then((data) => adaptUnlabeled(data, year)),
 
   series: (id: number, year: number) =>
     STATIC

@@ -13,6 +13,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
+  baseline/outputs/unlabeled/                -> unlabeled.json (model calls on blank-label corn fields)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -140,7 +141,9 @@ def main() -> None:
                 contrib[key].append({'name': r['feature'], 'value': round(float(r['value']), 4), 'contrib': round(float(r['contribution']), 4)})
 
     def top_features(oid: int, year: int, as_of: str = '') -> str:
-        rows_ = contrib.get((oid, year, as_of)) or contrib.get((oid, year, '')) or []
+        rows_ = contrib.get((oid, year, as_of)) or []
+        if not rows_ and (not as_of or as_of.endswith(f'-{SEASON_END}')):  # never show later months mid-season
+            rows_ = contrib.get((oid, year, '')) or []
         return json.dumps(sorted(rows_, key=lambda c: -abs(c['contrib']))[:6])
 
     # ---- held-out predictions (season end) ----
@@ -202,7 +205,8 @@ def main() -> None:
         for d in saved['dates']:
             rows_ = [{'OBJECTID': p['field_id'], 'year': d['year'], 'as_of': d['as_of'],
                       'p_silage': round(p['silage_probability'], 4), 'class': p['predicted_label'],
-                      'abstain': False, 'top_features': '[]'} for p in d['predictions']]
+                      'abstain': False, 'top_features': top_features(p['field_id'], d['year'], d['as_of'])}
+                     for p in d['predictions']]
             rows_ += [{'OBJECTID': i, 'year': d['year'], 'as_of': d['as_of'], 'p_silage': None, 'class': 'Pending',
                        'abstain': False, 'top_features': '[]'} for i in d['pending_field_ids']]
             if not d['as_of'].endswith(f'-{SEASON_END}'):  # season end already written from held-out predictions
@@ -287,6 +291,19 @@ def main() -> None:
         has_acres_convergence = True
     except Exception as exc:  # explicit, never a silent substitute
         print(f'convergence_acres.json NOT written: {exc}')
+
+    # ---- model calls on blank-label fields CDL marks as corn (same reader as GET /api/unlabeled) ----
+    try:
+        sys.path.insert(0, str(ROOT / 'backend'))
+        from app import artifacts
+        previous_output = artifacts.OUTPUT_DIR
+        try:
+            artifacts.OUTPUT_DIR = BASE
+            write('unlabeled', json.loads(artifacts.read_unlabeled().model_dump_json()))
+        finally:
+            artifacts.OUTPUT_DIR = previous_output
+    except Exception as exc:  # explicit, never a silent substitute; the dashboard shows Pending
+        print(f'unlabeled.json NOT written: {exc}')
 
     # ---- optional: before/after chips ----
     has_chips = False

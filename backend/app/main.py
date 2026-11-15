@@ -3,17 +3,21 @@ import sys
 from datetime import date
 from uuid import uuid4
 
+import re
+
 from fastapi import BackgroundTasks, FastAPI, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
+from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_contributions, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
-    read_predictions, read_quickstats, read_summary)
+    read_predictions, read_quickstats, read_summary, read_unlabeled)
 from . import market, tools
 from .frontend import mount_first_build
 from .schemas import (AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, MarketOutlook, MarketReport,
-    MarketStatus, Observation, Prediction, QuickStatsRow, Rollup)
+    MarketStatus, Observation, Prediction, QuickStatsRow, Rollup, SignalContribution, UnlabeledCalls)
+
+CHIP_NAME = re.compile(r'\d{1,6}_20\d{2}_(pre|post)\.png')
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -48,6 +52,23 @@ def decline_rule() -> DeclineRuleBaseline:
     return _serve(read_decline_rule)
 
 
+@app.get('/chips/{name}', include_in_schema=False)
+def chip(name: str) -> FileResponse:
+    """Saved before/after Sentinel-2 chip, <OBJECTID>_<year>_{pre,post}.png (baseline/export_chips.py)."""
+    if not CHIP_NAME.fullmatch(name):
+        raise HTTPException(status_code=400, detail='Invalid chip name.')
+    path = tools.artifacts.OUTPUT_DIR / 'chips' / name
+    if not path.is_file():
+        raise HTTPException(status_code=404, detail='No saved chip for this field-year.')
+    return FileResponse(path, media_type='image/png', headers={'Cache-Control': 'public, max-age=86400'})
+
+
+@app.get('/api/baseline/contributions', response_model=list[SignalContribution])
+def contributions() -> list[SignalContribution]:
+    """Per-field signal breakdown of the saved season-end calls (log-odds; positive = toward Silage)."""
+    return _serve(read_contributions)
+
+
 @app.get('/api/baseline/predictions', response_model=list[Prediction])
 def predictions() -> list[Prediction]:
     return _serve(read_predictions)
@@ -76,6 +97,13 @@ def rollup_csv() -> PlainTextResponse:
     """Roll-up in QuickStats column shape, for download."""
     return PlainTextResponse(_serve(rollup_quickstats_csv), media_type='text/csv',
         headers={'Content-Disposition': 'attachment; filename="quickstats_export.csv"'})
+
+
+@app.get('/api/unlabeled', response_model=UnlabeledCalls)
+def unlabeled() -> UnlabeledCalls:
+    """Saved model calls on BARC field-years with a blank label that CDL marks as corn.
+    No reference label exists for these; they are never mixed into the scored predictions."""
+    return _serve(read_unlabeled)
 
 
 @app.get('/api/fields.geojson')
