@@ -13,6 +13,7 @@ Optional inputs (see web/DATA_HANDOFF.md); each one is used automatically when i
   baseline/outputs/feature_contributions.csv -> per-field "why the model decided" bars
   baseline/outputs/rollup.json (or rollup_<year>.json) -> Maryland acres vs Census
   baseline/outputs/chips/<id>_<year>_{pre,post}.png    -> before/after images
+  baseline/outputs/estimate_2025/summary.json (+ benchmark.json) -> estimate_2025.json (2025 Maryland estimate)
 Agent execution is unavailable in static mode.
 
 Run from the repo root:  python3 web/scripts/build-real-snapshot.py   (needs: pip install pyproj)
@@ -263,6 +264,17 @@ def main() -> None:
         for png in cdir.glob('*.png'):
             shutil.copy2(png, OUT / 'chips' / png.name)
             has_chips = True
+
+    # ---- optional: 2025 Maryland estimate, in the same {summary, benchmark} shape as GET /api/estimate_2025 ----
+    edir = BASE / 'estimate_2025'
+    if (edir / 'summary.json').exists():
+        bpath = edir / 'benchmark.json'
+        write('estimate_2025', {
+            'summary': json.loads((edir / 'summary.json').read_text(encoding='utf-8')),
+            'benchmark': json.loads(bpath.read_text(encoding='utf-8')) if bpath.exists() else None,
+        })
+    else:  # not generated yet: the dashboard shows a pending slot instead
+        print(f"skipped estimate_2025.json ({edir / 'summary.json'} not found)")
 
     # ---- BARC-only acre roll-up: reuse the backend's own computation so offline matches live ----
     try:

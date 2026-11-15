@@ -2,6 +2,7 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { api } from './api'
 import type { Pred } from './api'
 import { AgentPanel } from './components/AgentPanel'
+import { Estimate2025Panel } from './components/Estimate2025'
 import { FieldPanel } from './components/FieldPanel'
 import { buildRows, FieldsTable, rowsToCsv } from './components/FieldsTable'
 import { LogoMark } from './components/Logo'
@@ -82,6 +83,7 @@ export default function App() {
   const preds = useAsync(() => api.predict(year, asOf), [year, asOf])
   const evaluation = useAsync(() => api.evaluate('strict', year), [year])
   const rollup = useAsync(() => api.rollup(year), [year])
+  const estimate = useAsync(() => api.estimate2025(), [])
 
   const predMap = useMemo(() => new Map<number, Pred>((preds.data ?? []).map((p) => [p.OBJECTID, p])), [preds.data])
   const selected = fields.data?.features.find((f) => f.properties.OBJECTID === selectedId) ?? null
@@ -227,6 +229,7 @@ export default function App() {
             asOf={asOf}
             counts={counts}
             rollup={rollup.data}
+            estimate={estimate}
             evaluation={evaluation.data}
             review={review}
             onSelect={select}
@@ -270,6 +273,8 @@ export default function App() {
                 ) : (
                   <RollupPanel data={rollup.data} error={rollup.error} />
                 )}
+                <h2 className="sheet__h2">2025 Maryland estimate</h2>
+                <Estimate2025Panel state={estimate} />
               </>
             )}
             {view === 'agent' && (

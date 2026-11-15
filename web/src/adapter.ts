@@ -1,6 +1,6 @@
 /** Adapt the published FastAPI contract to the dashboard's display types. */
 import type { FeatureCollection, Geometry } from 'geojson'
-import type { BarcRollupYear, BaselineSummary, ConvergencePoint, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse } from './types'
+import type { BarcRollupYear, BaselineSummary, ConvergencePoint, Estimate2025, Estimate2025Summary, EstimateAcres, EstimateCrop, EstimateErrors, EvaluateResponse, FieldsResponse, Label, Pred, RollupResponse, SeriesResponse } from './types'
 
 export interface SavedPrediction {
   field_id: number
@@ -213,4 +213,33 @@ export function adaptBarcRollup(data: SavedRollup, year: number): BarcRollupYear
     labeled_silage_acres: y.reference_silage_acres, expected_silage_acres: y.expected_silage_acres,
     ci: y.expected_silage_acres_95ci, cv_pct: y.cv_percent, adjusted_silage_acres: y.adjusted_silage_acres,
   }
+}
+
+export interface SavedEstimate2025 {
+  summary: Estimate2025Summary
+  benchmark: Record<string, unknown> | null
+}
+
+const finite = (...values: unknown[]) => values.every((v) => typeof v === 'number' && Number.isFinite(v))
+
+/**
+ * The saved 2025 Maryland estimate. The headline is the calibrated estimate, or the raw one when
+ * calibration is unavailable. An incomplete file is an error, never a zero.
+ */
+export function adaptEstimate2025(data: SavedEstimate2025): Estimate2025 {
+  const s = data?.summary
+  const shown = s?.calibrated ?? s?.raw
+  const errors = s?.calibrated ? s.benchmark?.calibrated : s?.benchmark?.raw
+  const crop = (name: 'silage' | 'grain', block: EstimateAcres, err: EstimateErrors | null | undefined) => {
+    const acres = block?.[`${name}_acres`]
+    const ci = block?.[`${name}_acres_95ci`]
+    const e = err?.[name]
+    if (!finite(acres, ci?.[0], ci?.[1], e?.error, e?.relative_error)) throw new Error('The saved 2025 estimate is incomplete.')
+    return { acres, ci, error: e!.error, relative_error: e!.relative_error }
+  }
+  if (!s || !shown || !s.raw || !finite(s.nass_2025?.silage_acres, s.nass_2025?.grain_acres)) throw new Error('The saved 2025 estimate is incomplete.')
+  const both = (name: 'silage' | 'grain'): EstimateCrop => ({
+    ...crop(name, shown, errors), nass_acres: s.nass_2025[`${name}_acres`], raw: crop(name, s.raw, s.benchmark?.raw),
+  })
+  return { summary: s, benchmark: data.benchmark ?? null, calibrated: s.calibrated != null, silage: both('silage'), grain: both('grain') }
 }

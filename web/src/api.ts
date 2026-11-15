@@ -11,6 +11,7 @@ import type {
   AgentRunResponse,
   AgentTraceResponse,
   BarcRollupYear,
+  Estimate2025,
   EvaluateResponse,
   FieldsResponse,
   Pred,
@@ -18,8 +19,8 @@ import type {
   SeriesResponse,
   SnapshotMeta,
 } from './types'
-import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary, byYearFromPredictions } from './adapter.ts'
-import type { SavedAsOf, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
+import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSeries, adaptSummary, byYearFromPredictions } from './adapter.ts'
+import type { SavedAsOf, SavedEstimate2025, SavedFields, SavedPrediction, SavedRollup, SavedSummary } from './adapter'
 
 export * from './types.ts'
 
@@ -107,6 +108,14 @@ export const api = {
   barcRollup: (year: number): Promise<BarcRollupYear | null> =>
     (STATIC ? fromSnapshot<SavedRollup>('barc_rollup') : getJson<SavedRollup>(`${API_URL}/api/baseline/rollup`))
       .then((data) => adaptBarcRollup(data, year)),
+
+  /**
+   * 2025 Maryland silage and grain acres: a model estimate from a sample of corn fields, next to
+   * NASS survey acres harvested. Live: /api/estimate_2025; snapshot: estimate_2025.json (same shape).
+   */
+  estimate2025: (): Promise<Estimate2025> =>
+    (STATIC ? fromSnapshot<SavedEstimate2025>('estimate_2025') : getJson<SavedEstimate2025>(`${API_URL}/api/estimate_2025`))
+      .then(adaptEstimate2025),
 
   rollup: (year: number) =>
     STATIC

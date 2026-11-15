@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import test from 'node:test'
-import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptFields, adaptPredictions, adaptRollup, adaptSummary, byYearFromPredictions, fieldLayerKey } from '../src/adapter.ts'
+import { adaptAsOfPredictions, adaptBarcRollup, adaptConvergence, adaptEstimate2025, adaptFields, adaptPredictions, adaptRollup, adaptSummary, byYearFromPredictions, fieldLayerKey } from '../src/adapter.ts'
 import { api } from '../src/api.ts'
 
 const artifact = (name) => JSON.parse(readFileSync(new URL(`../../baseline/outputs/${name}`, import.meta.url), 'utf8'))
@@ -143,4 +143,60 @@ test('BARC roll-up adapter keeps BARC-only scope and picks the requested year', 
 test('field acres are rounded to one decimal for display', () => {
   const f = adaptFields(fields, 2022).features.find((x) => x.properties.ACRES != null)
   assert.equal(f.properties.ACRES, Math.round(f.properties.ACRES * 10) / 10)
+})
+
+// Synthetic values for shape checks only; these are not results.
+const estimateSummary = () => ({
+  year: 2025, state: 'MARYLAND', generated_utc: '2000-01-01T00:00:00+00:00', headline: 'calibrated',
+  population: { source: 'synthetic', corn_rule: 'synthetic', csb_fields_maryland: 100, corn_fields_2025: 40, corn_acres_2025: 1000 },
+  sample: { seed: 1, stratified_by: 'county', requested_fields: 10, sampled_fields: 10, sampled_acres: 250, scored_fields: 8,
+    scored_acres: 200, skipped_fields: 2, skipped_reasons: { too_few_clear_dates: 1, read_error: 1 }, min_valid_dates: 3 },
+  model: { name: 'synthetic', training_field_years: 4, features: ['ndvi_07'], threshold: 0.5 },
+  raw: { silage_acres: 300, silage_acres_95ci: [200, 400], grain_acres: 700, grain_acres_95ci: [600, 800], silage_share: 0.3 },
+  calibrated: { silage_acres: 250, silage_acres_95ci: [100, 400], grain_acres: 750, grain_acres_95ci: [600, 900], silage_share: 0.25,
+    method: 'synthetic', tpr: 0.5, fpr: 0.1 },
+  nass_2025: { silage_acres: 200, grain_acres: 800, source: 'synthetic' },
+  benchmark: {
+    raw: { silage: { error: 100, relative_error: 0.5 }, grain: { error: -100, relative_error: -0.125 } },
+    calibrated: { silage: { error: 50, relative_error: 0.25 }, grain: { error: -50, relative_error: -0.0625 } },
+  },
+  method: 'synthetic', limitations: ['synthetic'], sources: [{ name: 'synthetic', url: 'https://example.invalid/', accessed: '2000-01-01' }],
+})
+
+test('2025 estimate comes from /api/estimate_2025 with the calibrated numbers as the headline', async (t) => {
+  const calls = []
+  t.mock.method(globalThis, 'fetch', async (url) => {
+    calls.push(url)
+    return Response.json({ summary: estimateSummary(), benchmark: { model_name: 'synthetic' } })
+  })
+  const result = await api.estimate2025()
+  assert.deepEqual(calls, ['/api/estimate_2025'])
+  assert.equal(result.calibrated, true)
+  assert.deepEqual(result.silage, { acres: 250, ci: [100, 400], nass_acres: 200, error: 50, relative_error: 0.25,
+    raw: { acres: 300, ci: [200, 400], error: 100, relative_error: 0.5 } })
+  assert.deepEqual([result.grain.acres, result.grain.nass_acres, result.grain.error, result.grain.raw.acres], [750, 800, -50, 700])
+  assert.deepEqual(result.summary, estimateSummary())
+  assert.deepEqual(result.benchmark, { model_name: 'synthetic' })
+})
+
+test('without calibration the raw 2025 estimate is the headline and is marked uncalibrated', () => {
+  const summary = { ...estimateSummary(), headline: 'raw', calibrated: null }
+  summary.benchmark.calibrated = null
+  const result = adaptEstimate2025({ summary, benchmark: null })
+  assert.equal(result.calibrated, false)
+  assert.equal(result.benchmark, null)
+  assert.deepEqual([result.silage.acres, result.silage.ci, result.silage.error], [300, [200, 400], 100])
+  assert.deepEqual([result.grain.acres, result.grain.relative_error], [700, -0.125])
+})
+
+test('a missing or incomplete 2025 estimate rejects instead of showing numbers', async (t) => {
+  t.mock.method(globalThis, 'fetch', async () => new Response('{"detail":"missing"}', { status: 503 }))
+  await assert.rejects(api.estimate2025(), (error) => error.status === 503 && /estimate_2025/.test(error.message))
+  assert.throws(() => adaptEstimate2025({}), /incomplete/)
+  const noErrors = estimateSummary()
+  delete noErrors.benchmark.calibrated
+  assert.throws(() => adaptEstimate2025({ summary: noErrors, benchmark: null }), /incomplete/)
+  const noRange = estimateSummary()
+  delete noRange.raw.grain_acres_95ci
+  assert.throws(() => adaptEstimate2025({ summary: noRange, benchmark: null }), /incomplete/)
 })
