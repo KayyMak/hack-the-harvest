@@ -573,7 +573,8 @@ def tool_specs() -> list[dict]:
 
 def tool_args(tc: dict) -> tuple[dict, str | None]:
     """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object."""
-    raw = tc.get('function', {}).get('arguments') or '{}'
+    fn = tc.get('function') if isinstance(tc, dict) else None
+    raw = (fn if isinstance(fn, dict) else {}).get('arguments') or '{}'
     try:
         args = raw if isinstance(raw, dict) else json.loads(raw)
     except (ValueError, TypeError):
@@ -584,8 +585,8 @@ def tool_args(tc: dict) -> tuple[dict, str | None]:
 
 
 def run_tool(name: str, args: dict) -> dict:
-    if name not in TOOLS:
-        return {'error': f'unknown tool {name}'}
+    if not isinstance(name, str) or name not in TOOLS:  # malformed names are a tool error, never a 500
+        return {'error': f'unknown tool {name!r}'}
     fn, _, params = TOOLS[name]
     try:
         return fn(**{k: args[k] for k in params if k in args})
@@ -952,7 +953,8 @@ def _generate(year: int, d: date, cfg: Config) -> dict:
             tcs = tcs[:MAX_CALLS_PER_ROUND]  # every call kept in the assistant message gets a tool reply
             messages.append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': tcs})
             for tc in tcs:
-                name = tc.get('function', {}).get('name', '')
+                fn = tc.get('function') if isinstance(tc, dict) else None
+                name = (fn if isinstance(fn, dict) else {}).get('name', '')
                 args, bad = tool_args(tc)
                 out = {'error': bad} if bad else run_tool(name, args)
                 ev.add_tool(name, args, out)

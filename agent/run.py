@@ -133,9 +133,15 @@ def tool_specs() -> list[dict]:
     return [convert_to_openai_tool(t) for t in AGENT_TOOLS]
 
 
+def _fn(tc) -> dict:
+    """The 'function' part of a tool call, or {} when the reply is malformed."""
+    fn = tc.get('function') if isinstance(tc, dict) else None
+    return fn if isinstance(fn, dict) else {}
+
+
 def _args(tc: dict) -> tuple[dict, str | None]:
     """A tool call's arguments as a dict, or ({}, error) when they are not a JSON object."""
-    raw = tc.get('function', {}).get('arguments') or '{}'
+    raw = _fn(tc).get('arguments') or '{}'
     try:
         args = raw if isinstance(raw, dict) else json.loads(raw)
     except (ValueError, TypeError):
@@ -171,7 +177,7 @@ def analyst(state: AgentState) -> AgentState:
             calls = calls[:MAX_CALLS_PER_ROUND]  # every call kept in the assistant message gets a tool reply
         state['messages'].append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': calls})
         for tc in calls:
-            log_step(run_id, node='analyst', type='tool_call', tool=tc.get('function', {}).get('name'), args=_args(tc)[0])
+            log_step(run_id, node='analyst', type='tool_call', tool=_fn(tc).get('name'), args=_args(tc)[0])
         state['pending'] = calls
         state['tool_rounds'] = rounds + 1
     else:
@@ -183,7 +189,9 @@ def analyst(state: AgentState) -> AgentState:
 def run_tools(state: AgentState) -> AgentState:
     run_id = state['run_id']
     for tc in state.get('pending', []):
-        name = tc.get('function', {}).get('name', '')
+        name = _fn(tc).get('name', '')
+        if not isinstance(name, str):  # a malformed reply must be a tool error, never a crash
+            name = repr(name)
         args, bad = _args(tc)
         args = {k: v for k, v in args.items() if v is not None}
         if name not in AGENT_TOOL_NAMES:  # only tools offered to the model run (not write_report: it takes a run_id)
