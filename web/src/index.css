@@ -2331,3 +2331,6 @@ details.more.section > summary { font-size: 14px; color: #e8eeeb; }
 :root[data-mode='light'] .shell .chip img { background: #e9eeec; }
 /* track record chart in the 2025 rail */
 .track { height: 150px; }
+.whymiss { width: 100%; font-size: 13px; }
+.whymiss tbody tr { cursor: pointer; }
+.whymiss tbody tr:hover { background: rgba(255, 255, 255, 0.04); }

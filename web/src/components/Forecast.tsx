@@ -80,6 +80,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
             <h3 className="rail__sub">Largest {crop} states (acres, ours vs NASS)</h3>
             <MissList rows={data.states} crop={crop} onSelect={onSelect} />
           </section>
+          {crop === 'silage' && <WhyMisses data={data} onSelect={onSelect} />}
           <ScoreUpload data={data} crop={crop} />
           <section>
             <h2 className="rail__title">How it works</h2>
@@ -447,4 +448,41 @@ function trackTicks(top: number): number[] {
   const step = top > 6 ? 4 : 2
   const n = Math.floor(top / step)
   return Array.from({ length: 2 * n + 1 }, (_, i) => (i - n) * step)
+}
+
+/** Why the silage misses: 2025 silage broke from each state's own recent history, which no pre-January report shows.
+ *  Uses NASS 2025 only to explain after the fact (never to build or choose the forecast). */
+function WhyMisses({ data, onSelect }: { data: Forecast; onSelect: (s: string) => void }) {
+  const w = data.why_silage
+  const rows = useMemo(
+    () => data.states
+      .filter((r) => r.silage?.nass != null && r.silage.hist5 != null && (r.silage.err ?? 0) > w!.threshold_pct / 100)
+      .sort((a, b) => (b.silage!.est - b.silage!.nass!) - (a.silage!.est - a.silage!.nass!))
+      .slice(0, 4),
+    [data, w],
+  )
+  if (!w || !rows.length) return null
+  return (
+    <section>
+      <h2 className="rail__title">Why the silage misses</h2>
+      <p className="rail__note rail__note--keep">
+        In <b>{w.over_below_history} of {w.over}</b> states we over-called by more than {w.threshold_pct}%, 2025 silage fell below that
+        state's own {w.history_years.replace('-', '–')} average; in <b>{w.under_above_history} of {w.under}</b> we under-called, it rose above it.
+        2025 broke from recent history, and no report before January shows that.
+      </p>
+      <table className="mini-table whymiss">
+        <thead><tr><th>State</th><th className="num">Ours</th><th className="num">{w.history_years.replace('-', '–')} avg</th><th className="num">NASS 2025</th></tr></thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r.state} onClick={() => onSelect(r.state)}>
+              <td>{titleCase(r.state)}</td>
+              <td className="num">{fmtAcres(r.silage!.est)}</td>
+              <td className="num">{fmtAcres(r.silage!.hist5!)}</td>
+              <td className="num">{fmtAcres(r.silage!.nass)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
 }
