@@ -21,6 +21,16 @@ class Metrics(BaseModel):
     matrix_columns: str
 
 
+class ModelSelection(BaseModel):
+    """How model v2 was chosen and how far to trust its gain over v1 (baseline/model_v2/results.md)."""
+    model_config = ConfigDict(extra='allow')
+    note: str
+    nested_selection_mean_balanced_accuracy: float
+    v1_mean_balanced_accuracy_same_seeds: float
+    gain_vs_v1_field_bootstrap_95ci: tuple[float, float]
+    details: str
+
+
 class BaselineSummary(BaseModel):
     protocol: str
     evaluated_field_years: int
@@ -29,8 +39,14 @@ class BaselineSummary(BaseModel):
     read_errors: int
     cloud_or_nodata_rejections: int
     missing_feature_counts: dict[str, int]
-    logistic: Metrics
+    logistic: Metrics  # the saved model's held-out metrics (v1 or v2; the key predates v2)
     always_grain: Metrics
+    # Present when the saved model is v2; absent (None) for v1 outputs.
+    model_version: Literal['v1', 'v2'] | None = None
+    model: str | None = None
+    features: list[str] | None = None
+    selection: ModelSelection | None = None
+    v1_logistic_same_split: Metrics | None = None
 
 
 class Prediction(BaseModel):

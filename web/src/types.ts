@@ -77,6 +77,19 @@ export interface EvaluateResponse {
   /** naive comparison model, e.g. always predicting grain */
   baseline?: BaselineSummary
   by_year?: Record<string, { model: BaselineSummary; baseline: BaselineSummary }>
+  /** 'v2' when the saved model is model v2 (absent or 'v1' for the original baseline) */
+  model_version?: 'v1' | 'v2'
+  /** v2 only: how it was chosen and how far to trust its gain over v1 */
+  selection?: ModelSelection
+  /** v2 only: the v1 model on the same held-out split, for comparison */
+  v1_same_split?: BaselineSummary
+}
+export interface ModelSelection {
+  note: string
+  nested_selection_mean_balanced_accuracy: number
+  v1_mean_balanced_accuracy_same_seeds: number
+  gain_vs_v1_field_bootstrap_95ci: [number, number]
+  details: string
 }
 export interface BaselineSummary {
   name?: string

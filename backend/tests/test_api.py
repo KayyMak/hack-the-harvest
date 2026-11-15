@@ -32,6 +32,22 @@ class ApiChecks(unittest.TestCase):
             self.assertIn(row['reference_label'], ['Grain', 'Silage'])
             self.assertEqual(field_folds.setdefault(row['field_id'], row['fold']), row['fold'])
 
+    def test_summary_names_the_saved_model_and_its_uncertainty(self):
+        import json
+        from app import artifacts
+        saved = json.loads((artifacts.OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))
+        report = self.client.get('/api/baseline/summary').json()
+        self.assertEqual(report['model_version'], saved.get('model_version'))  # None for v1 outputs
+        if report['model_version'] == 'v2':
+            self.assertEqual(report['features'], saved['features'])
+            self.assertEqual(len(report['features']), 13)
+            low, high = report['selection']['gain_vs_v1_field_bootstrap_95ci']
+            self.assertLessEqual(low, high)
+            self.assertLess(report['selection']['nested_selection_mean_balanced_accuracy'],
+                            report['logistic']['balanced_accuracy'])  # the honest estimate is lower
+            self.assertEqual(sum(map(sum, report['v1_logistic_same_split']['confusion_matrix'])),
+                             report['evaluated_field_years'])
+
     def test_missing_or_malformed_artifacts_return_503(self):
         with tempfile.TemporaryDirectory() as directory:
             with patch('app.artifacts.OUTPUT_DIR', Path(directory)):

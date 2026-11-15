@@ -243,10 +243,17 @@ def main() -> None:
         'abstained': 0,
         'n_evaluated': m['evaluated_field_years'],
         'n_fields': m['evaluated_fields'],
-        'model_name': 'Logistic regression on NDVI',
+        'model_name': m.get('model', 'Logistic regression on NDVI'),
         'balanced_accuracy': round(m['logistic']['balanced_accuracy'], 4),
         'baseline': {'name': 'Always grain', **summary(m['always_grain'])},
         'by_year': {y: {'model': summary(v['logistic']), 'baseline': summary(v['always_grain'])} for y, v in m['by_year'].items()},
+        'model_version': m.get('model_version', 'v1'),
+        **({'selection': {k: m['selection'][k] for k in ('note', 'nested_selection_mean_balanced_accuracy',
+                                                         'v1_mean_balanced_accuracy_same_seeds',
+                                                         'gain_vs_v1_field_bootstrap_95ci', 'details')}}
+           if 'selection' in m else {}),
+        **({'v1_same_split': {'name': 'v1 (nine NDVI features)', **summary(m['v1_logistic_same_split'])}}
+           if 'v1_logistic_same_split' in m else {}),
     })
 
     # ---- per-date NDVI series for scored field-years ----
@@ -349,7 +356,8 @@ def main() -> None:
 
     write('_meta', {
         'stub': False,
-        'note': 'Real BARC data: field outlines and labels from BARC_Corn.2021-2023.gpkg; held-out predictions and metrics from baseline/outputs (logistic regression, field-held-out folds).',
+        'note': 'Real BARC data: field outlines and labels from BARC_Corn.2021-2023.gpkg; held-out predictions and metrics from baseline/outputs '
+                f"({m.get('model', 'logistic regression')}, field-held-out folds).",
         'years': YEARS,
         'as_of_dates': sorted(set(asof_dates)) or [f'{y}-{SEASON_END}' for y in YEARS],
         'season_end_only': not asof_dates,
