@@ -6,11 +6,11 @@ threshold is fitted on training fields only; the 0.25 NDVI drop was fixed before
 
 | Metric | Decline rule | Logistic regression | Always Grain |
 | --- | ---: | ---: | ---: |
-| Silage precision | 0.3929 | 0.8750 | 0.0000 |
-| Silage recall | 0.9167 | 0.5833 | 0.0000 |
-| Silage F1 | 0.5500 | 0.7000 | 0.0000 |
+| Silage precision | 0.3929 | 0.9091 | 0.0000 |
+| Silage recall | 0.9167 | 0.8333 | 0.0000 |
+| Silage F1 | 0.5500 | 0.8696 | 0.0000 |
 | False positive rate | 0.5312 | 0.0312 | 0.0000 |
-| Balanced accuracy | 0.6927 | 0.7760 | 0.5000 |
+| Balanced accuracy | 0.6927 | 0.9010 | 0.5000 |
 
 Decline rule confusion (rows true, columns predicted): Grain 15 / 17, Silage 1 / 11.
 Thresholds by fold (day of year): {1: 260, 2: 261, 3: 261, 4: 261, 5: 261}.
