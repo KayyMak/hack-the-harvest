@@ -3,6 +3,7 @@ import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveCont
 import type { ConvergenceAcres } from '../api'
 import { acres, shortDate } from '../format'
 import { DATA, useTheme } from '../theme'
+import { xTitle, yTitle } from './charts'
 
 interface Props {
   data: ConvergenceAcres | null
@@ -52,10 +53,10 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
       <div className="acres-conv__plot" role="img"
         aria-label={`Silage acres ${current.year}: ${acres(first.est)} acres on ${first.label}, ${acres(last.est)} on ${last.label}; BARC reference ${acres(reference)}`}>
         <ResponsiveContainer width="100%" height={260}>
-          <ComposedChart data={rows} margin={{ top: 10, right: 16, bottom: 0, left: 0 }}>
+          <ComposedChart data={rows} margin={{ top: 10, right: 16, bottom: 0, left: 4 }}>
             <CartesianGrid stroke={t.grid} vertical={false} />
-            <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} />
-            <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={44} domain={[0, Math.ceil(top / 10) * 10]} />
+            <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} height={36} label={xTitle(`As-of date, ${current.year}`, t.muted)} />
+            <YAxis stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} domain={[0, Math.ceil(top / 10) * 10]} label={yTitle('Silage acres', t.muted)} />
             <Tooltip formatter={(v, name) => [typeof v === 'number' ? `${acres(v)} ac` : '—', name]}
               contentStyle={{ background: t.surface, border: `1px solid ${t.grid}`, color: t.ink }} />
             <Area type="monotone" dataKey="lo" stackId="b" stroke="none" fill="transparent" isAnimationActive={false} legendType="none" name="lower" />
@@ -68,12 +69,15 @@ export function AcresConvergence({ data, error, year, onYear }: Props) {
           </ComposedChart>
         </ResponsiveContainer>
       </div>
+      <details className="more">
+        <summary>Details</summary>
       <p className="muted small">
         {data.scope}. The interval comes from the model's own probabilities and does not include error in those probabilities, so it is narrower than the true uncertainty.{' '}
         {current.points.some((p) => p.mode === 'v1 month-cut refit')
           ? 'Before Nov 30 each date refits the v1 model (nine NDVI features) using only months of satellite data complete by then; model v2 needs the full season, so it is used from Nov 30.'
           : 'Each date refits the model using only months of satellite data complete by then.'}
       </p>
+      </details>
       {missingAcres > 0 && <p className="inline-error" role="alert">Some estimates omit fields without acreage (up to {missingAcres} field-years per date). Compare dates with care.</p>}
     </div>
   )

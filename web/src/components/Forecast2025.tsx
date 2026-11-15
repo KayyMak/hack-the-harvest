@@ -1,62 +1,7 @@
-import type { Forecast2025, ForecastCrop } from '../api'
+import type { Forecast2025 } from '../api'
 import { acres, pct, signedAcres, signedPct } from '../format'
 import type { AsyncState } from '../hooks'
 import { Pending } from './Pending'
-
-/** "2023–24" from the saved backtest years; empty when the forecast did not save them. */
-const backtestSpan = (years: string[]) =>
-  years.length === 0 ? '' : years.length === 1 ? years[0] : `${years[0]}–${years.at(-1)!.slice(-2)}`
-
-const range = (c: ForecastCrop) => (c.low != null && c.high != null ? `${acres(c.low)}–${acres(c.high)}` : 'not published')
-
-/** The Overview's first row: the graded 2025 Maryland forecast next to NASS 2025 acres harvested. */
-export function ForecastCards({ state }: { state: AsyncState<Forecast2025> }) {
-  if (state.error) {
-    return (
-      <section className="kpis kpis--headline" aria-label="Maryland 2025 forecast">
-        <article className="glass kpi kpi--wide">
-          <Pending title="Maryland 2025 silage and grain acres, forecast">
-            The saved 2025 forecast is not available, so no number is shown. {state.error.message}
-          </Pending>
-        </article>
-      </section>
-    )
-  }
-  const data = state.data
-  const span = data ? backtestSpan(data.backtest_years) : ''
-  return (
-    <section className="kpis kpis--headline" aria-label="Maryland 2025 forecast">
-      {(['silage', 'grain'] as const).map((crop) => {
-        const c = data?.maryland[crop]
-        return (
-          <article className="glass kpi" key={crop}>
-            <h2 className="kpi__label">Maryland 2025 {crop} acres, forecast</h2>
-            {!data || !c ? (
-              <div className="skeleton skeleton--chart kpi__skeleton" />
-            ) : (
-              <>
-                <div className="kpi__value">{acres(c.value)}</div>
-                <div className="kpi__sub">95% range {range(c)}</div>
-                <div className="kpi__foot">
-                  {c.nass == null || c.error == null || c.relative_error == null ? (
-                    'NASS 2025 comparison unavailable'
-                  ) : (
-                    <>
-                      NASS 2025: {acres(c.nass)} <span className="kpi__err">Error {signedAcres(c.error)} acres ({signedPct(c.relative_error)})</span>
-                    </>
-                  )}
-                </div>
-                <div className="kpi__foot kpi__note">
-                  From NASS reports published before Jan 2026{span ? `; backtested ${span}` : ''}
-                </div>
-              </>
-            )}
-          </article>
-        )
-      })}
-    </section>
-  )
-}
 
 /** Model quality section for the graded 2025 forecast: method, backtest, Maryland and US, sources. */
 export function Forecast2025Panel({ state }: { state: AsyncState<Forecast2025> }) {

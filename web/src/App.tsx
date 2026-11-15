@@ -329,7 +329,11 @@ export default function App() {
                   <RollupPanel data={rollup.data} error={rollup.error} />
                 )}
                 <h2 className="sheet__h2">2025 forecast (graded output)</h2>
-                <Forecast2025Panel state={forecast} />
+                <p className="muted small">Shown in full on the 2025 by state tab; method, backtest and sources are here.</p>
+                <details className="more">
+                  <summary>Method, backtest and sources</summary>
+                  <Forecast2025Panel state={forecast} />
+                </details>
                 <h2 className="sheet__h2">Satellite cross-check, Maryland 2025</h2>
                 <Estimate2025Panel state={estimate} />
               </>

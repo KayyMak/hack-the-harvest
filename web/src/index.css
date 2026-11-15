@@ -2069,3 +2069,65 @@ details.more[open] > summary { margin-bottom: 4px; }
 :root[data-theme='glass'][data-mode='light'] .toggle { color: #33453e; }
 :root[data-theme='glass'][data-mode='light'] .ftable__cover, :root[data-theme='glass'][data-mode='light'] .field-tip__cdl { color: #44564f; }
 :root[data-theme='glass'][data-mode='light'] .tag--cdl { background: rgba(28, 93, 134, 0.1); color: #1c5d86; }
+.linekey { flex-wrap: wrap; row-gap: 4px; }
+.linekey__dash { width: 16px !important; height: 0 !important; border-top: 2px dashed; background: none !important; }
+.recharts-label { font-family: var(--font-body); }
+
+/* ---------- compact pass: smaller type and padding, scannable cards (judging feedback) ---------- */
+.shell .kpi { padding: 11px 14px; border-radius: 14px; }
+.shell .kpi__label { font-size: 12.5px; line-height: 1.3; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.shell .kpi__value { font-size: 26px; margin-top: 2px; line-height: 1.15; }
+.shell .kpi__of { font-size: 13px; }
+.shell .kpi__sub { font-size: 12.5px; line-height: 1.35; margin-top: 2px; }
+.shell .kpi__foot { font-size: 12px; line-height: 1.35; margin-top: 4px; }
+.shell .kpis { gap: 10px; }
+.shell .lead { gap: 10px; }
+.shell .rail { gap: 14px; padding: 16px 18px; }
+.shell .rail__title { font-size: 14px; }
+.shell .rail__note { font-size: 12.5px; line-height: 1.45; }
+.shell .sheet { padding: 18px 22px 24px; }
+.shell .sheet__title { font-size: 20px; margin-bottom: 4px; }
+.shell .sheet__lede { font-size: 13.5px; margin-bottom: 12px; }
+.shell .sheet__h2 { font-size: 16px; margin: 26px 0 8px; }
+.shell .block { margin-top: 16px; }
+.shell .block__head h3 { font-size: 14px; }
+[data-theme='glass'] .shell .finding { font-size: 15px; line-height: 1.5; margin: 12px 0; }
+[data-theme='glass'] .shell .reliability { font-size: 13px; padding: 10px 14px; margin: 10px 0; }
+.shell .reliability p { margin: 4px 0 0; }
+.shell .tile { padding: 10px 12px; }
+[data-theme='glass'] .shell .tile__value { font-size: 20px; }
+.shell .cm__cell { min-height: 0; padding: 8px 6px; }
+[data-theme='glass'] .shell .cm__n { font-size: 20px; }
+.shell .mcm__cell { height: 38px; font-size: 18px; }
+.shell .conv { height: 160px; }
+@media (max-height: 820px) and (min-width: 901px) { .shell .conv { height: 140px; } }
+.shell .ghost-btn { padding: 6px 11px; font-size: 13px; }
+.shell .mapkey { font-size: 12.5px; }
+details.more > summary::marker { color: currentColor; }
+@media (max-width: 1520px) and (min-width: 901px) {
+  .shell .topbar { gap: 10px; }
+  .shell .views__btn { padding: 8px 7px; font-size: 13.5px; }
+  .shell .topbar .seg__btn { padding: 4px 7px; font-size: 13px; }
+  .shell .topbar .asof__label { display: none; }
+  .shell .yearpick select { padding: 5px 6px; font-size: 13px; }
+}
+
+/* phone: the tab row scrolls sideways; a fade on the right hints at Agent and Market */
+@media (max-width: 900px) {
+  .shell .views {
+    overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; scroll-snap-type: x proximity;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    padding-right: 32px;
+  }
+  .shell .views::-webkit-scrollbar { display: none; }
+  .shell .views__btn { flex: none; scroll-snap-align: start; }
+  .shell .kpi__value { font-size: 24px; }
+  .shell .kpi__label { white-space: normal; }
+  .banner { font-size: 12.5px; }
+}
+.shell .sheet .muted.small, .shell .sheet .small { font-size: 12.5px; line-height: 1.5; }
+.shell .sheet .est__text { font-size: 13.5px; }
+.shell .trace__summary { font-size: 13.5px; line-height: 1.45; }
+.shell .agent__form textarea { font-size: 14px; }
+.shell .agent__actions .muted { font-size: 13px; }

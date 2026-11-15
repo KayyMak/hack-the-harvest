@@ -2,7 +2,7 @@ import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Too
 import type { EvaluateResponse, Pred, RollupResponse, UnlabeledYearView } from '../api'
 import { acres, num, pct, shortDate } from '../format'
 import { DATA, useTheme } from '../theme'
-import { ChartTip, type TipProps } from './charts'
+import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
 import { Pending } from './Pending'
 
 export interface ReviewItem {
@@ -52,24 +52,25 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
       <section className="kpis" aria-label="Key figures">
         {rollup || !base ? (
           <article className="glass kpi">
-            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}{rollup?.reference_name ? ' (Nov 30)' : ''}</h2>
+            <h2 className="kpi__label">BARC silage acres</h2>
             <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
-            {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
+            {rollup && <div className="kpi__sub">{rollup.region ?? 'Maryland'}, {year}{rollup.reference_name ? ' (Nov 30)' : ''}; 95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
             {rollup && <div className="kpi__foot">{rollup.reference_name ?? `Census ${rollup.year}`}: {acres(rollup.census_acres)}</div>}
           </article>
         ) : (
           <article className="glass kpi">
-            <h2 className="kpi__label">Balanced accuracy, 2021–2023</h2>
+            <h2 className="kpi__label">Balanced accuracy</h2>
             <div className="kpi__value">{num(evaluation?.balanced_accuracy)}</div>
             <div className="kpi__sub">{base.name ?? 'Baseline'}: {num(base.balanced_accuracy)}</div>
             <div className="kpi__foot">{evaluation?.n_evaluated} field-years, {split}</div>
           </article>
         )}
         <article className="glass kpi">
-          <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Fields decided by ${shortDate(asOf)}`}</h2>
+          <h2 className="kpi__label">{seasonEnd ? `Fields scored, ${year}` : `Decided by ${shortDate(asOf)}`}</h2>
           <div className="kpi__value">
-            {decided} <span className="kpi__of">of {counts.labeled} labeled {year} fields</span>
+            {decided} <span className="kpi__of">of {counts.labeled}</span>
           </div>
+          <div className="kpi__sub">labeled {year} fields</div>
           <div className="kpi__bar" aria-hidden="true">
             <span style={{ width: w(counts.Silage), background: DATA.silage }} />
             <span style={{ width: w(counts.Grain), background: DATA.grain }} />
@@ -80,9 +81,9 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
           </div>
         </article>
         <article className="glass kpi">
-          <h2 className="kpi__label">Silage recall, full season 2021–2023</h2>
+          <h2 className="kpi__label">Silage recall</h2>
           <div className="kpi__value">{S ? num(S.recall.value) : '—'}</div>
-          {S && <div className="kpi__sub">95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
+          {S && <div className="kpi__sub">Full season, 2021–2023 pooled; 95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
           {evaluation && (
             <div className="kpi__foot">
               {evaluation.confusion[evaluation.labels.indexOf('Silage')]?.[evaluation.labels.indexOf('Silage')] ?? 0} of {S?.support ?? 0} silage field-years found
@@ -120,7 +121,7 @@ export function Overview({ year, asOf, counts, rollup, unlabeled, unlabeledError
 
         <section>
           <div className="rail__head">
-            <h2 className="rail__title">Held-out accuracy</h2>
+            <h2 className="rail__title">Held-out accuracy, 2021–2023 pooled</h2>
             <button className="link" onClick={onOpenQuality}>
               Model quality
             </button>
@@ -173,10 +174,10 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
   return (
     <div className="conv">
     <ResponsiveContainer width="100%" height="100%">
-      <LineChart data={rows} margin={{ top: 16, right: 16, bottom: 0, left: -18 }}>
+      <LineChart data={rows} margin={{ top: 12, right: 16, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
-        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} />
-        <YAxis domain={[0, 1]} ticks={[0, 0.5, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} />
+        <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 12, right: 12 }} height={34} label={xTitle('As-of date', t.muted)} />
+        <YAxis domain={[0, 1]} ticks={[0, 0.5, 1]} tickFormatter={(v: number) => `${v * 100}%`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Percent', t.muted)} />
         {current && <ReferenceLine x={current.label} stroke={t.share} strokeOpacity={0.35} strokeWidth={28} />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
         <Line dataKey="share_decided" name="Fields decided" stroke={t.share} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.share }} isAnimationActive={false} />

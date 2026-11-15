@@ -16,7 +16,7 @@ import type { FieldFeature, FieldLandcover, Pred, UnlabeledCallView } from '../a
 import { cdlText, classColor, featureName, monthOf, num, shortDate, toTime } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
-import { ChartTip, type TipProps } from './charts'
+import { ChartTip, type TipProps, xTitle, yTitle } from './charts'
 import { Pending } from './Pending'
 
 export interface Shortcut {
@@ -230,8 +230,8 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
   const asOfT = toTime(asOf)
   const lastT = data[data.length - 1].t
   return (
-    <ResponsiveContainer width="100%" height={250}>
-      <LineChart data={data} margin={{ top: 22, right: 18, bottom: 0, left: -12 }}>
+    <ResponsiveContainer width="100%" height={270}>
+      <LineChart data={data} margin={{ top: 22, right: 18, bottom: 0, left: 0 }}>
         <CartesianGrid stroke={t.grid} vertical={false} />
         <XAxis
           dataKey="t"
@@ -241,9 +241,11 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
           ticks={ticks}
           tickFormatter={monthOf}
           stroke={t.axis}
-          tick={{ fill: t.muted, fontSize: 14 }}
+          tick={{ fill: t.muted, fontSize: 12 }}
+          height={36}
+          label={xTitle(`Satellite date, ${new Date(data[0].t).getUTCFullYear()}`, t.muted)}
         />
-        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 14 }} />
+        <YAxis domain={[0, 1]} ticks={[0, 0.25, 0.5, 0.75, 1]} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Index (0–1)', t.muted)} />
         {asOfT < lastT && (
           <ReferenceArea x1={asOfT} x2={lastT} fill={t.muted} fillOpacity={0.1} ifOverflow="hidden" label={{ value: 'after as-of', position: 'insideTopRight', fill: t.muted, fontSize: 13 }} />
         )}
@@ -258,7 +260,7 @@ function SeriesChart({ points, decline, asOf }: { points: { date: string; ndvi: 
         <Tooltip
           content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => shortDate(new Date(Number(l)).toISOString())} value={(v) => v.toFixed(2)} />}
         />
-        <Legend verticalAlign="bottom" height={30} iconType="plainline" wrapperStyle={{ fontSize: 14, color: t.ink }} />
+        <Legend verticalAlign="top" height={28} iconType="plainline" wrapperStyle={{ fontSize: 13, color: t.ink, paddingBottom: 4 }} />
         <Line dataKey="ndvi" name="NDVI (greenness)" stroke={t.ndvi} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />
         {data.some((p) => p.ndti != null) && <Line dataKey="ndti" name="NDTI (residue)" stroke={DATA.ndti} strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls isAnimationActive={false} />}
       </LineChart>

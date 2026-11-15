@@ -78,6 +78,8 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
             </tbody>
           </table>
         </div>
+        <details className="more">
+          <summary>How the calibration works</summary>
         {s.calibrated ? (
           <p className="muted small">
             Calibrated rows are the headline. {s.calibrated.method}
@@ -89,6 +91,7 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
           <p className="muted small">Calibration is unavailable for this run, so the raw (uncalibrated) estimate is the headline.</p>
         )}
         <p className="muted small">NASS 2025: {s.nass_2025.source}</p>
+        </details>
       </section>
 
       <details className="more">

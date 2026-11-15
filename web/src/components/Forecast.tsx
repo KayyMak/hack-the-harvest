@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useTheme } from '../theme'
+import { xTitle, yTitle } from './charts'
 import type { Cell, Crop, Forecast, StateRow } from './forecastTypes'
 import { ERROR_STEPS, fmtAcres, fmtFull, fmtPct, releaseDate, titleCase } from './forecastFormat'
 
-const CROP_LABEL: Record<Crop, string> = { silage: 'corn for silage', grain: 'corn for grain' }
+const CROP_SHORT: Record<Crop, string> = { silage: 'silage', grain: 'grain' }
 
 interface Props {
   data: Forecast
@@ -17,6 +18,7 @@ interface Props {
 
 /** The graded view: 2025 acres by state vs NASS. Map, headline numbers, convergence, misses, and state detail. */
 export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTable }: Props) {
+  const t = useTheme().chart
   const md = data.states.find((s) => s.state === 'MARYLAND')
   const sel = data.states.find((s) => s.state === selected) ?? null
   const fsa = fsaBacktest(data)
@@ -31,7 +33,7 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           <UsCard crop="silage" cell={data.us.silage} />
           <UsCard crop="grain" cell={data.us.grain} />
           <article className="glass kpi">
-            <h2 className="kpi__label">States within 10% of NASS</h2>
+            <h2 className="kpi__label">States within 10%</h2>
             <div className="kpi__value">
               {data.scores.grain.within_10pct}
               <span className="kpi__of">/{data.scores.grain.states} grain</span>
@@ -40,17 +42,17 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
               {data.scores.silage.within_10pct}/{data.scores.silage.states} silage
             </div>
             <div className="kpi__foot">
-              Acre-weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
+              of NASS. Acre-weighted error: grain {data.scores.grain.acre_weighted_abs_pct_error}%, silage {data.scores.silage.acre_weighted_abs_pct_error}%
             </div>
           </article>
           {md && (
             <button className="glass kpi kpi--button" onClick={() => onSelect('MARYLAND')}>
-              <h2 className="kpi__label">Maryland, {CROP_LABEL[crop]}</h2>
+              <h2 className="kpi__label">Maryland {CROP_SHORT[crop]} acres</h2>
               <div className="kpi__value">{fmtAcres(md[crop]?.est)}</div>
               <div className="kpi__sub">
                 NASS {fmtAcres(md[crop]?.nass)} <ErrTag err={md[crop]?.err ?? null} />
               </div>
-              <div className="kpi__foot">Home of the BARC fields</div>
+              <div className="kpi__foot">Corn for {crop}, 2025; home of BARC</div>
             </button>
           )}
         </section>
@@ -60,8 +62,12 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
         <aside className="glass rail" aria-label="How the estimate was built">
           <section>
             <h2 className="rail__title">US silage estimate through the season</h2>
-            <p className="rail__note">Re-estimated at each 2025 NASS release. Band = 95% range; dashed = NASS final.</p>
             <ConvergenceChart data={data} />
+            <div className="linekey">
+              <span><i style={{ background: t.share }} />Our estimate</span>
+              <span><i style={{ background: t.share, opacity: 0.35, height: 8 }} />95% range</span>
+              <span><i className="linekey__dash" style={{ borderColor: t.accuracy }} />NASS final</span>
+            </div>
           </section>
           <section>
             <div className="rail__head">
@@ -73,15 +79,20 @@ export function ForecastPanels({ data, crop, selected, onSelect, showTable, onTa
           <section>
             <h2 className="rail__title">How it works</h2>
             <p className="rail__note rail__note--keep">
-              Grain: NASS's Nov 14, 2025 forecast. Silage: each state's usual share of non-grain corn, 2022–2024. Chosen by backtest
-              on 2023–2024 (US silage {fmtPct(data.backtest.silage.us_total['2023'].pct_error / 100)} and {fmtPct(data.backtest.silage.us_total['2024'].pct_error / 100)}).
-              No January 2026 data used.
+              Grain: NASS's Nov 14, 2025 forecast. Silage: each state's usual share of non-grain corn, 2022–2024.
             </p>
             {fsa && (
               <p className="rail__note rail__note--keep">
-                FSA December intended-use acres were tested as a silage predictor and lost the backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% acre-weighted error), so they are not used. RMA crop-insurance data is not used.
+                FSA December intended-use acres were tested for silage and lost the backtest ({fsa.fsa.toFixed(1)}% vs {fsa.chosen.toFixed(1)}% error), so they aren't used; nor is RMA insurance data.
               </p>
             )}
+            <details className="more">
+              <summary>Details</summary>
+              <p className="rail__note rail__note--keep">
+                Silage method chosen by acre-weighted backtest on 2023–2024 (US silage {fmtPct(data.backtest.silage.us_total['2023'].pct_error / 100)} and {fmtPct(data.backtest.silage.us_total['2024'].pct_error / 100)}).
+                No January 2026 data used. Click a state on the map for its numbers, or open All states for the table.
+              </p>
+            </details>
           </section>
         </aside>
       )}
@@ -115,13 +126,13 @@ function fsaBacktest(data: Forecast): { fsa: number; chosen: number } | null {
 function UsCard({ crop, cell }: { crop: Crop; cell: Cell }) {
   return (
     <article className="glass kpi">
-      <h2 className="kpi__label">US {CROP_LABEL[crop]}, 2025</h2>
+      <h2 className="kpi__label">US {CROP_SHORT[crop]} acres</h2>
       <div className="kpi__value">{fmtAcres(cell.est)}</div>
       <div className="kpi__sub">
         NASS {fmtAcres(cell.nass)} <ErrTag err={cell.err} />
       </div>
       <div className="kpi__foot">
-        95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
+        Corn for {crop}, 2025; 95% range {fmtAcres(cell.low)}–{fmtAcres(cell.high)}
       </div>
     </article>
   )
@@ -148,10 +159,10 @@ function ConvergenceChart({ data }: { data: Forecast }) {
   return (
     <div className="conv">
       <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: -6 }}>
+        <ComposedChart data={rows} margin={{ top: 10, right: 12, bottom: 0, left: 0 }}>
           <CartesianGrid stroke={t.grid} vertical={false} />
-          <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 10, right: 10 }} />
-          <YAxis domain={[Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={44} />
+          <XAxis dataKey="label" stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} tickLine={false} padding={{ left: 10, right: 10 }} height={34} label={xTitle('NASS release, 2025', t.muted)} />
+          <YAxis domain={[Math.floor(lo * 0.95 / 5e5) * 5e5, Math.ceil(hi * 1.03 / 5e5) * 5e5]} tickFormatter={(v: number) => `${(v / 1e6).toFixed(1)}M`} stroke={t.axis} tick={{ fill: t.muted, fontSize: 12 }} width={58} label={yTitle('Acres', t.muted)} />
           <Area dataKey="band" stroke="none" fill={t.share} fillOpacity={0.14} isAnimationActive={false} />
           <Line dataKey="high" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
           <Line dataKey="low" stroke={t.share} strokeDasharray="3 4" strokeWidth={1.5} dot={false} isAnimationActive={false} />
