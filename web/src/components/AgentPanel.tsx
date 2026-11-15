@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { api, STATIC } from '../api'
 import type { AgentTraceResponse, TraceLine } from '../api'
+import { Markdown } from './Markdown'
 
 const DEFAULT_QUERY =
   "Classify BARC's 2022 fields as of October 12, score them against the labels, and roll Maryland up against the 2022 Census."
@@ -56,6 +57,7 @@ export function AgentPanel() {
 
   const status = starting ? 'starting' : (trace?.status ?? (runId ? 'running' : 'idle'))
   const flags = trace?.lines.filter((l) => l.type === 'flag').length ?? 0
+  const report = trace?.lines.findLast((l) => l.type === 'report')
 
   if (STATIC) return <p role="status">Agent execution is unavailable in this saved snapshot. No live agent or verifier has run.</p>
 
@@ -94,6 +96,13 @@ export function AgentPanel() {
         </p>
       )}
 
+      {report && (
+        <article className="agent__report" aria-label="Agent report">
+          <p className="eyebrow">Report</p>
+          <Markdown text={String(report.summary ?? '')} className="md agent__md" />
+        </article>
+      )}
+
       {trace ? (
         <ol className="trace" ref={listRef} aria-live="polite">
           {trace.lines.map((l) => (
@@ -118,9 +127,15 @@ function TraceItem({ line }: { line: TraceLine }) {
           <span className="trace__type">{isFlag ? '⚑ Verifier flag' : line.type.replace('_', ' ')}</span>
           {line.tool && <code className="trace__tool">{line.tool}</code>}
         </div>
-        <p className="trace__summary">{line.summary}</p>
+        <p className="trace__summary">{line.type === 'report' ? reportTitle(String(line.summary ?? '')) : line.summary}</p>
         {line.args && <code className="trace__args">{JSON.stringify(line.args)}</code>}
       </div>
     </li>
   )
+}
+
+/** The report is rendered in full above the trace; its trace step just names it. */
+function reportTitle(md: string) {
+  const first = md.split('\n').find((l) => l.trim()) ?? ''
+  return `Report written: ${first.replace(/^#+\s*/, '').replace(/\*\*/g, '').trim() || 'see above'}`
 }

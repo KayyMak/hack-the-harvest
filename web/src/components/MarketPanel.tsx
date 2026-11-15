@@ -1,11 +1,11 @@
-import { Fragment, useState } from 'react'
-import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { Area, CartesianGrid, ComposedChart, Legend, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { api, STATIC } from '../api'
-import type { MarketCitation, MarketOutlook, MarketReport } from '../api'
+import type { MarketOutlook, MarketReport } from '../api'
 import { shortDate } from '../format'
 import { useAsync } from '../hooks'
 import { DATA, useTheme } from '../theme'
+import { Markdown } from './Markdown'
 import { Pending } from './Pending'
 
 type Dict = Record<string, unknown>
@@ -253,7 +253,7 @@ function Report({ report }: { report: MarketReport }) {
       {verifier === 'unavailable' && (
         <p className="inline-error" role="status">The wording check (does each source support its sentence?) could not run; only citations and numbers were verified.</p>
       )}
-      <Markdown text={report.markdown} cites={cites} />
+      <Markdown text={report.markdown} cites={cites} className="md market__md" />
       <section className="market__sources" aria-label="Cited sources">
         <h3>Cited sources</h3>
         <ul>
@@ -290,54 +290,4 @@ function Report({ report }: { report: MarketReport }) {
       </details>
     </article>
   )
-}
-
-type Cites = Map<string, MarketCitation>
-
-/** Minimal, safe markdown: ## headings, bullet lists, paragraphs, **bold** and [source] citation chips. No raw HTML. */
-export function Markdown({ text, cites = new Map() }: { text: string; cites?: Cites }) {
-  const inline = (s: string) => renderInline(s, cites)
-  const blocks: ReactNode[] = []
-  let list: string[] = []
-  let para: string[] = []
-  const flush = () => {
-    if (para.length) blocks.push(<p key={blocks.length}>{inline(para.join(' '))}</p>)
-    if (list.length) blocks.push(<ul key={blocks.length}>{list.map((l, i) => <li key={i}>{inline(l)}</li>)}</ul>)
-    para = []
-    list = []
-  }
-  for (const raw of text.split('\n')) {
-    const line = raw.trim()
-    const heading = /^#{1,4}\s+(.*)$/.exec(line)
-    const bullet = /^(?:[-*•]|\d+\.)\s+(.*)$/.exec(line)
-    if (!line) flush()
-    else if (heading) {
-      flush()
-      blocks.push(<h3 key={blocks.length}>{inline(heading[1])}</h3>)
-    } else if (bullet) {
-      if (para.length) flush()
-      list.push(bullet[1])
-    } else {
-      if (list.length) flush()
-      para.push(line)
-    }
-  }
-  flush()
-  return <div className="market__md">{blocks}</div>
-}
-
-function renderInline(s: string, cites: Cites): ReactNode {
-  return s.split(/(\*\*[^*]+\*\*|\[[A-Za-z0-9_./-]+(?:#\d+)?\])/g).map((part, i) => {
-    if (part.startsWith('**') && part.endsWith('**')) return <strong key={i}>{part.slice(2, -2)}</strong>
-    const id = /^\[(.+)\]$/.exec(part)?.[1]
-    if (id) {
-      const c = cites.get(id)
-      return (
-        <sup key={i} className={`cite${c ? '' : ' cite--unknown'}`} title={c ? `${c.kind === 'doc' ? 'Document' : 'Tool'}: ${c.label}` : 'Not a retrieved source'}>
-          {id.replace(/^.*\//, '')}
-        </sup>
-      )
-    }
-    return <Fragment key={i}>{part}</Fragment>
-  })
 }

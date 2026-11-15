@@ -1927,6 +1927,33 @@ textarea {
 .market__controls { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 0 0 16px; }
 .market__chart { margin: 0 0 8px; }
 
+/* ---------- shared report markdown (components/Markdown.tsx): theme variables, so every design/mode reads */
+.md { line-height: 1.6; font-size: 15px; color: var(--ink); overflow-wrap: anywhere; }
+.md h3 { font-family: var(--font-body); font-size: 17px; font-weight: 700; margin: 4px 0 8px; color: var(--ink); }
+.md h4 { font-family: var(--font-body); font-size: 14px; font-weight: 700; margin: 18px 0 6px; color: var(--ink); text-transform: none; letter-spacing: 0; }
+.md p { margin: 0 0 10px; }
+.md ul, .md ol { margin: 0 0 10px; padding-left: 22px; }
+.md li { margin: 4px 0; }
+.md strong { font-weight: 700; }
+.md code { font-family: var(--font-mono, monospace); font-size: 0.9em; padding: 0 4px; border-radius: 4px; background: var(--surface-2); }
+.md blockquote { margin: 10px 0; padding: 6px 12px; border-left: 3px solid #f2c46d; background: color-mix(in srgb, #f2c46d 10%, transparent); }
+.md hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+.md__table { overflow-x: auto; margin: 4px 0 12px; border: 1px solid var(--border); border-radius: 8px; max-width: 100%; }
+.md table { border-collapse: collapse; width: 100%; font-size: 14px; font-variant-numeric: tabular-nums; }
+.md th, .md td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.md th { font-weight: 700; background: var(--surface-2); }
+.md tbody tr:last-child td { border-bottom: 0; }
+.market__md h3 { margin: 20px 0 6px; font-size: 16px; font-weight: 650; }
+.agent__report { margin: 16px 0; padding: 16px 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); max-width: 860px; }
+.agent__report .eyebrow { margin: 0 0 8px; }
+[data-theme='glass'] .agent__report { background: rgba(0, 0, 0, 0.18); border-color: rgba(255, 255, 255, 0.08); }
+:root[data-theme='glass'][data-mode='light'] .agent__report { background: rgba(255, 255, 255, 0.7); border-color: rgba(20, 45, 38, 0.12); }
+:root[data-theme='glass'][data-mode='light'] .md blockquote { border-left-color: #b07a12; }
+@media (max-width: 600px) {
+  .agent__report { padding: 12px; }
+  .md { font-size: 14px; }
+}
+
 /* ---------- 2025 forecast headline cards + 2025 model quality sections ---------- */
 .lead .kpis--headline { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .kpi--wide { grid-column: 1 / -1; }
