@@ -163,5 +163,37 @@ class Outputs(unittest.TestCase):
         self.assertEqual((nov['us_silage_low'], nov['us_silage_high']), (new['us']['silage_low'], new['us']['silage_high']))
 
 
+class Round3(unittest.TestCase):
+    def test_round3_code_never_names_the_answer_key(self):
+        for name in ('backtest_round3.py', 'common.py'):
+            text = (HERE / name).read_text(encoding='utf-8')
+            for banned in ('quickstats_2025_judges', 'cropan26', 'benchmark', 'compare_2025', 'judges'):
+                self.assertNotIn(banned, text, f'{name} names {banned}')
+
+    def test_round3_candidates_ignore_finals_from_t_on(self):
+        from common import round3_silage
+        for t in (2019, 2022, 2024):
+            hist, bad = {k: v for k, v in FINALS.items() if k[1] < t}, scrambled(FINALS, t)
+            for st in ('IOWA', 'MARYLAND', 'TEXAS', 'NEW YORK'):
+                if (st, t - 1) not in hist:
+                    continue
+                p = INSEASON.get((st, t), {})
+                pl = next(iter(p.get('planted', {}).values()), None)
+                g = next(iter(p.get('grain', {}).values()), None)
+                self.assertEqual(round3_silage(st, t, hist, pl, g), round3_silage(st, t, bad, pl, g))
+
+    def test_round3_follows_its_preregistered_rule(self):
+        r = json.loads((HERE / 'outputs/round3/backtest_round3.json').read_text(encoding='utf-8'))
+        s, g = r['silage'], r['grain']
+        p = s['pooled']
+        floor = min(p[m]['acre_weighted_mape'] for m in ('T1', 'T2', 'T3'))
+        w = next(m for m in ('T2', 'T3', 'T1') if p[m]['acre_weighted_mape'] <= floor + 0.20)
+        ok = (p['R2']['acre_weighted_mape'] - p[w]['acre_weighted_mape'] >= 0.50
+              and p[w]['median_ape'] - p['R2']['median_ape'] <= 0.50)
+        self.assertEqual(s['winner'], w if ok else 'R2')
+        gp = g['pooled']
+        self.assertEqual(g['winner'], 'GB5' if gp['G1']['acre_weighted_mape'] - gp['GB5']['acre_weighted_mape'] >= 0.05 else 'G1')
+
+
 if __name__ == '__main__':
     unittest.main()
