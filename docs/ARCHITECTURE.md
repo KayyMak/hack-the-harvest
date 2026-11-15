@@ -96,9 +96,12 @@ field is Pending. This is a command-line step, not an API route.
 
 ## Deliberate limits
 
-There is no database, login, deployment configuration, uploaded-AOI inference,
+There is no database, login, uploaded-AOI inference,
 model-serving endpoint, or asynchronous worker. The current task needs a shared
 working foundation for existing results. Add those components when a concrete
 feature needs persistence, controlled access, deployment, or long-running jobs.
-The Vite proxy is for local development; a deployed frontend will need an API
-route/reverse proxy selected with its hosting setup.
+The Vite proxy is for local development. In production the API mounts
+`frontend/dist/` after its API routes, so the dashboard and API share one origin.
+The Dockerfile and `render.yaml` host the saved-results app; see
+[DEPLOY_RENDER.md](DEPLOY_RENDER.md). Offline training and the `harvest` CLI
+are not part of that image.

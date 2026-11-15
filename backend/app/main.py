@@ -10,6 +10,7 @@ from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_c
     read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
+from .frontend import mount_frontend
 from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
@@ -105,3 +106,7 @@ def agent_trace(run_id: str) -> list[dict]:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     except ArtifactUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+
+# Keep this last so API routes take precedence over static files.
+mount_frontend(app, tools.artifacts.ROOT / 'frontend' / 'dist')

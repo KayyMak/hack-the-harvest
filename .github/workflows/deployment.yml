@@ -1,0 +1,29 @@
+name: Deployment
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t harvest .
+      - name: Start production image on a custom PORT
+        run: docker run -d --name harvest -e PORT=8080 -p 8000:8080 harvest
+      - name: Wait for API
+        run: |
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8000/api/health; then exit 0; fi
+            sleep 2
+          done
+          docker logs harvest
+          exit 1
+      - run: python scripts/check_deployment.py
+      - name: Container logs
+        if: always()
+        run: docker logs harvest

@@ -108,8 +108,9 @@ Backend, from `backend/` (Windows):
 ```
 
 On macOS/Linux use `../.venv/bin/python` instead. CI runs these same checks.
-The production frontend build is output to `frontend/dist/`; production hosting
-and API routing are not configured in this local scaffold.
+The production frontend build is output to `frontend/dist/`. The API serves
+that build when present. See [docs/DEPLOY_RENDER.md](docs/DEPLOY_RENDER.md) for
+single-service hosting and deployment checks.
 
 With ports 8000 and 5173 free and frontend dependencies installed, run
 `python scripts/smoke_test.py` using the backend environment to start both
