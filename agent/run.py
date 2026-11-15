@@ -158,6 +158,9 @@ def chat(messages: list[dict], tools: list[dict] | None) -> dict:
         body = exc.read().decode('utf-8', 'replace')[:300]
         if exc.code in (401, 403):
             raise AgentError(f'NVIDIA rejected the API key (HTTP {exc.code}).') from exc
+        if exc.code == 429:
+            raise AgentError("NVIDIA's API is rate-limiting requests right now (HTTP 429), even after retrying "
+                        "for about a minute. Wait a minute and run it again.") from exc
         raise AgentError(f'NVIDIA API error (HTTP {exc.code}): {body}') from exc
     except (urllib.error.URLError, TimeoutError, OSError, KeyError, IndexError, TypeError, ValueError) as exc:
         raise AgentError(f'Could not get a reply from the NVIDIA API: {exc}') from exc

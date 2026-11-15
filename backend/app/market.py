@@ -893,6 +893,9 @@ def _chat(cfg: Config, messages: list[dict], tools: list[dict] | None) -> dict:
             ids = _nemotron_ids(cfg)
             raise MarketUnavailable(f'Model {cfg.model!r} was rejected (HTTP {exc.code}). Set NEMOTRON_MODEL in .env to one of: '
                                     + (', '.join(ids) or 'see https://build.nvidia.com')) from exc
+        if exc.code == 429:
+            raise MarketUnavailable("NVIDIA's API is rate-limiting requests right now (HTTP 429), even after retrying "
+                        "for about a minute. Wait a minute and run it again.") from exc
         raise MarketUnavailable(f'NVIDIA API error (HTTP {exc.code}): {body}') from exc
     except (urllib.error.URLError, TimeoutError, OSError) as exc:
         raise MarketUnavailable(f'Could not reach the NVIDIA API: {exc}') from exc

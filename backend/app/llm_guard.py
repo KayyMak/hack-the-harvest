@@ -21,10 +21,10 @@ from email.utils import parsedate_to_datetime
 
 # ---------------------------------------------------------------- HTTP with retries
 
-RETRY_ATTEMPTS = 4          # total tries per model call
-RETRY_MAX_WAIT = 30.0       # seconds of backoff in total, Retry-After included
-RETRY_BASE = 1.0            # first backoff; doubles each retry, plus up to 50% jitter
-MODEL_SLOTS = threading.BoundedSemaphore(max(1, int(os.environ.get('NEMOTRON_CONCURRENCY', '2') or 2)))
+RETRY_ATTEMPTS = 7          # total tries per model call (NVIDIA's free tier limits requests per minute)
+RETRY_MAX_WAIT = 75.0       # seconds of backoff in total, Retry-After included; spans a per-minute window
+RETRY_BASE = 2.0            # first backoff; doubles each retry (capped at 20 s), plus up to 50% jitter
+MODEL_SLOTS = threading.BoundedSemaphore(max(1, int(os.environ.get('NEMOTRON_CONCURRENCY', '1') or 1)))
 _sleep = time.sleep         # tests replace this
 
 
@@ -73,7 +73,7 @@ def post_json(req: urllib.request.Request, timeout: float, on_retry=None,
             reason = _retryable(exc)
             if reason is None or attempt == attempts:
                 raise
-            backoff = RETRY_BASE * 2 ** (attempt - 1) * (1 + random.random() * 0.5)
+            backoff = min(20.0, RETRY_BASE * 2 ** (attempt - 1)) * (1 + random.random() * 0.5)
             hint = _retry_after(exc) if isinstance(exc, urllib.error.HTTPError) else None
             wait = min(max(backoff, hint or 0.0), max_wait - waited)
             if wait <= 0:
