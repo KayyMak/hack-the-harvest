@@ -133,3 +133,35 @@ class QuickStatsRow(BaseModel):
     value: float | None
     cv_percent: float | None = None
     suppressed: bool
+
+
+class RuleMetrics(BaseModel):
+    n: int
+    silage_precision: float
+    silage_recall: float
+    silage_f1: float
+    false_positive_rate: float | None
+    balanced_accuracy: float
+    confusion_matrix: list[list[int]]
+    matrix_order: list[HarvestType]
+    matrix_rows: str
+    matrix_columns: str
+
+
+class DeclineRuleYear(BaseModel):
+    decline_rule: RuleMetrics
+    logistic: RuleMetrics
+
+
+class DeclineRuleBaseline(BaseModel):
+    protocol: str
+    drop: float
+    threshold_grid: list[int]
+    thresholds_by_fold: dict[str, int]
+    evaluated_field_years: int
+    no_sustained_decline: int
+    decline_rule: RuleMetrics
+    logistic_same_rows: RuleMetrics
+    always_grain_same_rows: RuleMetrics
+    by_year: dict[str, DeclineRuleYear]
+    limitations: list[str]

@@ -10,7 +10,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from .schemas import (AsOfResults, BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow,
+from .schemas import (AsOfResults, BaselineSummary, BarcField, DeclineRuleBaseline, Observation, Prediction, QuickStatsRow,
     Rollup, YearRollup)
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,6 +29,15 @@ def read_summary() -> BaselineSummary:
             (OUTPUT_DIR / 'metrics.json').read_text(encoding='utf-8'))
     except (OSError, ValueError, ValidationError) as exc:
         raise ArtifactUnavailable('Saved baseline metrics are missing or invalid.') from exc
+
+
+def read_decline_rule() -> DeclineRuleBaseline:
+    try:
+        return DeclineRuleBaseline.model_validate_json(
+            (OUTPUT_DIR / 'decline_rule' / 'metrics.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError, ValidationError) as exc:
+        raise ArtifactUnavailable('Saved decline-rule baseline (baseline/outputs/decline_rule/metrics.json) '
+            'is missing or invalid.') from exc
 
 
 def read_predictions() -> list[Prediction]:
@@ -203,7 +212,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
     total_only keeps domain TOTAL rows (drops irrigated and other breakdowns)."""
     path = os.environ.get('QUICKSTATS_CSV')
     if not path:
-        raise ArtifactUnavailable('QUICKSTATS_CSV is not set.')
+        raise ArtifactUnavailable('QUICKSTATS_CSV is not set. Point it at a NASS QuickStats CSV, for example '
+            'data/reference/quickstats_2025_judges.csv (2025 judge totals).')
     try:
         with open(path, encoding='utf-8-sig', newline='') as file:
             reader = csv.DictReader(file)
@@ -212,8 +222,8 @@ def read_quickstats(state: str, year: int | None = None, crop_use: str | None = 
             c_state, c_year = pick('state_name', 'state'), pick('year')
             c_item = pick('short_description', 'short_desc', 'data item')
             c_value, c_cv = pick('value'), pick('cv_percent', 'cv (%)')
-            c_county, c_level = pick('county_name', 'county'), pick('aggregation_level', 'agg_level_desc')
-            c_use, c_source = pick('crop_use', 'util_practice_desc'), pick('source', 'source_desc')
+            c_county, c_level = pick('county_name', 'county'), pick('aggregation_level', 'agg_level_desc', 'geo level')
+            c_use, c_source = pick('crop_use', 'util_practice_desc'), pick('source', 'source_desc', 'program')
             c_domain = pick('domain', 'domain_desc')
             if c_value is None:
                 raise ValueError('No value column')
