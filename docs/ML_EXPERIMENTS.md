@@ -59,6 +59,17 @@ Grain, 48 state-level Silage, and two national rows. Some state entries are
 OTHER STATES aggregates. The exact contest scoring scope/metric is unconfirmed.
 Do not use these aggregate totals as field labels or force estimates to match.
 
+`python -m harvest.benchmark --predictions FILE --out report.json` compares an
+aggregate prediction CSV (same headers: Year, Geo Level, State, Data Item,
+Domain, Value) with that file, offline and with the standard library only. It
+matches year, geography, crop use, and harvested acres exactly; keeps NATIONAL,
+STATE, and OTHER STATES rows apart; treats suppressed or blank values as
+unknown; and lists rejected, missing, unmatched, and duplicate rows. The report
+gives per-row signed, absolute, and relative errors with descriptive means per
+geography kind and crop use. It is not a contest score. No statewide 2025
+prediction file exists yet, and the BARC roll-up export is rejected as out of
+scope rather than compared with the MARYLAND row.
+
 The merged [Kraatz label documentation](../data/README.md) and root
 `kraatz_labels.csv` already provide additional BARC label candidates. Audit
 harvest-versus-planting provenance, conflicts, overlapping field-years, and
