@@ -280,20 +280,25 @@ def bernoulli(p, acres):
         cv_percent=round(100 * sd / expected, 1) if expected else None)
 
 
-def kraatz_check(pred):
-    """Farm harvest/planting records (Kraatz 2023) on blank field-years: evidence only, never training."""
+def kraatz_check(pred, corn):
+    """Farm harvest/planting records (Kraatz 2023) on blank field-years: evidence only, never training.
+
+    Every blank field-year with a record is listed, including ones the CDL gate left uncalled."""
     path = ROOT / 'kraatz_labels.csv'
     if not path.exists():
         return []
     k = pd.read_csv(path).dropna(subset=['OBJECTID'])
     k = k[(~k.conflict.astype(bool)) & k.year.isin(YEARS)]
     k = k.assign(field_id=k.OBJECTID.astype(int))
-    m = k.merge(pred, on=['field_id', 'year'], how='inner')
+    blank = corn[corn.label == 'blank'][['field_id', 'year', 'corn_check_share', 'category']]
+    m = k.merge(blank, on=['field_id', 'year'], how='inner').merge(
+        pred[['field_id', 'year', 'predicted_label', 'silage_probability']], on=['field_id', 'year'], how='left')
     return [dict(field_id=int(r.field_id), year=int(r.year), farm_record=r.harvest_type,
         record_source=r.label_source, record_share_inside_polygon=round(float(r.share), 3),
-        predicted_label=r.predicted_label if isinstance(r.predicted_label, str) else None,
+        cdl_corn_share=round(float(r.corn_check_share), 4), corn_category=r.category,
+        predicted_label=r.predicted_label if isinstance(r.predicted_label, str) and r.predicted_label else None,
         silage_probability=None if pd.isna(r.silage_probability) else round(float(r.silage_probability), 4))
-        for r in m.itertuples()]
+        for r in m.sort_values(['year', 'field_id']).itertuples()]
 
 
 def predict_stage():
@@ -367,9 +372,10 @@ def predict_stage():
             **{k: metrics['logistic'][k] for k in ('n', 'balanced_accuracy', 'silage_precision',
                 'silage_recall', 'silage_f1', 'false_positive_rate', 'brier_score')}),
         farm_record_spot_check=dict(
-            note=('Kraatz (2023) farm planting/harvest records for blank field-years. Evidence only, '
-                  'not an official label and never used in training.'),
-            rows=kraatz_check(feats)),
+            note=('Kraatz (2023) farm planting/harvest records for blank field-years, including ones the CDL '
+                  'gate did not call (predicted_label null). Evidence only, not an official label and never '
+                  'used in training.'),
+            rows=kraatz_check(feats, corn)),
         method='expected = sum(p_silage * acres); 95% interval and CV% from independent Bernoulli variance, as in /api/baseline/rollup',
         sources=[
             dict(name='USDA NASS Cropland Data Layer, Maryland, 2021-2023', url=CDL_URL.format(year='<YEAR>'),

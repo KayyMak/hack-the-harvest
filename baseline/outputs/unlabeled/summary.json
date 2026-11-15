@@ -1,5 +1,5 @@
 {
-  "generated_utc": "2026-11-15T07:54:41+00:00",
+  "generated_utc": "2026-11-15T08:00:46+00:00",
   "scope": "BARC field-years with a blank silage/grain label that CDL marks as likely corn",
   "caveat": "These are model calls on BARC field-years that have no silage/grain label. There is no reference label to check them against. A field-year is called only when the USDA Cropland Data Layer shows it was mostly corn that year; CDL itself has errors. The 95% interval uses the model's own probabilities as independent Bernoulli outcomes; it does not include model error or uncertainty about whether the field was corn.",
   "counts": {
@@ -145,7 +145,7 @@
     "brier_score": 0.08256721062853613
   },
   "farm_record_spot_check": {
-    "note": "Kraatz (2023) farm planting/harvest records for blank field-years. Evidence only, not an official label and never used in training.",
+    "note": "Kraatz (2023) farm planting/harvest records for blank field-years, including ones the CDL gate did not call (predicted_label null). Evidence only, not an official label and never used in training.",
     "rows": [
       {
         "field_id": 235,
@@ -153,8 +153,21 @@
         "farm_record": "Grain",
         "record_source": "harvest_record",
         "record_share_inside_polygon": 0.648,
+        "cdl_corn_share": 0.8421,
+        "corn_category": "likely_corn",
         "predicted_label": "Grain",
         "silage_probability": 0.208
+      },
+      {
+        "field_id": 243,
+        "year": 2021,
+        "farm_record": "Silage",
+        "record_source": "harvest_record",
+        "record_share_inside_polygon": 0.999,
+        "cdl_corn_share": 0.1959,
+        "corn_category": "not_corn",
+        "predicted_label": null,
+        "silage_probability": null
       },
       {
         "field_id": 251,
@@ -162,6 +175,8 @@
         "farm_record": "Grain",
         "record_source": "harvest_record",
         "record_share_inside_polygon": 0.997,
+        "cdl_corn_share": 0.6154,
+        "corn_category": "likely_corn",
         "predicted_label": "Grain",
         "silage_probability": 0.0574
       },
@@ -171,6 +186,8 @@
         "farm_record": "Grain",
         "record_source": "harvest_record",
         "record_share_inside_polygon": 0.809,
+        "cdl_corn_share": 0.8088,
+        "corn_category": "likely_corn",
         "predicted_label": "Grain",
         "silage_probability": 0.0394
       }
