@@ -42,6 +42,7 @@ DEFAULT_BASE = 'https://integrate.api.nvidia.com/v1'
 MAX_TOOL_ROUNDS = 6
 MAX_VERIFY_ROUNDS = 1
 AGENT_TOOLS = [t for t in harvest_tools.TOOLS if t.name != 'write_report']  # the writer node saves the report
+AGENT_TOOL_NAMES = {t.name for t in AGENT_TOOLS}
 NUM = re.compile(r'\d[\d,]*(?:\.\d+)?')
 
 SYSTEM = """You are the analyst agent for a hackathon project that predicts whether corn fields at the BARC
@@ -148,6 +149,8 @@ def analyst(state: AgentState) -> AgentState:
     rounds = state.get('tool_rounds', 0)
     msg = chat(state['messages'], tool_specs() if rounds < MAX_TOOL_ROUNDS else None)
     calls = msg.get('tool_calls') or []
+    if rounds >= MAX_TOOL_ROUNDS:
+        calls = []  # no tools were offered this round: a call the model makes anyway is not run
     if calls:
         state['messages'].append({'role': 'assistant', 'content': msg.get('content') or '', 'tool_calls': calls})
         for tc in calls:
@@ -175,7 +178,10 @@ def run_tools(state: AgentState) -> AgentState:
         except ValueError:
             args = {}
         args = {k: v for k, v in args.items() if v is not None}
-        out = harvest_tools.call(name, args)
+        if name not in AGENT_TOOL_NAMES:  # only tools offered to the model run (not write_report: it takes a run_id)
+            out = {'error': f'unknown tool {name!r}; available: {sorted(AGENT_TOOL_NAMES)}'}
+        else:
+            out = harvest_tools.call(name, args)
         text = json.dumps(out, default=str)
         state.setdefault('results', []).append(text)
         state['messages'].append({'role': 'tool', 'tool_call_id': tc.get('id', name), 'name': name, 'content': text})
