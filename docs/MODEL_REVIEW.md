@@ -1,5 +1,9 @@
 # First review of the logistic regression baseline
 
+Historical review of model v1. For the submitted model v2, see the
+[current results](../baseline/outputs/results.md) and
+[model v2 experiment](../baseline/model_v2/results.md).
+
 > **Note:** this review describes the v1 baseline. The submitted model is now model v2 (see `baseline/model_v2/results.md`).
 
 These results use all 44 labeled field-years (32 Grain, 12 Silage) from 34 BARC

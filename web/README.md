@@ -1,30 +1,58 @@
-# web — demo dashboard (Frontend)
+﻿# Cutline frontend
 
-React + TypeScript (Vite), Leaflet map, Recharts charts.
+The main React and TypeScript dashboard uses Vite, Leaflet maps, and Recharts.
+For full project setup, see the [root README](../README.md#run-locally).
 
-```bash
+## Run
+
+Start the FastAPI backend on port 8000, then:
+
+```sh
 cd web
-npm install
-cp .env.example .env.local      # optional; defaults to same-origin /api
-npm run dev                      # live: talks to the FastAPI backend
-VITE_STATIC=1 npm run dev        # offline: reads public/snapshot/*.json
-npm run build                    # type-check + production build
-VITE_STATIC=1 npm run build      # static backup build (e.g. Vercel)
+npm ci
+npm run dev
 ```
 
-Dev server: http://localhost:5173
+Open the URL Vite prints, normally http://localhost:5173. Requests to `/api`
+are proxied to the backend. Optional connection settings are documented in
+`.env.example`; browser configuration must never contain an NVIDIA key.
 
-- Backend `/openapi.json` is the contract. `src/adapter.ts` converts its saved-artifact responses into the display types in `src/types.ts`.
-- `src/api.ts` is the only place that talks to the backend; snapshot file names are in `snap`.
-- `public/snapshot/` contains real BARC season-end results. Rebuild it with
-  `python web/scripts/build-real-snapshot.py` from the repo root (requires pyproj).
-  The separate stub generator creates fabricated fixtures and must not be used for a results demo.
-- Live mode uses `/api/fields.geojson`, `/api/baseline/summary`, `/api/baseline/predictions`,
-  and saved observations. Start the existing FastAPI server on port 8000; Vite proxies `/api`.
-- Only season-end predictions exist. Statewide rollups, chips, and feature contributions
-  remain explicitly unavailable. The saved BARC acreage subtotal is not a statewide estimate.
-- Static mode cannot run an agent. Live agent requests report the backend's 501 until implemented.
-- Run `npm test` and `npm run build`; CI checks both dashboards. Render still serves `frontend/`.
-- Design variants: header "Design" menu or `?theme=harvest|usda|deck|night`.
-- Presenter keys: `1`–`4` switch panels, `←`/`→` step the as-of date.
-- No API keys in the browser, ever.
+For the saved snapshot fallback on macOS/Linux:
+
+```sh
+VITE_STATIC=1 npm run dev
+```
+
+In PowerShell, set `$env:VITE_STATIC = '1'` before `npm.cmd run dev`.
+Static mode cannot start agent runs or generate hosted reports.
+
+## Data and ownership
+
+- `src/api.ts` owns HTTP access and snapshot file selection.
+- `src/adapter.ts` converts API responses into display types.
+- The backend's `/openapi.json` is the public contract.
+- Views include 2025 state forecasts, BARC validation, fields, model quality,
+  agent traces, and market context. Missing optional data remains explicit.
+- Saved BARC field acreage is distinct from the submitted state forecast.
+- Live agent runs use `agent/run.py` and a server-side NVIDIA key.
+
+`public/snapshot/` contains saved real results. Rebuild commands and input checks
+are in `scripts/build-real-snapshot.py`; run it from the project root with its
+required analysis packages. The submitted forecast export is built separately
+by `forecast_v2/export_dashboard.py`. Do not regenerate snapshots merely to edit
+UI or documentation. The separate stub generator makes fabricated fixtures and
+must not be used for a results demo.
+
+## Checks and hosting
+
+```sh
+npm test
+npm run build
+```
+
+CI runs both. The production build goes to `web/dist/`. The root Dockerfile
+builds this dashboard and the API serves it on the same origin, with
+`frontend/dist/` as a fallback. See [hosting](../docs/DEPLOY_RENDER.md).
+
+Presenter keys `1` through `6` switch views. Theme options are defined in
+`src/theme.ts`; the design menu is available with `?design`.
