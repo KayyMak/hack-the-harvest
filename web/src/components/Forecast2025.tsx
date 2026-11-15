@@ -164,6 +164,11 @@ export function Forecast2025Panel({ state }: { state: AsyncState<Forecast2025> }
             </tbody>
           </table>
         </div>
+        <p className="muted small">
+          These are the forecast's own backtest figures. A longer, independent check over 2012–2024 (analysis/forecast_backtest)
+          found the grain range holds up for large states but is too narrow for small ones, and that states without a November
+          report were scored against their final value in this backtest, which flatters the grain row.
+        </p>
       </section>
 
       <section className="block">
