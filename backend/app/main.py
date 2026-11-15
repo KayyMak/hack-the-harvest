@@ -6,12 +6,12 @@ from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel
 
-from .artifacts import (ArtifactUnavailable, compute_rollup, rollup_quickstats_csv, read_fields, read_fields_geojson,
+from .artifacts import (ArtifactUnavailable, compute_convergence, compute_rollup, read_asof, read_decline_rule, rollup_quickstats_csv, read_fields, read_fields_geojson,
     read_observations,
     read_predictions, read_quickstats, read_summary)
 from . import tools
 from .frontend import mount_first_build
-from .schemas import BaselineSummary, BarcField, Observation, Prediction, QuickStatsRow, Rollup
+from .schemas import AsOfResults, Convergence, BaselineSummary, DeclineRuleBaseline, BarcField, Observation, Prediction, QuickStatsRow, Rollup
 
 app = FastAPI(title='Hack the Harvest API', version='0.1.0',
     description='Read-only access to saved, field-held-out BARC baseline results.')
@@ -34,9 +34,34 @@ def summary() -> BaselineSummary:
     return _serve(read_summary)
 
 
+@app.get('/api/baseline/convergence', response_model=Convergence)
+def convergence() -> Convergence:
+    """Silage-acre estimate with a 95% interval at each saved as-of date, per year."""
+    return _serve(compute_convergence)
+
+
+@app.get('/api/baseline/decline_rule', response_model=DeclineRuleBaseline)
+def decline_rule() -> DeclineRuleBaseline:
+    """Saved organizer decline-date rule, scored on the same field-years as the logistic model."""
+    return _serve(read_decline_rule)
+
+
 @app.get('/api/baseline/predictions', response_model=list[Prediction])
 def predictions() -> list[Prediction]:
     return _serve(read_predictions)
+
+
+@app.get('/api/baseline/asof', response_model=AsOfResults)
+def asof(year: int | None = None) -> AsOfResults:
+    """Saved mid-season calls per year and release date, plus scores pooled over the years.
+    Read from baseline/outputs/asof.json; nothing is fitted in this request."""
+    data = _serve(read_asof)
+    if year is None:
+        return data
+    entries = [entry for entry in data.dates if entry.year == year]
+    if not entries:
+        raise HTTPException(status_code=404, detail=f'No saved as-of results for year {year}.')
+    return data.model_copy(update={'dates': entries})
 
 
 @app.get('/api/baseline/rollup', response_model=Rollup)

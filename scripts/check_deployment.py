@@ -27,6 +27,11 @@ def check(base: str) -> None:
     assert json.loads(get('/api/fields'))
     assert json.loads(get('/api/fields.geojson'))['features']
     assert json.loads(get('/api/baseline/rollup'))['years']
+    assert json.loads(get('/api/baseline/convergence'))['years']
+    assert json.loads(get('/api/baseline/decline_rule'))['decline_rule']['n'] > 0
+    quickstats = json.loads(get('/api/quickstats?state=MARYLAND&year=2025&crop_use=silage&level=STATE'))
+    assert quickstats and all(row['source'] == 'SURVEY' and row['value'] is not None for row in quickstats)
+    assert json.loads(get('/api/baseline/asof'))['pooled']
     row = rows[0]
     assert json.loads(get(f"/api/fields/{row['field_id']}/observations?year={row['year']}"))
     assert json.loads(get('/openapi.json'))['paths']

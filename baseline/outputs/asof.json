@@ -1,0 +1,1642 @@
+{
+ "scope": "Labeled BARC field-years, held out by field; pooled over 2021-2023 in `pooled`",
+ "method": "Logistic pipeline refit on the saved field folds using only monthly NDVI medians complete by each date; the saved full-season model from Nov 30",
+ "years": [
+  2021,
+  2022,
+  2023
+ ],
+ "month_days": [
+  "08-12",
+  "09-12",
+  "10-12",
+  "11-12",
+  "11-30"
+ ],
+ "dates": [
+  {
+   "year": 2021,
+   "as_of": "2021-08-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.241985,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.394993,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.345204,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 263,
+     "predicted_label": "Grain",
+     "silage_probability": 0.378898,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 280,
+     "predicted_label": "Grain",
+     "silage_probability": 0.323198,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.397923,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.369623,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 291,
+     "predicted_label": "Grain",
+     "silage_probability": 0.421543,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 301,
+     "predicted_label": "Grain",
+     "silage_probability": 0.116926,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 327,
+     "predicted_label": "Grain",
+     "silage_probability": 0.151506,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 328,
+     "predicted_label": "Grain",
+     "silage_probability": 0.244728,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 332,
+     "predicted_label": "Grain",
+     "silage_probability": 0.331817,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 334,
+     "predicted_label": "Grain",
+     "silage_probability": 0.314406,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.234938,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.335673,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 511,
+     "predicted_label": "Grain",
+     "silage_probability": 0.171071,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 548,
+     "predicted_label": "Grain",
+     "silage_probability": 0.251506,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 571,
+     "predicted_label": "Grain",
+     "silage_probability": 0.062012,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2021,
+   "as_of": "2021-09-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.145383,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.314593,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.318353,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 263,
+     "predicted_label": "Grain",
+     "silage_probability": 0.35297,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 280,
+     "predicted_label": "Grain",
+     "silage_probability": 0.330007,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.326216,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.316102,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 291,
+     "predicted_label": "Grain",
+     "silage_probability": 0.432446,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 301,
+     "predicted_label": "Grain",
+     "silage_probability": 0.094932,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 327,
+     "predicted_label": "Grain",
+     "silage_probability": 0.074394,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 328,
+     "predicted_label": "Grain",
+     "silage_probability": 0.219415,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 332,
+     "predicted_label": "Grain",
+     "silage_probability": 0.315495,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 334,
+     "predicted_label": "Grain",
+     "silage_probability": 0.280871,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.080963,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.268759,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 511,
+     "predicted_label": "Grain",
+     "silage_probability": 0.124931,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 548,
+     "predicted_label": "Grain",
+     "silage_probability": 0.181992,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 571,
+     "predicted_label": "Grain",
+     "silage_probability": 0.017128,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2021,
+   "as_of": "2021-10-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.211292,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.316804,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.177448,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 263,
+     "predicted_label": "Grain",
+     "silage_probability": 0.443123,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 280,
+     "predicted_label": "Silage",
+     "silage_probability": 0.688129,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.312806,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.180374,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 291,
+     "predicted_label": "Silage",
+     "silage_probability": 0.83223,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 301,
+     "predicted_label": "Grain",
+     "silage_probability": 0.13864,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 327,
+     "predicted_label": "Grain",
+     "silage_probability": 0.066176,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 328,
+     "predicted_label": "Silage",
+     "silage_probability": 0.529627,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 332,
+     "predicted_label": "Grain",
+     "silage_probability": 0.291327,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 334,
+     "predicted_label": "Grain",
+     "silage_probability": 0.312698,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.064385,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.204059,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 511,
+     "predicted_label": "Grain",
+     "silage_probability": 0.080292,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 548,
+     "predicted_label": "Grain",
+     "silage_probability": 0.10476,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 571,
+     "predicted_label": "Grain",
+     "silage_probability": 0.012575,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2021,
+   "as_of": "2021-11-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.15115,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.279817,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.15775,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 263,
+     "predicted_label": "Grain",
+     "silage_probability": 0.437838,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 280,
+     "predicted_label": "Silage",
+     "silage_probability": 0.62222,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.305658,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.183933,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 291,
+     "predicted_label": "Silage",
+     "silage_probability": 0.794363,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 301,
+     "predicted_label": "Grain",
+     "silage_probability": 0.110298,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 327,
+     "predicted_label": "Grain",
+     "silage_probability": 0.060925,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 328,
+     "predicted_label": "Grain",
+     "silage_probability": 0.46161,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 332,
+     "predicted_label": "Grain",
+     "silage_probability": 0.257736,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 334,
+     "predicted_label": "Grain",
+     "silage_probability": 0.274601,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.060542,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.197575,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 511,
+     "predicted_label": "Grain",
+     "silage_probability": 0.079741,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 548,
+     "predicted_label": "Grain",
+     "silage_probability": 0.113212,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 571,
+     "predicted_label": "Grain",
+     "silage_probability": 0.012053,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2021,
+   "as_of": "2021-11-30",
+   "mode": "saved full-season model",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10",
+    "ndvi_11",
+    "peak_ndvi",
+    "peak_doy",
+    "late_ndvi",
+    "early_minus_late"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.304878,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Silage",
+     "silage_probability": 0.692686,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.021849,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 263,
+     "predicted_label": "Grain",
+     "silage_probability": 0.306431,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 280,
+     "predicted_label": "Silage",
+     "silage_probability": 0.910748,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.029458,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.0321,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 291,
+     "predicted_label": "Silage",
+     "silage_probability": 0.835508,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 301,
+     "predicted_label": "Grain",
+     "silage_probability": 0.133018,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 327,
+     "predicted_label": "Grain",
+     "silage_probability": 0.0112,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 328,
+     "predicted_label": "Silage",
+     "silage_probability": 0.876805,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 332,
+     "predicted_label": "Grain",
+     "silage_probability": 0.175136,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 334,
+     "predicted_label": "Grain",
+     "silage_probability": 0.111835,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.059289,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.121713,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 511,
+     "predicted_label": "Grain",
+     "silage_probability": 0.015297,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 548,
+     "predicted_label": "Grain",
+     "silage_probability": 0.05062,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 571,
+     "predicted_label": "Grain",
+     "silage_probability": 0.002121,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-08-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07"
+   ],
+   "predictions": [
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.385668,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.008557,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 252,
+     "predicted_label": "Grain",
+     "silage_probability": 0.433169,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 278,
+     "predicted_label": "Grain",
+     "silage_probability": 0.417879,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 279,
+     "predicted_label": "Grain",
+     "silage_probability": 0.44297,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.002266,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 429,
+     "predicted_label": "Grain",
+     "silage_probability": 0.445041,
+     "reference_label": "Silage"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-09-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08"
+   ],
+   "predictions": [
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.425542,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.013357,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 252,
+     "predicted_label": "Grain",
+     "silage_probability": 0.488274,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 278,
+     "predicted_label": "Grain",
+     "silage_probability": 0.429113,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 279,
+     "predicted_label": "Silage",
+     "silage_probability": 0.5258,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.006316,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 429,
+     "predicted_label": "Grain",
+     "silage_probability": 0.467447,
+     "reference_label": "Silage"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-10-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09"
+   ],
+   "predictions": [
+    {
+     "field_id": 231,
+     "predicted_label": "Silage",
+     "silage_probability": 0.817827,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.010882,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 252,
+     "predicted_label": "Silage",
+     "silage_probability": 0.848432,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 278,
+     "predicted_label": "Silage",
+     "silage_probability": 0.742998,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 279,
+     "predicted_label": "Silage",
+     "silage_probability": 0.830119,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.001439,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 429,
+     "predicted_label": "Silage",
+     "silage_probability": 0.722775,
+     "reference_label": "Silage"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-11-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10"
+   ],
+   "predictions": [
+    {
+     "field_id": 231,
+     "predicted_label": "Silage",
+     "silage_probability": 0.791983,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.009887,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 252,
+     "predicted_label": "Silage",
+     "silage_probability": 0.825292,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 278,
+     "predicted_label": "Silage",
+     "silage_probability": 0.721222,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 279,
+     "predicted_label": "Silage",
+     "silage_probability": 0.818842,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.001349,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 429,
+     "predicted_label": "Silage",
+     "silage_probability": 0.667987,
+     "reference_label": "Silage"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2022,
+   "as_of": "2022-11-30",
+   "mode": "saved full-season model",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10",
+    "ndvi_11",
+    "peak_ndvi",
+    "peak_doy",
+    "late_ndvi",
+    "early_minus_late"
+   ],
+   "predictions": [
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.379058,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.021389,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 252,
+     "predicted_label": "Grain",
+     "silage_probability": 0.329517,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 278,
+     "predicted_label": "Silage",
+     "silage_probability": 0.9885,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 279,
+     "predicted_label": "Grain",
+     "silage_probability": 0.311639,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.006532,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 429,
+     "predicted_label": "Silage",
+     "silage_probability": 0.99874,
+     "reference_label": "Silage"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-08-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.156664,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.224218,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 230,
+     "predicted_label": "Grain",
+     "silage_probability": 0.026132,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.039384,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.176009,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 248,
+     "predicted_label": "Grain",
+     "silage_probability": 0.477732,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.119578,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 254,
+     "predicted_label": "Grain",
+     "silage_probability": 0.42826,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.355419,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.330638,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 292,
+     "predicted_label": "Grain",
+     "silage_probability": 0.460046,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 323,
+     "predicted_label": "Grain",
+     "silage_probability": 0.462535,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.12629,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.404833,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 382,
+     "predicted_label": "Grain",
+     "silage_probability": 0.420689,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 383,
+     "predicted_label": "Grain",
+     "silage_probability": 0.47418,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 394,
+     "predicted_label": "Grain",
+     "silage_probability": 0.031574,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 397,
+     "predicted_label": "Grain",
+     "silage_probability": 0.005362,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 400,
+     "predicted_label": "Grain",
+     "silage_probability": 0.066091,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-09-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.153966,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.23454,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 230,
+     "predicted_label": "Grain",
+     "silage_probability": 0.202578,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.008522,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.281268,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 248,
+     "predicted_label": "Silage",
+     "silage_probability": 0.59029,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.121148,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 254,
+     "predicted_label": "Silage",
+     "silage_probability": 0.501881,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.388089,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.374192,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 292,
+     "predicted_label": "Grain",
+     "silage_probability": 0.496463,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 323,
+     "predicted_label": "Silage",
+     "silage_probability": 0.50387,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.129862,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.473683,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 382,
+     "predicted_label": "Grain",
+     "silage_probability": 0.481889,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 383,
+     "predicted_label": "Silage",
+     "silage_probability": 0.633788,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 394,
+     "predicted_label": "Grain",
+     "silage_probability": 0.029124,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 397,
+     "predicted_label": "Grain",
+     "silage_probability": 0.005299,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 400,
+     "predicted_label": "Grain",
+     "silage_probability": 0.071907,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-10-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.087549,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.111109,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 230,
+     "predicted_label": "Grain",
+     "silage_probability": 0.056882,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.001028,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.15965,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 248,
+     "predicted_label": "Grain",
+     "silage_probability": 0.146243,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.062629,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 254,
+     "predicted_label": "Silage",
+     "silage_probability": 0.798591,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.101436,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.190564,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 292,
+     "predicted_label": "Grain",
+     "silage_probability": 0.430967,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 323,
+     "predicted_label": "Grain",
+     "silage_probability": 0.11676,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.182603,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.328387,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 382,
+     "predicted_label": "Grain",
+     "silage_probability": 0.239947,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 383,
+     "predicted_label": "Grain",
+     "silage_probability": 0.191857,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 394,
+     "predicted_label": "Grain",
+     "silage_probability": 0.014917,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 397,
+     "predicted_label": "Grain",
+     "silage_probability": 0.003939,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 400,
+     "predicted_label": "Grain",
+     "silage_probability": 0.104014,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-11-12",
+   "mode": "refit on months complete by as-of",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.119887,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.130545,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 230,
+     "predicted_label": "Grain",
+     "silage_probability": 0.055711,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.001342,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.170782,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 248,
+     "predicted_label": "Grain",
+     "silage_probability": 0.137199,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.060824,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 254,
+     "predicted_label": "Silage",
+     "silage_probability": 0.791824,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.098859,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.227073,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 292,
+     "predicted_label": "Grain",
+     "silage_probability": 0.392945,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 323,
+     "predicted_label": "Grain",
+     "silage_probability": 0.09082,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.176521,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.323563,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 382,
+     "predicted_label": "Grain",
+     "silage_probability": 0.244692,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 383,
+     "predicted_label": "Grain",
+     "silage_probability": 0.197452,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 394,
+     "predicted_label": "Grain",
+     "silage_probability": 0.01623,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 397,
+     "predicted_label": "Grain",
+     "silage_probability": 0.007926,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 400,
+     "predicted_label": "Grain",
+     "silage_probability": 0.086049,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  },
+  {
+   "year": 2023,
+   "as_of": "2023-11-30",
+   "mode": "saved full-season model",
+   "features": [
+    "ndvi_07",
+    "ndvi_08",
+    "ndvi_09",
+    "ndvi_10",
+    "ndvi_11",
+    "peak_ndvi",
+    "peak_doy",
+    "late_ndvi",
+    "early_minus_late"
+   ],
+   "predictions": [
+    {
+     "field_id": 1,
+     "predicted_label": "Grain",
+     "silage_probability": 0.143807,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 24,
+     "predicted_label": "Grain",
+     "silage_probability": 0.081328,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 230,
+     "predicted_label": "Grain",
+     "silage_probability": 0.221685,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 231,
+     "predicted_label": "Grain",
+     "silage_probability": 0.006496,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 238,
+     "predicted_label": "Grain",
+     "silage_probability": 0.033295,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 248,
+     "predicted_label": "Silage",
+     "silage_probability": 0.794675,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 251,
+     "predicted_label": "Grain",
+     "silage_probability": 0.066657,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 254,
+     "predicted_label": "Grain",
+     "silage_probability": 0.418898,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 286,
+     "predicted_label": "Grain",
+     "silage_probability": 0.1044,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 288,
+     "predicted_label": "Grain",
+     "silage_probability": 0.117857,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 292,
+     "predicted_label": "Silage",
+     "silage_probability": 0.889651,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 323,
+     "predicted_label": "Grain",
+     "silage_probability": 0.365841,
+     "reference_label": "Silage"
+    },
+    {
+     "field_id": 347,
+     "predicted_label": "Grain",
+     "silage_probability": 0.08878,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 348,
+     "predicted_label": "Grain",
+     "silage_probability": 0.071152,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 382,
+     "predicted_label": "Grain",
+     "silage_probability": 0.023777,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 383,
+     "predicted_label": "Grain",
+     "silage_probability": 0.03223,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 394,
+     "predicted_label": "Grain",
+     "silage_probability": 0.049854,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 397,
+     "predicted_label": "Grain",
+     "silage_probability": 0.034358,
+     "reference_label": "Grain"
+    },
+    {
+     "field_id": 400,
+     "predicted_label": "Grain",
+     "silage_probability": 0.043699,
+     "reference_label": "Grain"
+    }
+   ],
+   "pending_field_ids": []
+  }
+ ],
+ "pooled": [
+  {
+   "month_day": "08-12",
+   "field_years": 44,
+   "decided": 44,
+   "share_decided": 1.0,
+   "accuracy_decided": 0.7272727272727273,
+   "balanced_accuracy": 0.5,
+   "silage_recall": 0.0,
+   "confusion_matrix": [
+    [
+     32,
+     0
+    ],
+    [
+     12,
+     0
+    ]
+   ]
+  },
+  {
+   "month_day": "09-12",
+   "field_years": 44,
+   "decided": 44,
+   "share_decided": 1.0,
+   "accuracy_decided": 0.75,
+   "balanced_accuracy": 0.59375,
+   "silage_recall": 0.25,
+   "confusion_matrix": [
+    [
+     30,
+     2
+    ],
+    [
+     9,
+     3
+    ]
+   ]
+  },
+  {
+   "month_day": "10-12",
+   "field_years": 44,
+   "decided": 44,
+   "share_decided": 1.0,
+   "accuracy_decided": 0.8863636363636364,
+   "balanced_accuracy": 0.8177083333333333,
+   "silage_recall": 0.6666666666666666,
+   "confusion_matrix": [
+    [
+     31,
+     1
+    ],
+    [
+     4,
+     8
+    ]
+   ]
+  },
+  {
+   "month_day": "11-12",
+   "field_years": 44,
+   "decided": 44,
+   "share_decided": 1.0,
+   "accuracy_decided": 0.8636363636363636,
+   "balanced_accuracy": 0.7760416666666667,
+   "silage_recall": 0.5833333333333334,
+   "confusion_matrix": [
+    [
+     31,
+     1
+    ],
+    [
+     5,
+     7
+    ]
+   ]
+  },
+  {
+   "month_day": "11-30",
+   "field_years": 44,
+   "decided": 44,
+   "share_decided": 1.0,
+   "accuracy_decided": 0.8636363636363636,
+   "balanced_accuracy": 0.7760416666666667,
+   "silage_recall": 0.5833333333333334,
+   "confusion_matrix": [
+    [
+     31,
+     1
+    ],
+    [
+     5,
+     7
+    ]
+   ]
+  }
+ ]
+}

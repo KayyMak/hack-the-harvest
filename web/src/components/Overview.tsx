@@ -36,6 +36,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
   const abstained = review.length - mismatches
   const split = evaluation?.split_label ?? 'whole years held out'
   const base = evaluation?.baseline
+  const balanced = evaluation?.convergence.some((c) => c.bal_acc != null) ?? false
   const w = (n: number) => `${counts.total ? (n / counts.total) * 100 : 0}%`
 
   return (
@@ -44,10 +45,10 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
       <section className="kpis" aria-label="Key figures">
         {rollup || !base ? (
           <article className="glass kpi">
-            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}</h2>
+            <h2 className="kpi__label">{rollup?.region ?? 'Maryland'} silage acres, {year}{rollup?.reference_name ? ' (Nov 30)' : ''}</h2>
             <div className="kpi__value">{rollup ? acres(rollup.acres) : '—'}</div>
             {rollup && <div className="kpi__sub">95% range {acres(rollup.ci[0])}–{acres(rollup.ci[1])}</div>}
-            {rollup && <div className="kpi__foot">Census {rollup.year} reported {acres(rollup.census_acres)}</div>}
+            {rollup && <div className="kpi__foot">{rollup.reference_name ?? `Census ${rollup.year}`}: {acres(rollup.census_acres)}</div>}
           </article>
         ) : (
           <article className="glass kpi">
@@ -72,7 +73,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
           </div>
         </article>
         <article className="glass kpi">
-          <h2 className="kpi__label">Silage recall, {seasonEnd ? '2021–2023' : 'held-out years'}</h2>
+          <h2 className="kpi__label">Silage recall, full season 2021–2023</h2>
           <div className="kpi__value">{S ? num(S.recall.value) : '—'}</div>
           {S && <div className="kpi__sub">95% range {num(S.recall.lo)}–{num(S.recall.hi)}</div>}
           {evaluation && (
@@ -91,6 +92,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
       </div>
 
       <aside className="glass rail" aria-label="Season and accuracy">
+        {evaluation?.convergence_error && <p className="inline-error" role="alert">Season chart unavailable: {evaluation.convergence_error}</p>}
         {evaluation && evaluation.convergence.length < 2 && base ? (
           <section>
             <h2 className="rail__title">Model vs always guessing grain</h2>
@@ -100,11 +102,11 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
         ) : (
           <section>
             <h2 className="rail__title">How the call firms up through the season</h2>
-            <p className="rail__note">Share of fields decided, and accuracy on those decided.</p>
+            <p className="rail__note">{balanced ? 'Share of fields called, and balanced accuracy of those calls, pooled over 2021–2023.' : 'Share of fields decided, and accuracy on those decided.'}</p>
             {evaluation ? <Convergence data={evaluation} asOf={asOf} /> : <div className="skeleton skeleton--chart" />}
             <div className="linekey">
               <span><i style={{ background: chart.share }} />Fields decided</span>
-              <span><i style={{ background: chart.accuracy }} />Accuracy on decided</span>
+              <span><i style={{ background: chart.accuracy }} />{balanced ? 'Balanced accuracy' : 'Accuracy on decided'}</span>
             </div>
           </section>
         )}
@@ -116,7 +118,7 @@ export function Overview({ year, asOf, counts, rollup, evaluation, review, onSel
               Model quality
             </button>
           </div>
-          {evaluation && <MiniConfusion data={evaluation} />}
+        {evaluation && <><p className="rail__note">Full-season results (November 30); independent of the selected date.</p><MiniConfusion data={evaluation} /></>}
         </section>
 
         <section>
@@ -162,7 +164,7 @@ function Convergence({ data, asOf }: { data: EvaluateResponse; asOf: string }) {
         {current && <ReferenceLine x={current.label} stroke={t.share} strokeOpacity={0.35} strokeWidth={28} />}
         <Tooltip content={(p) => <ChartTip {...(p as unknown as TipProps)} title={(l) => `As of ${l}`} value={(v) => pct(v)} />} />
         <Line dataKey="share_decided" name="Fields decided" stroke={t.share} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.share }} isAnimationActive={false} />
-        <Line dataKey="acc_decided" name="Accuracy on decided" stroke={t.accuracy} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.accuracy }} isAnimationActive={false} />
+        <Line dataKey={rows.some((r) => r.bal_acc != null) ? 'bal_acc' : 'acc_decided'} name={rows.some((r) => r.bal_acc != null) ? 'Balanced accuracy' : 'Accuracy on decided'} stroke={t.accuracy} strokeWidth={2.5} dot={{ r: 3.5, strokeWidth: 0, fill: t.accuracy }} isAnimationActive={false} />
       </LineChart>
     </ResponsiveContainer>
     </div>

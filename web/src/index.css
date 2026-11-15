@@ -1863,13 +1863,18 @@ textarea {
 :root[data-theme='glass'][data-mode='light'] .contrib__axis { background: #55655e; }
 :root[data-theme='glass'][data-mode='light'] .yearpick select { background-color: #ffffff; background-repeat: no-repeat; background-position: right 11px center; }
 
-/* model-quality meta line + BARC acres */
-.sheet__meta { margin: -2px 0 18px; font-size: 13px; color: var(--muted); }
-.barc__scope { margin: 0 0 12px; font-size: 14px; color: var(--ink-2); max-width: 72ch; }
-.barc__tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.barc__verdict { margin: 12px 0 0; font-size: 14px; font-weight: 600; }
-.barc__verdict.is-ok { color: #a6e3b7; }
-.barc__verdict.is-off { color: #ffb3a6; }
-:root[data-theme='glass'][data-mode='light'] .barc__verdict.is-ok { color: #1b6b34; }
-:root[data-theme='glass'][data-mode='light'] .barc__verdict.is-off { color: #b3261e; }
-@media (max-width: 900px) { .barc__tiles { grid-template-columns: 1fr; } }
+/* acre-estimate convergence chart */
+.acres-conv__tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.acres-conv .seg { display: inline-flex; padding: 3px; border-radius: 11px; background: rgba(0, 0, 0, 0.28); border: 0; }
+.acres-conv .seg__btn { border: 0; background: none; color: #a9b8b2; font-size: 14px; font-weight: 500; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
+.acres-conv .seg__btn + .seg__btn { border-left: 0; }
+.acres-conv .seg__btn.is-on { background: #e8eeeb; color: #0d1715; font-weight: 600; }
+.acres-conv__key { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; opacity: 0.9; }
+.acres-conv__key span { display: inline-flex; align-items: center; gap: 6px; }
+.acres-conv__key i { display: inline-block; width: 22px; height: 0; border-top: 3px solid; border-color: currentColor; }
+.acres-conv__key i:not(.is-dotted):not(.is-dashed) { height: 3px; border: 0; border-radius: 2px; }
+.acres-conv__key i.is-dotted { border-top: 2px dotted; }
+.acres-conv__key i.is-dashed { border-top: 2px dashed; }
+:root[data-theme='glass'][data-mode='light'] .acres-conv .seg { background: rgba(10, 25, 20, 0.08); }
+:root[data-theme='glass'][data-mode='light'] .acres-conv .seg__btn { color: #3b4a44; }
+:root[data-theme='glass'][data-mode='light'] .acres-conv .seg__btn.is-on { background: #12261f; color: #f3f8f5; }
