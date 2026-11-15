@@ -220,6 +220,12 @@ def read_observations(field_id: int, year: int) -> list[Observation]:
         with (OUTPUT_DIR / 'observations.csv').open(encoding='utf-8', newline='') as file:
             rows = [r for r in csv.DictReader(file)
                     if r['OBJECTID'] == str(field_id) and r['year'] == str(year)]
+        unlabeled = OUTPUT_DIR / 'unlabeled' / 'observations.csv'
+        if not rows and unlabeled.exists():
+            # Unlabeled field-years with season-end model calls, same columns and recipe.
+            with unlabeled.open(encoding='utf-8', newline='') as file:
+                rows = [r for r in csv.DictReader(file)
+                        if r['OBJECTID'] == str(field_id) and r['year'] == str(year)]
         return sorted((Observation(date=r['date'], ndvi=_num(r['ndvi']),
             clear_fraction=_num(r['clear_fraction']),
             scene_cloud_percent=_num(r['scene_cloud_percent']), status=r['status'])
