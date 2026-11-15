@@ -1,5 +1,7 @@
 # Claude Code lead-agent prompt
 
+> **Note:** the submitted model is now model v2 (see `baseline/model_v2/results.md`); v1 references below are historical.
+
 Use Claude Code signed in with the teammate's Claude Max account. Subagents
 share that account's usage limits. A separate Anthropic API key can select API
 billing instead. Ordinary subagents are sufficient; experimental Agent Teams
