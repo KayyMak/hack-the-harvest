@@ -8,8 +8,8 @@ import { createServer } from 'vite'
 const repo = new URL('../../', import.meta.url)
 const judges = readFileSync(new URL('data/reference/quickstats_2025_judges.csv', repo), 'utf8')
 const forecast = JSON.parse(readFileSync(new URL('web/public/forecast_2025.json', repo), 'utf8'))
-// What `python -m harvest.benchmark --predictions forecast/outputs/state_estimates_2025.csv` reported.
-const benchmark = JSON.parse(readFileSync(new URL('forecast/outputs/benchmark.json', repo), 'utf8'))
+// What `python -m harvest.benchmark --predictions forecast_v2/outputs/state_estimates_2025.csv` reported.
+const benchmark = JSON.parse(readFileSync(new URL('forecast_v2/outputs/benchmark.json', repo), 'utf8'))
 
 let server
 let score
@@ -48,7 +48,7 @@ test("the judges' file scores the same rows as harvest.benchmark", () => {
     near(js.relativeError, py.relative_error)
   }
   assert.equal(s.us.Grain.signedError, -901000)
-  assert.equal(s.maryland.Silage.signedError, -2405)
+  assert.equal(s.maryland.Silage.signedError, -3352)
 
   // every comparison, row by row
   assert.equal(s.report.comparisons.length, benchmark.comparisons.length)
@@ -78,7 +78,7 @@ test('our side comes from the forecast estimates, never its stored NASS values',
   tampered.us.grain.nass = 1
   const s = score.scoreUpload(judges, tampered)
   assert.equal(s.us.Grain.signedError, -901000)
-  assert.equal(s.maryland.Silage.signedError, -2405)
+  assert.equal(s.maryland.Silage.signedError, -3352)
 })
 
 test('suppressed values are unknown, other items and years are ignored, lab aliases are read', () => {

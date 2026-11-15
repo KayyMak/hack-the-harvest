@@ -16,6 +16,11 @@ SUMMARY = ROOT / 'forecast_v2' / 'outputs' / 'summary.json'
 ESTIMATES = ROOT / 'forecast_v2' / 'outputs' / 'state_estimates_2025.csv'
 JUDGES = ROOT / 'data' / 'reference' / 'quickstats_2025_judges.csv'
 OUT = ROOT / 'web' / 'public' / 'forecast_2025.json'
+# Student t, 0.95 quantile (two-sided 90%), by degrees of freedom; 30 stands in for anything larger.
+T90 = {1: 6.314, 2: 2.920, 3: 2.353, 4: 2.132, 5: 2.015, 6: 1.943, 7: 1.895, 8: 1.860, 9: 1.833, 10: 1.812,
+       11: 1.796, 12: 1.782, 13: 1.771, 14: 1.761, 15: 1.753, 16: 1.746, 17: 1.740, 18: 1.734, 19: 1.729,
+       20: 1.725, 21: 1.721, 22: 1.717, 23: 1.714, 24: 1.711, 25: 1.708, 26: 1.706, 27: 1.703, 28: 1.701,
+       29: 1.699, 30: 1.697}
 
 
 def acres(v: str):
@@ -54,6 +59,19 @@ def main():
         grain=cell(us['grain'], us['grain_se'], g_lo, g_hi, nass.get(('US TOTAL', 'grain'))),
     )
 
+    def reliability(crop):
+        """NASS's 'Reliability' format from the saved US backtest: root-mean-square % error, and the 90% margin
+        (Student t on n-1 df x RMSE, as NASS does): 9 times in 10 the miss is no larger than this."""
+        errs = [v['pct_error'] for v in s['backtest'][crop]['us_total'].values()]
+        n = len(errs)
+        if n < 2:
+            return None
+        rmse = (sum(e * e for e in errs) / n) ** 0.5
+        t90 = T90[min(n - 1, 30)]
+        years = sorted(s['backtest'][crop]['us_total'])
+        return dict(years=f'{years[0]}-{years[-1]}', n=n, rmse_pct=round(rmse, 1), t=t90,
+                    margin90_pct=round(t90 * rmse, 1), max_abs_pct=round(max(abs(e) for e in errs), 1))
+
     def score(crop):
         rows = [x[crop] for x in states if x[crop] and x[crop]['nass']]
         abs_err = sum(abs(r['est'] - r['nass']) for r in rows)
@@ -70,6 +88,7 @@ def main():
         reference_note='Reference: judges\' NASS QuickStats 2025 export (data/reference/quickstats_2025_judges.csv), used only for scoring.',
         method=s['method'], silage_method=s['silage_method'], backtest=s['backtest'], interval_z=z,
         us=us_out, scores=dict(grain=score('grain'), silage=score('silage')),
+        reliability=dict(grain=reliability('grain'), silage=reliability('silage')),
         convergence=s['convergence'], states=states,
         sources=s['sources'],
     )

@@ -116,7 +116,7 @@ export interface RollupResponse {
   note?: string
 }
 
-/** GET /api/forecast_2025: `summary` is forecast/outputs/summary.json as saved (the graded output). */
+/** GET /api/forecast_2025: `summary` is forecast_v2/outputs/summary.json as saved (the graded output). */
 export interface ForecastStateRow {
   state: string
   silage: number

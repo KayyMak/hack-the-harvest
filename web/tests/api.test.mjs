@@ -189,7 +189,7 @@ test('a missing or incomplete 2025 estimate rejects instead of showing numbers',
   assert.throws(() => adaptEstimate2025({ summary: noRange, benchmark: null }), /incomplete/)
 })
 
-const forecast = JSON.parse(readFileSync(new URL('../../forecast/outputs/summary.json', import.meta.url), 'utf8'))
+const forecast = JSON.parse(readFileSync(new URL('../../forecast_v2/outputs/summary.json', import.meta.url), 'utf8'))
 // Synthetic reference values for shape checks only; real NASS values are read by the backend.
 const nassFixture = { source: 'synthetic', maryland: { silage: 50000, grain: 400000 }, us: { silage: 6000000, grain: null } }
 
@@ -208,7 +208,7 @@ test('2025 forecast comes from /api/forecast_2025 and picks the Maryland and US 
   assert.equal(result.maryland.silage.relative_error, (md.silage - 50000) / 50000)
   assert.equal(result.maryland.grain.value, md.grain)
   assert.equal(result.us.silage.value, forecast.us.silage)
-  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [null, null, null], 'no US grain range or NASS: nothing invented')
+  assert.deepEqual([result.us.grain.low, result.us.grain.high, result.us.grain.error], [forecast.us.grain_low ?? null, forecast.us.grain_high ?? null, null], 'US grain range only when the forecast saves one; no NASS fixture value: no error')
   assert.deepEqual(result.backtest_years, Object.keys(forecast.backtest.silage.us_total).sort())
 })
 

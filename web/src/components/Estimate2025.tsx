@@ -39,7 +39,7 @@ export function Estimate2025Panel({ state }: { state: AsyncState<Estimate2025> }
         ({signedPct(silageMiss)} vs NASS).
       </p>
       <p className="muted small">
-        The graded submission is <code>forecast/outputs/state_estimates_2025.csv</code> (the 2025 by state tab), not this estimate.
+        The graded submission is <code>forecast_v2/outputs/state_estimates_2025.csv</code> (the 2025 by state tab), not this estimate.
       </p>
       {partial && (
         <p className="est__partial" role="note">
