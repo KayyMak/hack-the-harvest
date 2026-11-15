@@ -209,7 +209,7 @@ def _summary(out: dict) -> str:
     if 'error' in out:
         return f"error: {out['error']}"
     keys = [k for k in ('year', 'as_of', 'n', 'n_pending', 'expected_silage_acres', 'balanced_accuracy') if k in out]
-    return ', '.join(f'{k}={out[k]}' for k in keys) or ', '.join(list(out)[:5])
+    return llm_guard.round_long_floats(', '.join(f'{k}={out[k]}' for k in keys) or ', '.join(list(out)[:5]))
 
 
 # ---------------------------------------------------------------- nodes

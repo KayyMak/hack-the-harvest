@@ -1008,6 +1008,7 @@ textarea {
 .trace__summary {
   margin: 6px 0 0;
   font-size: 16px;
+  overflow-wrap: anywhere;
 }
 .trace__args {
   display: block;
